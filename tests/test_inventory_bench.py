@@ -86,7 +86,7 @@ def test_policy_fingerprint_captures_comparable_settings():
     assert fingerprint["context_sizes"] == [512]
     assert fingerprint["repetitions"] == 1
     assert fingerprint["performance_repetitions"] == 1
-    assert fingerprint["dataset_dir"].endswith("/dataset")
+    assert fingerprint["dataset_dir"].replace("\\", "/").endswith("/dataset")
 
 
 def test_completed_job_requires_terminal_manifest(tmp_path: Path):
