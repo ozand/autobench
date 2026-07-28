@@ -189,12 +189,37 @@ def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None
 
 
 def sync_results(host: str, remote_dir: str, repo: Path) -> None:
-    """Copy remote ignored benchmark artifacts into the local results directory."""
+    """Copy only ignored benchmark artifacts into the local results directory."""
     destination = repo / "results"
     destination.mkdir(parents=True, exist_ok=True)
-    source = f"{host}:{remote_dir.rstrip('/')}/results/."
-    print(f"[sync] Copying {source} to {destination}...")
-    run(("scp", *SSH_OPTIONS, "-r", source, str(destination)))
+    for relative_path in ("inventory", "manifests", "runs"):
+        local_path = destination / relative_path
+        local_path.mkdir(parents=True, exist_ok=True)
+        source = f"{host}:{remote_dir.rstrip('/')}/results/{relative_path}/."
+        print(f"[sync] Copying {source} to {local_path}...")
+        result = subprocess.run(
+            ("scp", *SSH_OPTIONS, "-r", source, str(local_path)),
+            text=True,
+            capture_output=True,
+        )
+        if result.returncode != 0 and "No such file or directory" not in result.stderr:
+            raise WorkflowError(
+                f"Result synchronization failed for {relative_path}: "
+                f"{result.stderr.strip()}"
+            )
+
+    comparisons = destination / "comparisons"
+    comparisons.mkdir(parents=True, exist_ok=True)
+    source = f"{host}:{remote_dir.rstrip('/')}/results/comparisons/matrix_*.md"
+    result = subprocess.run(
+        ("scp", *SSH_OPTIONS, source, str(comparisons)),
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0 and "No such file or directory" not in result.stderr:
+        raise WorkflowError(
+            f"Result synchronization failed for comparisons: {result.stderr.strip()}"
+        )
 
 
 def parse_arguments() -> argparse.Namespace:
