@@ -780,8 +780,19 @@ def render_matrix(plan: dict, manifest_name: str) -> str:
                     "not_run",
                 ]
             elif result["stage"] == "suite":
-                if result["status"].startswith("BLOCKED_BY_"):
-                    values = [result["status"]] + ["not_run"] * 6
+                required_metrics = {
+                    "maximum_allocatable_context",
+                    "maximum_reliable_context",
+                    "retrieval_rate",
+                    "prompt_ts",
+                    "gen_ts",
+                    "elapsed_seconds",
+                    "task_pass_rate",
+                }
+                if not required_metrics.issubset(result):
+                    diagnostic = result.get("boundary_diagnostic", {})
+                    reason = diagnostic.get("cause_status", result.get("status", "not_run"))
+                    values = [reason] + ["not_run"] * 6
                 else:
                     allocatable = str(result["maximum_allocatable_context"])
                     if result.get("allocatable_is_lower_bound"):
