@@ -1,155 +1,254 @@
 #!/usr/bin/env python3
-"""
-Remote execution runner for AutoBench on host k7000.
+"""Safely deploy local AutoBench commits and execute them on a remote host.
 
-Workflow:
-1. Checks local git status in T:\\Code\\autobench.
-2. Pushes local changes to GitHub (if unpushed / dirty).
-3. Connects to k7000 via SSH, pulls latest changes into /home/opencode/code/autobench.
-4. Executes target benchmark script inside k7000 virtualenv (.venv).
-5. Streams real-time stdout/stderr back to local console.
-6. (Optional) Syncs remote results/ directory back to local results/.
+The local Git repository is the source of truth. This tool never stages or
+commits changes. It verifies a clean, tested local commit; pushes it; updates
+the remote checkout with a fast-forward-only merge; executes a command; and can
+copy ignored benchmark artifacts back to the local workspace.
 
-Usage:
-    python scripts/run_remote.py inventory_bench.py
-    python scripts/run_remote.py context_bench.py --sync-results
-    python scripts/run_remote.py --cmd "pytest"
+Examples:
+    python scripts/run_remote.py --deploy-only
+    python scripts/run_remote.py -- pytest
+    python scripts/run_remote.py --sync-results -- python inventory_bench.py --status
+    python scripts/run_remote.py --sync-results -- python authoritative_bench.py --smoke
 """
 
-import sys
-import os
+from __future__ import annotations
+
 import argparse
+import os
+from pathlib import Path
+import shlex
 import subprocess
-import shutil
+import sys
+from collections.abc import Sequence
 
-DEFAULT_HOST = os.environ.get("K7000_HOST", "opencode@100.67.171.58")
-REMOTE_DIR = os.environ.get("K7000_AUTOBENCH_DIR", "/home/opencode/code/autobench")
+DEFAULT_HOST = os.environ.get("AUTOBENCH_REMOTE_HOST", "opencode@100.67.171.58")
+DEFAULT_REMOTE_DIR = os.environ.get(
+    "AUTOBENCH_REMOTE_DIR", "/home/opencode/code/autobench"
+)
+SSH_OPTIONS = (
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "StrictHostKeyChecking=accept-new",
+)
 
 
-def run_local_cmd(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    """Run a local shell command."""
-    return subprocess.run(cmd, check=check, text=True, capture_output=True)
+class WorkflowError(RuntimeError):
+    """Raised when a deployment safety check fails."""
 
 
-def get_repo_root() -> str:
-    """Get the root directory of the local autobench repository."""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.dirname(script_dir)
+def repository_root() -> Path:
+    """Return the repository root containing this script."""
+    return Path(__file__).resolve().parents[1]
 
 
-def sync_git_local_to_remote(repo_root: str, host: str, auto_commit: bool = True) -> bool:
-    """Ensure local changes are committed & pushed, then pulled on remote."""
-    print("🔄 Checking local git status...")
-    status_res = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=repo_root, capture_output=True, text=True
+def run(
+    command: Sequence[str],
+    *,
+    cwd: Path | None = None,
+    capture_output: bool = False,
+) -> subprocess.CompletedProcess[str]:
+    """Run a command and raise a readable workflow error on failure."""
+    try:
+        return subprocess.run(
+            list(command),
+            cwd=cwd,
+            check=True,
+            text=True,
+            capture_output=capture_output,
+        )
+    except FileNotFoundError as exc:
+        raise WorkflowError(f"Required executable was not found: {command[0]}") from exc
+    except subprocess.CalledProcessError as exc:
+        rendered = subprocess.list2cmdline(list(command))
+        detail = (exc.stderr or exc.stdout or "").strip()
+        suffix = f"\n{detail}" if detail else ""
+        raise WorkflowError(
+            f"Command failed with exit code {exc.returncode}: {rendered}{suffix}"
+        ) from exc
+
+
+def git_output(repo: Path, *arguments: str) -> str:
+    """Run Git and return stripped stdout."""
+    return run(
+        ("git", *arguments), cwd=repo, capture_output=True
+    ).stdout.strip()
+
+
+def ensure_clean_local_repository(repo: Path) -> None:
+    """Refuse deployment when tracked or untracked local files are pending."""
+    status = git_output(repo, "status", "--porcelain")
+    if status:
+        raise WorkflowError(
+            "Local repository is not clean. Review, test, and commit changes "
+            "explicitly before remote execution:\n" + status
+        )
+
+
+def ensure_origin_is_expected(repo: Path, expected_origin: str | None) -> None:
+    """Optionally verify that deployment uses the intended canonical remote."""
+    if not expected_origin:
+        return
+    actual_origin = git_output(repo, "remote", "get-url", "origin")
+    if actual_origin != expected_origin:
+        raise WorkflowError(
+            f"Unexpected origin URL: {actual_origin!r}; expected {expected_origin!r}."
+        )
+
+
+def ensure_local_main_is_current(repo: Path) -> str:
+    """Fetch origin and ensure local main is not behind or diverged."""
+    branch = git_output(repo, "branch", "--show-current")
+    if branch != "main":
+        raise WorkflowError(f"Deployment requires branch 'main'; current branch is {branch!r}.")
+
+    run(("git", "fetch", "origin", "main"), cwd=repo)
+    local_sha = git_output(repo, "rev-parse", "HEAD")
+    remote_sha = git_output(repo, "rev-parse", "origin/main")
+    merge_base = git_output(repo, "merge-base", "HEAD", "origin/main")
+
+    if local_sha == remote_sha:
+        return local_sha
+    if merge_base == local_sha:
+        raise WorkflowError(
+            "Local main is behind origin/main. Run 'git pull --ff-only', verify, and retry."
+        )
+    if merge_base != remote_sha:
+        raise WorkflowError(
+            "Local main and origin/main have diverged. Resolve the divergence explicitly."
+        )
+
+    run(("git", "push", "origin", "main"), cwd=repo)
+    return local_sha
+
+
+def run_local_tests(repo: Path) -> None:
+    """Run the local fast test suite before deployment."""
+    print("[local] Running test suite...")
+    run((sys.executable, "-m", "pytest", "-q"), cwd=repo)
+
+
+def remote_shell(host: str, script: str, *, capture_output: bool = False) -> str:
+    """Run a non-interactive Bash script over SSH."""
+    result = run(
+        ("ssh", *SSH_OPTIONS, host, "bash", "-lc", shlex.quote(script)),
+        capture_output=capture_output,
     )
-    
-    if status_res.stdout.strip():
-        if auto_commit:
-            print("📝 Uncommitted local changes detected. Committing...")
-            subprocess.run(["git", "add", "."], cwd=repo_root, check=True)
-            subprocess.run(
-                ["git", "commit", "-m", "chore: auto-sync local changes for remote execution"],
-                cwd=repo_root,
-                check=True,
-            )
-        else:
-            print("⚠️ Uncommitted changes exist. Please commit or use --auto-commit.")
-            return False
-
-    print("🚀 Pushing local changes to GitHub...")
-    push_res = subprocess.run(["git", "push"], cwd=repo_root)
-    if push_res.returncode != 0:
-        print("❌ Failed to push local changes to GitHub.")
-        return False
-
-    print(f"📥 Pulling latest changes on {host}...")
-    ssh_cmd = [
-        "ssh",
-        "-o", "StrictHostKeyChecking=no",
-        host,
-        f"cd {REMOTE_DIR} && git pull origin main"
-    ]
-    pull_res = subprocess.run(ssh_cmd)
-    if pull_res.returncode != 0:
-        print("❌ Remote git pull failed.")
-        return False
-
-    return True
+    return result.stdout.strip() if capture_output else ""
 
 
-def execute_remote_command(host: str, target_cmd: str) -> int:
-    """Execute command on k7000 inside venv and stream output."""
-    full_remote_cmd = f"cd {REMOTE_DIR} && source .venv/bin/activate && {target_cmd}"
-    print(f"⚡ Executing on {host}: {target_cmd}\n" + "-" * 60)
-    
-    ssh_cmd = [
-        "ssh",
-        "-o", "StrictHostKeyChecking=no",
-        "-t",
-        host,
-        full_remote_cmd,
-    ]
-    
-    proc = subprocess.run(ssh_cmd)
-    print("-" * 60)
-    return proc.returncode
+def deploy_commit(host: str, remote_dir: str, expected_sha: str) -> None:
+    """Fast-forward the clean remote checkout and refresh its editable install."""
+    quoted_dir = shlex.quote(remote_dir)
+    script = f"""
+set -euo pipefail
+cd {quoted_dir}
+if [ -n "$(git status --porcelain)" ]; then
+    echo 'Remote checkout is dirty; refusing to overwrite it.' >&2
+    git status --short >&2
+    exit 20
+fi
+git fetch origin main
+git checkout main
+git merge --ff-only origin/main
+test -x .venv/bin/python || python3 -m venv .venv
+.venv/bin/python -m pip install --disable-pip-version-check -q -e .
+test "$(git rev-parse HEAD)" = {shlex.quote(expected_sha)}
+"""
+    print(f"[remote] Deploying commit {expected_sha[:12]} to {host}:{remote_dir}...")
+    remote_shell(host, script)
 
 
-def sync_results_back(host: str, repo_root: str) -> None:
-    """Download updated results from k7000 to local repo."""
-    print(f"📥 Syncing remote results/ back to local {repo_root}/results/...")
-    local_results = os.path.join(repo_root, "results")
-    os.makedirs(local_results, exist_ok=True)
-    
-    scp_cmd = [
-        "scp",
-        "-o", "StrictHostKeyChecking=no",
-        "-r",
-        f"{host}:{REMOTE_DIR}/results/*",
-        local_results
-    ]
-    res = subprocess.run(scp_cmd)
-    if res.returncode == 0:
-        print("✅ Results synchronized successfully.")
-    else:
-        print("⚠️ Could not sync results via scp (check if remote results directory contains files).")
+def normalize_remote_command(arguments: Sequence[str], remote_dir: str) -> str:
+    """Build a safely quoted remote command using the project virtualenv."""
+    if not arguments:
+        raise WorkflowError("No remote command supplied. Use '-- <command> [args...]'.")
+
+    command = list(arguments)
+    if command[0] in {"python", "python3"}:
+        command[0] = ".venv/bin/python"
+    elif command[0] == "pytest":
+        command = [".venv/bin/python", "-m", "pytest", *command[1:]]
+
+    quoted_dir = shlex.quote(remote_dir)
+    quoted_command = shlex.join(command)
+    return f"set -euo pipefail; cd {quoted_dir}; exec {quoted_command}"
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Run AutoBench scripts remotely on k7000.")
-    parser.add_argument("script", nargs="?", help="Python script to run (e.g., inventory_bench.py, context_bench.py)")
-    parser.add_argument("--cmd", help="Custom full command to run remotely (e.g. 'pytest' or 'python3 authoritative_bench.py --limit 5')")
-    parser.add_argument("--host", default=DEFAULT_HOST, help=f"SSH host string (default: {DEFAULT_HOST})")
-    parser.add_argument("--no-push", action="store_true", help="Skip local git push & remote git pull")
-    parser.add_argument("--sync-results", action="store_true", help="Sync results/ directory back after execution")
-    parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Additional arguments passed to the script")
+def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None:
+    """Execute a command remotely and stream its output."""
+    print(f"[remote] Executing: {shlex.join(arguments)}")
+    remote_shell(host, normalize_remote_command(arguments, remote_dir))
 
+
+def sync_results(host: str, remote_dir: str, repo: Path) -> None:
+    """Copy remote ignored benchmark artifacts into the local results directory."""
+    destination = repo / "results"
+    destination.mkdir(parents=True, exist_ok=True)
+    source = f"{host}:{remote_dir.rstrip('/')}/results/."
+    print(f"[sync] Copying {source} to {destination}...")
+    run(("scp", *SSH_OPTIONS, "-r", source, str(destination)))
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Deploy a clean local commit and execute it on remote hardware.",
+        epilog="Place runner options before '--'; everything after '--' is the remote command.",
+    )
+    parser.add_argument("--host", default=DEFAULT_HOST, help="SSH user and host")
+    parser.add_argument(
+        "--remote-dir", default=DEFAULT_REMOTE_DIR, help="Remote Git checkout"
+    )
+    parser.add_argument(
+        "--expected-origin",
+        default=os.environ.get("AUTOBENCH_EXPECTED_ORIGIN"),
+        help="Optional exact origin URL safety check",
+    )
+    parser.add_argument(
+        "--skip-local-tests",
+        action="store_true",
+        help="Skip local pytest only when tests were already run for this commit",
+    )
+    parser.add_argument(
+        "--deploy-only", action="store_true", help="Synchronize code without executing"
+    )
+    parser.add_argument(
+        "--sync-results", action="store_true", help="Copy results back after execution"
+    )
+    parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    if args.command and args.command[0] == "--":
+        args.command = args.command[1:]
+    return args
 
-    if not args.script and not args.cmd:
-        parser.print_help()
-        sys.exit(1)
 
-    repo_root = get_repo_root()
+def main() -> int:
+    args = parse_arguments()
+    repo = repository_root()
 
-    if not args.no_push:
-        if not sync_git_local_to_remote(repo_root, args.host):
-            sys.exit(1)
+    try:
+        ensure_clean_local_repository(repo)
+        ensure_origin_is_expected(repo, args.expected_origin)
+        if not args.skip_local_tests:
+            run_local_tests(repo)
+        expected_sha = ensure_local_main_is_current(repo)
+        deploy_commit(args.host, args.remote_dir, expected_sha)
 
-    if args.cmd:
-        target_cmd = args.cmd
-    else:
-        extra = " ".join(args.extra_args) if args.extra_args else ""
-        target_cmd = f"python3 {args.script} {extra}".strip()
+        if not args.deploy_only:
+            execute_remote(args.host, args.remote_dir, args.command)
+        if args.sync_results:
+            sync_results(args.host, args.remote_dir, repo)
+    except WorkflowError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
 
-    exit_code = execute_remote_command(args.host, target_cmd)
-
-    if getattr(args, "sync_results", False):
-        sync_results_back(args.host, repo_root)
-
-    sys.exit(exit_code)
+    print("Workflow completed successfully.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
