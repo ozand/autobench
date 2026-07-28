@@ -30,6 +30,7 @@ def test_remote_python_uses_virtualenv_and_quotes_arguments() -> None:
     )
 
     assert "cd '/srv/auto bench'" in command
+    assert "export AUTOBENCH_EXECUTION_MODE=local" in command
     assert ".venv/bin/python inventory_bench.py" in command
     assert "'model name.gguf'" in command
 

@@ -34,7 +34,7 @@ def test_inventory_excludes_vocab_and_keeps_quantization_variants():
         ),
         stderr="",
     )
-    with patch("authoritative_bench.subprocess.run", return_value=completed):
+    with patch("authoritative_bench.run_host_command", return_value=completed):
         models = discover_remote_models()
 
     assert [model["name"] for model in models] == [

@@ -6,6 +6,8 @@ import urllib.request
 import os
 import shlex
 
+from src.remote import run_host_command
+
 
 class Runner:
     @staticmethod
@@ -17,11 +19,9 @@ class Runner:
             f"-m {shlex.quote(model_path)} --stdin --show-count"
         )
         try:
-            result = subprocess.run(
-                ["ssh", "opencode@192.168.1.171", command],
-                input=text,
-                capture_output=True,
-                text=True,
+            result = run_host_command(
+                command,
+                input_text=text,
                 timeout=timeout + 10,
             )
         except subprocess.TimeoutExpired as exc:
@@ -77,17 +77,11 @@ class Runner:
             f"-n {max_tokens} -st -no-cnv --no-display-prompt --simple-io < /dev/null"
         )
 
-        ssh_cmd = ["ssh", "opencode@192.168.1.171", cmd]
         command_args = shlex.split(cmd)
 
         start_time = time.time()
         try:
-            res = subprocess.run(
-                ssh_cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout + 10,
-            )
+            res = run_host_command(cmd, timeout=timeout + 10)
         except subprocess.TimeoutExpired as exc:
             elapsed = time.time() - start_time
             return {

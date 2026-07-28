@@ -36,7 +36,7 @@ def test_count_local_tokens_uses_remote_model_tokenizer():
 
     assert count == 42
     assert mocked_run.call_args.kwargs["input"] == "hello world"
-    assert "llama-tokenize" in mocked_run.call_args.args[0][2]
+    assert "llama-tokenize" in mocked_run.call_args.args[0][-1]
 
 
 def test_count_local_tokens_rejects_missing_count():

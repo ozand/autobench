@@ -12,6 +12,7 @@ from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 from runner import Runner
 from judge import Judge
+from src.remote import run_host_command
 
 
 def load_dataset(dataset_dir: str) -> list:
@@ -52,12 +53,7 @@ def collect_local_provenance(model_path: str) -> dict:
         "nvidia-smi --query-gpu=index,name,memory.total "
         "--format=csv,noheader | sed 's/^/GPU=/'"
     )
-    result = subprocess.run(
-        ["ssh", "opencode@192.168.1.171", command],
-        capture_output=True,
-        text=True,
-        timeout=300,
-    )
+    result = run_host_command(command, timeout=300)
     if result.returncode != 0:
         return {"status": "unavailable", "error": result.stderr.strip()}
 

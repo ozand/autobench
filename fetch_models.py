@@ -6,6 +6,9 @@ import urllib.request
 import json
 import subprocess
 
+from src.remote import run_host_command
+
+
 def get_best_gguf_file(repo_id: str) -> str:
     """
     Queries Hugging Face API to find available GGUF files and returns the best one.
@@ -53,11 +56,9 @@ def download_to_k7000(repo_id: str, filename: str) -> bool:
         f"wget -c -P {target_path} '{download_url}'"
     )
     
-    ssh_cmd = ["ssh", "opencode@192.168.1.171", cmd]
-    
-    # Run the SSH command
+    # Run the command locally on k7000 or over SSH from a workstation.
     try:
-        res = subprocess.run(ssh_cmd)
+        res = run_host_command(cmd, capture_output=False)
         if res.returncode == 0:
             print(f"Successfully downloaded {filename} on k7000.")
             return True

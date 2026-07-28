@@ -11,10 +11,10 @@ from pathlib import Path
 from context_bench import build_context_prompt, run_context_test
 from run_bench import load_dataset
 from src.judge import Judge
+from src.remote import SSH_TARGET, run_host_command
 from src.runner import Runner
 
 MODEL_DIR = "/home/opencode/llama.cpp/models"
-SSH_TARGET = "opencode@192.168.1.171"
 GPU_MEMORY_BYTES = 2 * 1024**3
 SINGLE_GPU_FIT_BYTES = 1_900_000_000
 FULL_POLICY = {
@@ -38,12 +38,7 @@ def discover_remote_models(timeout: int = 30) -> list[dict]:
         f"find {MODEL_DIR} -maxdepth 1 -type f -iname '*.gguf' "
         "-printf '%f\\t%s\\n' | sort"
     )
-    result = subprocess.run(
-        ["ssh", "-o", "BatchMode=yes", SSH_TARGET, command],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    result = run_host_command(command, timeout=timeout)
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or "remote GGUF inventory failed")
 

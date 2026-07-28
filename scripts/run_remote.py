@@ -176,7 +176,10 @@ def normalize_remote_command(arguments: Sequence[str], remote_dir: str) -> str:
 
     quoted_dir = shlex.quote(remote_dir)
     quoted_command = shlex.join(command)
-    return f"set -euo pipefail; cd {quoted_dir}; exec {quoted_command}"
+    return (
+        f"set -euo pipefail; cd {quoted_dir}; "
+        f"export AUTOBENCH_EXECUTION_MODE=local; exec {quoted_command}"
+    )
 
 
 def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None:
