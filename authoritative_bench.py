@@ -13,6 +13,7 @@ from run_bench import load_dataset
 from src.judge import Judge
 from src.remote import SSH_TARGET, run_host_command
 from src.runner import Runner
+from src.statuses import boundary_summary
 
 MODEL_DIR = "/home/opencode/llama.cpp/models"
 GPU_MEMORY_BYTES = 2 * 1024**3
@@ -180,9 +181,12 @@ def execute_suite(
     )["models"][0]["configurations"][0]["result"]
     retrieval_context = boundary["maximum_allocatable_context"]
     if retrieval_context <= 0:
+        diagnostic = boundary_summary(boundary)
         config_template["result"] = {
             "stage": "suite",
-            "status": "BLOCKED_BY_BOUNDARY",
+            "status": diagnostic["cause_status"],
+            "source_status": diagnostic["source_status"],
+            "boundary_diagnostic": diagnostic,
             "stages": {"boundary": boundary},
         }
     elif prompt_tokens + output_tokens > min(
@@ -567,6 +571,13 @@ def execute_boundary(
             else "SUCCESS"
             if probes
             else "NOT_RUN"
+        ),
+        "cause_status": (
+            boundary_summary({"probes": probes, "inconclusive_status": inconclusive_status})[
+                "cause_status"
+            ]
+            if inconclusive_status
+            else None
         ),
         "inconclusive_status": inconclusive_status,
         "context_size": last_pass,

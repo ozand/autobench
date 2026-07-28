@@ -169,6 +169,58 @@ def test_execute_suite_combines_all_stage_results():
     assert executed["authoritative"] is False
 
 
+def test_execute_suite_preserves_boundary_timeout_cause():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "suite",
+    )
+    plan["models"][0]["configurations"] = [
+        {"device": "Vulkan0", "tensor_split": None, "mode": "full"}
+    ]
+    boundary = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "boundary",
+    )
+    boundary["models"][0]["configurations"][0]["result"] = {
+        "stage": "boundary",
+        "status": "INCONCLUSIVE",
+        "inconclusive_status": "SSH_TIMEOUT",
+        "maximum_allocatable_context": 0,
+        "first_failed_context": None,
+        "probes": [
+            {
+                "status": "SSH_TIMEOUT",
+                "context_size": 512,
+                "error": "SSH execution timed out",
+                "return_code": None,
+            }
+        ],
+    }
+
+    with patch("authoritative_bench.execute_boundary", return_value=boundary):
+        executed = execute_suite(
+            plan,
+            timeout=15,
+            context_sizes=[512],
+            boundary_step=256,
+            retrieval_repetitions=1,
+            reliability_threshold=0.8,
+            performance_context=512,
+            prompt_tokens=240,
+            output_tokens=32,
+            warmups=0,
+            performance_repetitions=1,
+            dataset_dir="/dataset",
+            max_tasks=1,
+        )
+
+    result = executed["models"][0]["configurations"][0]["result"]
+    assert result["status"] == "BOUNDARY_SSH_TIMEOUT"
+    assert result["source_status"] == "SSH_TIMEOUT"
+    assert result["boundary_diagnostic"]["context_size"] == 512
+    assert result["boundary_diagnostic"]["error"] == "SSH execution timed out"
+
+
 def test_execute_suite_stops_if_boundary_has_no_allocatable_context():
     plan = build_plan(
         [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
@@ -194,7 +246,9 @@ def test_execute_suite_stops_if_boundary_has_no_allocatable_context():
         )
 
     result = executed["models"][0]["configurations"][0]["result"]
-    assert result["status"] == "BLOCKED_BY_BOUNDARY"
+    assert result["status"] == "BOUNDARY_EXECUTION_ERROR"
+    assert result["source_status"] == "INCONCLUSIVE"
+    assert result["boundary_diagnostic"]["context_size"] is None
     retrieval.assert_not_called()
 
 
