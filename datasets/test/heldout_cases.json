@@ -1,0 +1,25 @@
+[
+  {
+    "id": "write_test_001",
+    "task": "writing",
+    "prompt": "Write a bash script that iterates over all .gguf files in the current folder and prints their file sizes.",
+    "constraints": {
+      "required_regex": ["for ", "in ", "du |wc |ls "],
+      "max_length": 300
+    }
+  },
+  {
+    "id": "analyze_test_001",
+    "task": "analysis",
+    "prompt": "Extract the exit code from this message into JSON with key 'exit_code' (integer):\n'Process finished with exit code -1073741819 (unknown error)'",
+    "constraints": {
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "exit_code": {"type": "integer"}
+        },
+        "required": ["exit_code"]
+      }
+    }
+  }
+]

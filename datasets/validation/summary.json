@@ -1,0 +1,11 @@
+[
+  {
+    "id": "sum_001",
+    "task": "summarization",
+    "prompt": "Summarize this system log snippet in 1 short sentence, capturing the primary event:\n'systemd[1]: Starting OpenClaw Gateway Service...\nsystemd[1]: openclaw-gateway.service: Can't open PID file /run/openclaw.pid (yet?) as we speak: No such file or directory\nsystemd[1]: openclaw-gateway.service: Supervised process 12903. Failed to startup correctly.\nsystemd[1]: openclaw-gateway.service: Main process exited, code=exited, status=1/FAILURE\nsystemd[1]: openclaw-gateway.service: Failed with result 'exit-code'.'",
+    "constraints": {
+      "max_length": 200,
+      "required_regex": ["OpenClaw|openclaw-gateway|service", "failed|failure|exit"]
+    }
+  }
+]

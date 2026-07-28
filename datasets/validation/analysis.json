@@ -1,0 +1,32 @@
+[
+  {
+    "id": "analyze_001",
+    "task": "analysis",
+    "prompt": "Analyze the following log message and determine if it represents a critical hardware error. Output JSON with fields 'critical' (boolean) and 'component' (string):\n'dmesg: [ 1042.420104] mce: [Hardware Error]: CPU 0: Machine Check: 0 Bank 4: be00000000800400'",
+    "constraints": {
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "critical": {"type": "boolean"},
+          "component": {"type": "string"}
+        },
+        "required": ["critical", "component"]
+      }
+    }
+  },
+  {
+    "id": "analyze_002",
+    "task": "analysis",
+    "prompt": "Extract the SSH connection source IP from this log entry. Output JSON with key 'ip' (string):\n'Jul 19 04:36:20 k7000 sshd[34512]: Accepted publickey for opencode from 192.168.1.35 port 55432 ssh2'",
+    "constraints": {
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "ip": {"type": "string"}
+        },
+        "required": ["ip"]
+      },
+      "required_regex": ["192.168.1.35"]
+    }
+  }
+]

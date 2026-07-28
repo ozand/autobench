@@ -1,0 +1,59 @@
+{
+  "active_profile": "qwen-coder-1.5b",
+  "profiles": {
+    "fast-local": {
+      "type": "local",
+      "device": "Vulkan0",
+      "model_path": "/home/opencode/llama.cpp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "description": "Ultra high-speed local inference (Qwen 2.5 0.5B Q4_K_M) on Vulkan0 (~32 t/s generation, ~95 t/s prompt)"
+    },
+    "qwen-3.5-0.8b": {
+      "type": "local",
+      "device": "Vulkan0",
+      "model_path": "/home/opencode/llama.cpp/models/Qwen3.5-0.8B-Q4_K_M.gguf",
+      "description": "Next-gen micro model (Qwen 3.5 0.8B Q4_K_M) on Vulkan0 (~37.2 t/s generation, ~30.3 t/s prompt)"
+    },
+    "qwen-coder-1.5b": {
+      "type": "local",
+      "device": "Vulkan0",
+      "model_path": "/home/opencode/llama.cpp/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "description": "Highly accurate and fast code model (Qwen 2.5 Coder 1.5B Q4_K_M) on Vulkan0 (~22.5 t/s generation, ~35.0 t/s prompt)"
+    },
+    "smollm-1.7b": {
+      "type": "local",
+      "device": "Vulkan0",
+      "model_path": "/home/opencode/llama.cpp/models/smollm2-1.7b-instruct-q4_k_m.gguf",
+      "description": "Compact reasoning model (SmolLM2 1.7B Q4_K_M) on Vulkan0 (~23.2 t/s generation, ~16.3 t/s prompt)"
+    },
+    "gemma-4-e2b": {
+      "type": "local",
+      "device": "Vulkan0",
+      "model_path": "/home/opencode/llama.cpp/models/gemma-4-E2B-it-Q4_K_M.gguf",
+      "description": "Google Gemma 4 E2B Instruct on Vulkan0 (~15.9 t/s generation, ~3.8 t/s prompt)"
+    },
+    "llama-3b-dual": {
+      "type": "local",
+      "device": "Vulkan0,Vulkan1",
+      "model_path": "/home/opencode/llama.cpp/models/llama-3.2-3b-instruct-q4_k_m.gguf",
+      "description": "Dual-GPU sliced instruction model (Llama 3.2 3B Q4_K_M) split across Vulkan0,Vulkan1 (~12.1 t/s generation, ~10.7 t/s prompt)"
+    },
+    "qwen-3b-dual": {
+      "type": "local",
+      "device": "Vulkan0,Vulkan1",
+      "model_path": "/home/opencode/llama.cpp/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "description": "Dual-GPU sliced reasoning model (Qwen 2.5 3B Q4_K_M) split across Vulkan0,Vulkan1 (~12.8 t/s generation, ~19.4 t/s prompt)"
+    },
+    "nemotron-4b-dual": {
+      "type": "local",
+      "device": "Vulkan0,Vulkan1",
+      "model_path": "/home/opencode/llama.cpp/models/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
+      "description": "NVIDIA Nemotron 3 Nano 4B on Vulkan0,Vulkan1 (~8.9 t/s generation, ~5.4 t/s prompt)"
+    },
+    "frontier-precision": {
+      "type": "frontier",
+      "device": "Vulkan0",
+      "model_name": "cl/gemini-2.5-flash",
+      "description": "High-fidelity frontier model for complex JSON schema and tool calling validation"
+    }
+  }
+}

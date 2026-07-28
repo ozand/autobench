@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.pytest_cache/
+
+# Benchmark artifacts
+results/manifests/
+results/inventory/
+results/runs/
+results/comparisons/*.md
+!results/comparisons/README.md
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

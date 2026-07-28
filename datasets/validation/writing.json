@@ -1,0 +1,22 @@
+[
+  {
+    "id": "write_001",
+    "task": "writing",
+    "prompt": "Write a python function `is_prime(n)` that returns True if a number is prime and False otherwise. Include docstring and comments. No explanation, just code.",
+    "constraints": {
+      "required_regex": ["def is_prime", "returns True", "False"],
+      "banned_phrases": ["class ", "import "],
+      "max_length": 500
+    }
+  },
+  {
+    "id": "write_002",
+    "task": "writing",
+    "prompt": "Draft a short commit message for staging an ignore rule for local environment configurations like `.env`.",
+    "constraints": {
+      "required_regex": ["commit", "ignore|env"],
+      "banned_phrases": ["push", "PR"],
+      "max_length": 150
+    }
+  }
+]

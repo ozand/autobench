@@ -1,0 +1,24 @@
+[
+  {
+    "id": "tool_001",
+    "task": "tools",
+    "prompt": "You are a tool caller. Based on this request: 'Find all matching markdown files under the /home/opencode/docs directory' and the available tools:\n1. find_files(path: str, pattern: str)\n2. read_file(path: str)\n3. delete_file(path: str)\nChoose the correct tool and output its call in valid JSON format: {\"name\": \"tool_name\", \"arguments\": {\"arg1\": \"value\"}}.",
+    "constraints": {
+      "json_schema": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string", "enum": ["find_files"]},
+          "arguments": {
+            "type": "object",
+            "properties": {
+              "path": {"type": "string"},
+              "pattern": {"type": "string"}
+            },
+            "required": ["path", "pattern"]
+          }
+        },
+        "required": ["name", "arguments"]
+      }
+    }
+  }
+]
