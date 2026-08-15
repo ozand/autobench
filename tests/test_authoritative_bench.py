@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from authoritative_bench import (
     FULL_POLICY,
     build_plan,
+    resolve_budget,
     configurations_for_model,
     discover_remote_models,
     execute_boundary,
@@ -252,7 +253,106 @@ def test_execute_suite_stops_if_boundary_has_no_allocatable_context():
     retrieval.assert_not_called()
 
 
-def test_execute_suite_blocks_if_workload_exceeds_measured_capacity():
+def test_resolve_budget_preserves_default_when_context_is_sufficient():
+    result = resolve_budget(1024, 512, 64)
+
+    assert result["status"] == "SUPPORTED"
+    assert result["resolved_prompt_tokens"] == 512
+    assert result["resolved_output_tokens"] == 64
+    assert result["non_comparable"] is False
+
+
+def test_resolve_budget_reduces_output_before_prompt():
+    result = resolve_budget(512, 512, 64)
+
+    assert result["status"] == "SUPPORTED"
+    assert result["resolved_prompt_tokens"] == 496
+    assert result["resolved_output_tokens"] == 16
+    assert result["non_comparable"] is True
+    assert "output_reduced" in result["reduction_reason"]
+
+
+def test_resolve_budget_rejects_context_below_minimum():
+    result = resolve_budget(143, 512, 64)
+
+    assert result["status"] == "WORKLOAD_UNSUPPORTED"
+    assert result["resolved_prompt_tokens"] == 0
+    assert result["non_comparable"] is False
+
+
+def test_execute_suite_resolves_reduced_workload_instead_of_blocking():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "suite",
+    )
+    plan["models"][0]["configurations"] = [
+        {"device": "Vulkan0", "tensor_split": None, "mode": "full"}
+    ]
+    child = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "boundary",
+    )
+    child["models"][0]["configurations"][0]["result"] = {
+        "status": "SUCCESS", "maximum_allocatable_context": 512,
+        "first_failed_context": 768,
+    }
+    results = {
+        "retrieval": {"status": "SUCCESS", "retrieved": True, "retrieval_rate": 1.0, "elapsed_seconds": 1.0},
+        "performance": {"status": "SUCCESS", "prompt_ts": 1.0, "gen_ts": 1.0, "elapsed_seconds": 1.0},
+        "quality": {"status": "SUCCESS", "task_pass_rate": 1.0, "elapsed_seconds": 1.0},
+    }
+
+    def stage_result(name):
+        stage = build_plan(
+            [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], name
+        )
+        stage["models"][0]["configurations"][0]["result"] = results[name]
+        return stage
+
+    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+        "authoritative_bench.execute_retrieval", return_value=stage_result("retrieval")
+    ), patch(
+        "authoritative_bench.execute_performance", return_value=stage_result("performance")
+    ) as performance, patch(
+        "authoritative_bench.execute_quality", return_value=stage_result("quality")
+    ) as quality:
+        executed = execute_suite(
+            plan, 5, [512], 128, 1, 0.8, 1024, 512, 64, 0, 1, "/dataset", 1
+        )
+
+    result = executed["models"][0]["configurations"][0]["result"]
+    assert result["status"] == "SUCCESS"
+    assert result["workload"]["non_comparable"] is True
+    assert performance.call_args.args[3:5] == (496, 16)
+    assert quality.call_args.args[5] == 16
+    assert executed["policy"]["suite_workload"] == result["workload"]
+
+
+def test_execute_suite_marks_unworkable_budget_distinctly():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], "suite"
+    )
+    plan["models"][0]["configurations"] = [
+        {"device": "Vulkan0", "tensor_split": None, "mode": "full"}
+    ]
+    child = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], "boundary"
+    )
+    child["models"][0]["configurations"][0]["result"] = {
+        "status": "SUCCESS", "maximum_allocatable_context": 128,
+        "first_failed_context": 256,
+    }
+    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+        "authoritative_bench.execute_retrieval"
+    ) as retrieval:
+        executed = execute_suite(plan, 5, [128], 128, 1, 0.8, 128, 512, 64, 0, 1, "/dataset", 1)
+
+    result = executed["models"][0]["configurations"][0]["result"]
+    assert result["status"] == "WORKLOAD_UNSUPPORTED"
+    retrieval.assert_not_called()
+
+
+def test_execute_suite_does_not_block_reduced_workload():
     plan = build_plan(
         [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
         "suite",
@@ -269,16 +369,36 @@ def test_execute_suite_blocks_if_workload_exceeds_measured_capacity():
         "maximum_allocatable_context": 512,
         "first_failed_context": 768,
     }
+    retrieval_result = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], "retrieval"
+    )
+    retrieval_result["models"][0]["configurations"][0]["result"] = {
+        "status": "SUCCESS", "retrieved": True, "retrieval_rate": 1.0, "elapsed_seconds": 1.0
+    }
+    performance_result = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], "performance"
+    )
+    performance_result["models"][0]["configurations"][0]["result"] = {
+        "status": "SUCCESS", "prompt_ts": 1.0, "gen_ts": 1.0, "elapsed_seconds": 1.0
+    }
+    quality_result = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}], "quality"
+    )
+    quality_result["models"][0]["configurations"][0]["result"] = {
+        "status": "SUCCESS", "task_pass_rate": 1.0, "elapsed_seconds": 1.0
+    }
     with patch("authoritative_bench.execute_boundary", return_value=child), patch(
-        "authoritative_bench.execute_retrieval"
-    ) as retrieval:
+        "authoritative_bench.execute_retrieval", return_value=retrieval_result
+    ), patch("authoritative_bench.execute_performance", return_value=performance_result), patch(
+        "authoritative_bench.execute_quality", return_value=quality_result
+    ):
         executed = execute_suite(
             plan, 5, [512, 768], 128, 1, 0.8, 1024, 500, 64, 0, 1, "/dataset", 1
         )
 
     result = executed["models"][0]["configurations"][0]["result"]
-    assert result["status"] == "BLOCKED_BY_CONTEXT_BUDGET"
-    retrieval.assert_not_called()
+    assert result["status"] == "SUCCESS"
+    assert result["workload"]["non_comparable"] is True
 
 
 def test_execute_performance_discards_warmup_and_averages_measured_runs():
@@ -806,6 +926,57 @@ def test_renderer_shows_smoke_measurements_without_claiming_task_quality():
 
     text = render_matrix(plan, "smoke.json")
     assert "| 512 | 512 | 100% | 7.5 | 12.5 | 3.0s | not_run |" in text
+
+
+def test_renderer_keeps_legacy_suite_rows_without_task_quality():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "suite",
+    )
+    plan["models"][0]["configurations"][0]["result"] = {
+        "stage": "suite",
+        "status": "SUCCESS",
+        "maximum_allocatable_context": 1024,
+        "maximum_reliable_context": 512,
+        "allocatable_is_lower_bound": False,
+        "retrieval_rate": 0.80,
+        "prompt_ts": 12.0,
+        "gen_ts": 22.0,
+        "elapsed_seconds": 40.0,
+    }
+
+    text = render_matrix(plan, "suite.json")
+    assert "| 1024 | 512 | 80% | 12.0 | 22.0 | 40.0s | not_run |" in text
+
+
+def test_renderer_marks_reduced_suite_workload_non_comparable():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "suite",
+    )
+    plan["models"][0]["configurations"][0]["result"] = {
+        "stage": "suite",
+        "status": "SUCCESS",
+        "maximum_allocatable_context": 512,
+        "maximum_reliable_context": 512,
+        "allocatable_is_lower_bound": False,
+        "retrieval_rate": 1.0,
+        "prompt_ts": 12.0,
+        "gen_ts": 22.0,
+        "elapsed_seconds": 40.0,
+        "task_pass_rate": 1.0,
+        "workload": {
+            "requested_prompt_tokens": 512,
+            "requested_output_tokens": 64,
+            "resolved_prompt_tokens": 496,
+            "resolved_output_tokens": 16,
+            "non_comparable": True,
+        },
+    }
+
+    text = render_matrix(plan, "suite.json")
+    assert "workload 496+16/512+64" in text
+    assert "reduced workload" in text
 
 
 def test_renderer_shows_complete_suite_row():

@@ -31,6 +31,103 @@ FULL_POLICY = {
     "task_quality_dataset": "datasets/validation",
     "task_quality_metric": "deterministic_pass_rate",
 }
+MIN_PROMPT_TOKENS = 128
+MIN_OUTPUT_TOKENS = 16
+
+
+def resolve_budget(
+    available_context: int,
+    requested_prompt_tokens: int,
+    requested_output_tokens: int,
+) -> dict:
+    """Resolve a workload without confusing a small context with a boundary failure.
+
+    The default prompt/output pair is preserved when it fits. If it does not,
+    output is reduced only as far as needed to retain the minimum prompt, then
+    the prompt is reduced. A workload below the explicit 128 + 16 minimum is
+    unsupported rather than being executed with an incomparable tiny prompt.
+    """
+    values = (
+        available_context,
+        requested_prompt_tokens,
+        requested_output_tokens,
+    )
+    if (
+        any(int(value) < 0 for value in values)
+        or requested_prompt_tokens < 1
+        or requested_output_tokens < 1
+    ):
+        raise ValueError(
+            "context must be non-negative and workload counts must be positive"
+        )
+
+    metadata = {
+        "status": "SUPPORTED",
+        "available_context_tokens": int(available_context),
+        "requested_prompt_tokens": int(requested_prompt_tokens),
+        "requested_output_tokens": int(requested_output_tokens),
+        "minimum_prompt_tokens": MIN_PROMPT_TOKENS,
+        "minimum_output_tokens": MIN_OUTPUT_TOKENS,
+        "resolved_prompt_tokens": 0,
+        "resolved_output_tokens": 0,
+        "reduced": False,
+        "non_comparable": False,
+        "reduction_reason": None,
+    }
+    if (
+        requested_prompt_tokens < MIN_PROMPT_TOKENS
+        or requested_output_tokens < MIN_OUTPUT_TOKENS
+    ):
+        metadata.update(
+            status="WORKLOAD_UNSUPPORTED",
+            reduction_reason="requested_workload_below_minimum",
+        )
+        return metadata
+    if available_context < MIN_PROMPT_TOKENS + MIN_OUTPUT_TOKENS:
+        metadata.update(
+            status="WORKLOAD_UNSUPPORTED",
+            reduction_reason="available_context_below_minimum",
+        )
+        return metadata
+
+    if requested_prompt_tokens + requested_output_tokens <= available_context:
+        resolved_output = requested_output_tokens
+        resolved_prompt = requested_prompt_tokens
+    else:
+        # Preserve the requested prompt first by reducing output to its minimum;
+        # only then reduce the prompt if the available context still requires it.
+        resolved_output = min(
+            requested_output_tokens,
+            max(MIN_OUTPUT_TOKENS, available_context - requested_prompt_tokens),
+        )
+        resolved_prompt = min(
+            requested_prompt_tokens,
+            available_context - resolved_output,
+        )
+    if resolved_prompt < MIN_PROMPT_TOKENS:
+        metadata.update(
+            status="WORKLOAD_UNSUPPORTED",
+            reduction_reason="minimum_prompt_cannot_fit",
+        )
+        return metadata
+
+    reduced = (
+        resolved_prompt != requested_prompt_tokens
+        or resolved_output != requested_output_tokens
+    )
+    reasons = []
+    if resolved_output != requested_output_tokens:
+        reasons.append("output_reduced_to_fit_context")
+    if resolved_prompt != requested_prompt_tokens:
+        reasons.append("prompt_reduced_to_fit_context")
+    metadata.update(
+        resolved_prompt_tokens=resolved_prompt,
+        resolved_output_tokens=resolved_output,
+        reduced=reduced,
+        non_comparable=reduced,
+        reduction_reason=", ".join(reasons) if reasons else None,
+    )
+    return metadata
 
 
 def discover_remote_models(timeout: int = 30) -> list[dict]:
@@ -181,37 +278,49 @@ def execute_suite(
     )["models"][0]["configurations"][0]["result"]
     retrieval_context = boundary["maximum_allocatable_context"]
     if retrieval_context <= 0:
+        operational_context = 0
+        budget = resolve_budget(0, prompt_tokens, output_tokens)
+    else:
+        operational_context = min(performance_context, retrieval_context)
+        budget = resolve_budget(operational_context, prompt_tokens, output_tokens)
+    plan["policy"]["suite_workload"] = budget
+    plan["policy"]["suite_operational_context"] = operational_context
+    if retrieval_context <= 0:
         diagnostic = boundary_summary(boundary)
         config_template["result"] = {
             "stage": "suite",
             "status": diagnostic["cause_status"],
             "source_status": diagnostic["source_status"],
             "boundary_diagnostic": diagnostic,
+            "workload": budget,
             "stages": {"boundary": boundary},
         }
-    elif prompt_tokens + output_tokens > min(
-        performance_context, retrieval_context
-    ):
+    elif budget["status"] != "SUPPORTED":
         config_template["result"] = {
             "stage": "suite",
-            "status": "BLOCKED_BY_CONTEXT_BUDGET",
+            "status": "WORKLOAD_UNSUPPORTED",
+            "workload": budget,
             "stages": {"boundary": boundary},
         }
     else:
-        operational_context = min(performance_context, retrieval_context)
         retrieval = execute_retrieval(
             stage_plan("retrieval"),
             timeout,
             retrieval_context,
             retrieval_repetitions,
             reliability_threshold,
+            max_tokens=budget["resolved_output_tokens"],
+            utilization=min(
+                0.90,
+                budget["resolved_prompt_tokens"] / retrieval_context,
+            ),
         )["models"][0]["configurations"][0]["result"]
         performance = execute_performance(
             stage_plan("performance"),
             timeout,
             operational_context,
-            prompt_tokens,
-            output_tokens,
+            budget["resolved_prompt_tokens"],
+            budget["resolved_output_tokens"],
             warmups,
             performance_repetitions,
         )["models"][0]["configurations"][0]["result"]
@@ -221,7 +330,7 @@ def execute_suite(
             dataset_dir,
             max_tasks,
             operational_context,
-            output_tokens,
+            budget["resolved_output_tokens"],
         )["models"][0]["configurations"][0]["result"]
         config_template["result"] = {
             "stage": "suite",
@@ -249,6 +358,7 @@ def execute_suite(
                 for stage in (boundary, retrieval, performance, quality)
             ),
             "task_pass_rate": quality["task_pass_rate"],
+            "workload": budget,
             "stages": {
                 "boundary": boundary,
                 "retrieval": retrieval,
@@ -607,6 +717,8 @@ def execute_retrieval(
     context_size: int,
     repetitions: int,
     reliability_threshold: float,
+    max_tokens: int = 64,
+    utilization: float = 0.90,
 ) -> dict:
     """Execute repeated 10/50/90% retrieval for one full configuration."""
     full_configs = [
@@ -633,8 +745,8 @@ def execute_retrieval(
                         f"RETRIEVAL-{model['id']}-{position:.2f}-{repeat}-8842"
                     ),
                     timeout=timeout,
-                    utilization=0.90,
-                    max_tokens=64,
+                    utilization=utilization,
+                    max_tokens=max_tokens,
                     needle_position=position,
                     calibration_steps=8,
                 )
@@ -688,6 +800,9 @@ def execute_retrieval(
         {
             "retrieval_repetitions": repetitions,
             "retrieval_context": context_size,
+            "retrieval_repetitions": repetitions,
+            "retrieval_max_tokens": max_tokens,
+            "retrieval_utilization": utilization,
             "reliability_threshold": reliability_threshold,
         }
     )
@@ -766,6 +881,18 @@ def render_matrix(plan: dict, manifest_name: str) -> str:
         for config in model["configurations"]:
             label = f"{model['name']} — {config['device']} ({config['mode']})"
             result = config.get("result")
+            workload = (result or {}).get("workload", {})
+            if workload:
+                requested = (
+                    f"{workload.get('requested_prompt_tokens')}+"
+                    f"{workload.get('requested_output_tokens')}"
+                )
+                resolved = (
+                    f"{workload.get('resolved_prompt_tokens')}+"
+                    f"{workload.get('resolved_output_tokens')}"
+                )
+                label += f" [workload {resolved}/{requested}]"
+
             if not result:
                 values = ["not_run"] * 7
             elif result["stage"] == "load_probe":
@@ -780,32 +907,41 @@ def render_matrix(plan: dict, manifest_name: str) -> str:
                     "not_run",
                 ]
             elif result["stage"] == "suite":
-                required_metrics = {
-                    "maximum_allocatable_context",
-                    "maximum_reliable_context",
-                    "retrieval_rate",
-                    "prompt_ts",
-                    "gen_ts",
-                    "elapsed_seconds",
-                    "task_pass_rate",
-                }
-                if not required_metrics.issubset(result):
-                    diagnostic = result.get("boundary_diagnostic", {})
-                    reason = diagnostic.get("cause_status", result.get("status", "not_run"))
-                    values = [reason] + ["not_run"] * 6
-                else:
-                    allocatable = str(result["maximum_allocatable_context"])
-                    if result.get("allocatable_is_lower_bound"):
-                        allocatable = f">={allocatable}"
+                workload = result.get("workload", {})
+                if result.get("status") == "WORKLOAD_UNSUPPORTED":
+                    reason = workload.get("reduction_reason", "unsupported")
                     values = [
-                        allocatable,
-                        str(result["maximum_reliable_context"]),
-                        f"{result['retrieval_rate']:.0%}",
-                        f"{result['prompt_ts']:.1f}",
-                        f"{result['gen_ts']:.1f}",
-                        f"{result['elapsed_seconds']:.1f}s",
-                        f"{result['task_pass_rate']:.0%}",
-                    ]
+                        f"WORKLOAD_UNSUPPORTED ({reason})"
+                    ] + ["not_run"] * 6
+                else:
+                    required_metrics = {
+                        "maximum_allocatable_context",
+                        "maximum_reliable_context",
+                        "retrieval_rate",
+                        "prompt_ts",
+                        "gen_ts",
+                        "elapsed_seconds",
+                    }
+                    if not required_metrics.issubset(result):
+                        diagnostic = result.get("boundary_diagnostic", {})
+                        reason = diagnostic.get("cause_status", result.get("status", "not_run"))
+                        values = [reason] + ["not_run"] * 6
+                    else:
+                        allocatable = str(result["maximum_allocatable_context"])
+                        if result.get("allocatable_is_lower_bound"):
+                            allocatable = f">={allocatable}"
+                        if workload.get("non_comparable"):
+                            allocatable = f"{allocatable} (reduced workload)"
+                        task_pass_rate = result.get("task_pass_rate")
+                        values = [
+                            allocatable,
+                            str(result["maximum_reliable_context"]),
+                            f"{result['retrieval_rate']:.0%}",
+                            f"{result['prompt_ts']:.1f}",
+                            f"{result['gen_ts']:.1f}",
+                            f"{result['elapsed_seconds']:.1f}s",
+                            f"{task_pass_rate:.0%}" if task_pass_rate is not None else "not_run",
+                        ]
             elif result["stage"] == "performance":
                 values = [
                     "not_run",
@@ -966,7 +1102,7 @@ def main() -> None:
                 parser.error("--warmups cannot be negative")
             if args.performance_repetitions < 1:
                 parser.error("--performance-repetitions must be at least 1")
-            if args.prompt_tokens + args.max_tokens > args.context_size:
+            if selected_mode == "performance" and args.prompt_tokens + args.max_tokens > args.context_size:
                 parser.error("prompt and output tokens must fit inside context")
         if selected_mode in {"quality", "suite"}:
             if args.max_tasks < 1:
