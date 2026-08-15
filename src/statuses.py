@@ -3,6 +3,28 @@
 from __future__ import annotations
 
 
+PREFLIGHT_CAUSE_STATUSES = {
+    "OOM": "PREFLIGHT_OOM",
+    "REMOTE_TIMEOUT": "PREFLIGHT_TIMEOUT",
+    "SSH_TIMEOUT": "PREFLIGHT_SSH_TIMEOUT",
+    "UNSUPPORTED_BACKEND": "PREFLIGHT_UNSUPPORTED_BACKEND",
+    "EXECUTION_ERROR": "PREFLIGHT_EXECUTION_ERROR",
+    "MODEL_LOAD_ERROR": "PREFLIGHT_MODEL_LOAD_ERROR",
+    "SSH_ERROR": "PREFLIGHT_SSH_ERROR",
+    "CONTEXT_OVERFLOW": "PREFLIGHT_EXECUTION_ERROR",
+}
+
+
+def preflight_cause(probe: dict) -> str:
+    """Map a load-probe result to a stable preflight cause status."""
+    raw_status = str(probe.get("status", "EXECUTION_ERROR"))
+    if raw_status in PREFLIGHT_CAUSE_STATUSES:
+        return PREFLIGHT_CAUSE_STATUSES[raw_status]
+    if raw_status.startswith("PREFLIGHT_"):
+        return raw_status
+    return "PREFLIGHT_EXECUTION_ERROR"
+
+
 BOUNDARY_CAUSE_STATUSES = {
     "OOM": "BOUNDARY_OOM",
     "CONTEXT_OVERFLOW": "BOUNDARY_CONTEXT_OVERFLOW",

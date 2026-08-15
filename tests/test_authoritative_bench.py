@@ -127,6 +127,14 @@ def test_execute_suite_combines_all_stage_results():
         "task_pass_rate": 0.50,
         "elapsed_seconds": 4.0,
     }
+    preflight_ok = {
+        "stage": "load_probe",
+        "status": "SUCCESS",
+        "load_ok": True,
+        "elapsed_seconds": 0.5,
+        "return_code": 0,
+        "command_args": ["llama-cli"],
+    }
 
     def result_plan(stage_result):
         child = build_plan(
@@ -136,7 +144,9 @@ def test_execute_suite_combines_all_stage_results():
         child["models"][0]["configurations"][0]["result"] = stage_result
         return child
 
-    with patch("authoritative_bench.execute_boundary", return_value=result_plan(boundary)), patch(
+    with patch("authoritative_bench.run_load_probe", return_value=preflight_ok), patch(
+        "authoritative_bench.execute_boundary", return_value=result_plan(boundary)
+    ), patch(
         "authoritative_bench.execute_retrieval", return_value=result_plan(retrieval)
     ), patch(
         "authoritative_bench.execute_performance", return_value=result_plan(performance)
@@ -166,8 +176,49 @@ def test_execute_suite_combines_all_stage_results():
     assert result["prompt_ts"] == 12.0
     assert result["task_pass_rate"] == 0.50
     assert result["elapsed_seconds"] == 10.0
+    assert "preflight" in result["stages"]
+    assert result["stages"]["preflight"]["load_ok"] is True
     assert executed["execution_status"] == "completed_suite"
     assert executed["authoritative"] is False
+
+
+def test_execute_suite_preflight_failure_skips_later_stages_and_sanitizes_result():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "suite",
+    )
+    plan["models"][0]["configurations"] = [
+        {"device": "Vulkan1", "tensor_split": None, "mode": "full"}
+    ]
+    preflight = {
+        "stage": "load_probe",
+        "status": "OOM",
+        "load_ok": False,
+        "elapsed_seconds": 1.0,
+        "return_code": 1,
+        "command_args": ["llama-cli", "-dev", "Vulkan1"],
+        "stdout": "SECRET_RAW_OUTPUT",
+        "stderr": "out of device memory",
+    }
+    with patch("authoritative_bench.run_load_probe", return_value=preflight), patch(
+        "authoritative_bench.execute_boundary"
+    ) as boundary, patch("authoritative_bench.execute_retrieval") as retrieval, patch(
+        "authoritative_bench.execute_performance"
+    ) as performance, patch("authoritative_bench.execute_quality") as quality:
+        executed = execute_suite(
+            plan, 5, [512], 256, 1, 0.8, 512, 240, 32, 0, 1, "/dataset", 1
+        )
+
+    result = executed["models"][0]["configurations"][0]["result"]
+    assert result["status"] == "PREFLIGHT_OOM"
+    assert result["source_status"] == "OOM"
+    assert result["stages"]["preflight"]["status"] == "OOM"
+    assert "SECRET_RAW_OUTPUT" not in str(result)
+    assert "out of device memory" not in str(result)
+    boundary.assert_not_called()
+    retrieval.assert_not_called()
+    performance.assert_not_called()
+    quality.assert_not_called()
 
 
 def test_execute_suite_preserves_boundary_timeout_cause():
@@ -197,8 +248,18 @@ def test_execute_suite_preserves_boundary_timeout_cause():
             }
         ],
     }
+    preflight_ok = {
+        "stage": "load_probe",
+        "status": "SUCCESS",
+        "load_ok": True,
+        "elapsed_seconds": 0.5,
+        "return_code": 0,
+        "command_args": ["llama-cli"],
+    }
 
-    with patch("authoritative_bench.execute_boundary", return_value=boundary):
+    with patch("authoritative_bench.run_load_probe", return_value=preflight_ok), patch(
+        "authoritative_bench.execute_boundary", return_value=boundary
+    ):
         executed = execute_suite(
             plan,
             timeout=15,
@@ -239,7 +300,10 @@ def test_execute_suite_stops_if_boundary_has_no_allocatable_context():
         "maximum_allocatable_context": 0,
         "first_failed_context": None,
     }
-    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+    with patch(
+        "authoritative_bench.run_load_probe",
+        return_value={"status": "SUCCESS", "load_ok": True},
+    ), patch("authoritative_bench.execute_boundary", return_value=child), patch(
         "authoritative_bench.execute_retrieval"
     ) as retrieval:
         executed = execute_suite(
@@ -309,7 +373,10 @@ def test_execute_suite_resolves_reduced_workload_instead_of_blocking():
         stage["models"][0]["configurations"][0]["result"] = results[name]
         return stage
 
-    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+    with patch(
+        "authoritative_bench.run_load_probe",
+        return_value={"status": "SUCCESS", "load_ok": True},
+    ), patch("authoritative_bench.execute_boundary", return_value=child), patch(
         "authoritative_bench.execute_retrieval", return_value=stage_result("retrieval")
     ), patch(
         "authoritative_bench.execute_performance", return_value=stage_result("performance")
@@ -342,7 +409,10 @@ def test_execute_suite_marks_unworkable_budget_distinctly():
         "status": "SUCCESS", "maximum_allocatable_context": 128,
         "first_failed_context": 256,
     }
-    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+    with patch(
+        "authoritative_bench.run_load_probe",
+        return_value={"status": "SUCCESS", "load_ok": True},
+    ), patch("authoritative_bench.execute_boundary", return_value=child), patch(
         "authoritative_bench.execute_retrieval"
     ) as retrieval:
         executed = execute_suite(plan, 5, [128], 128, 1, 0.8, 128, 512, 64, 0, 1, "/dataset", 1)
@@ -387,7 +457,10 @@ def test_execute_suite_does_not_block_reduced_workload():
     quality_result["models"][0]["configurations"][0]["result"] = {
         "status": "SUCCESS", "task_pass_rate": 1.0, "elapsed_seconds": 1.0
     }
-    with patch("authoritative_bench.execute_boundary", return_value=child), patch(
+    with patch(
+        "authoritative_bench.run_load_probe",
+        return_value={"status": "SUCCESS", "load_ok": True},
+    ), patch("authoritative_bench.execute_boundary", return_value=child), patch(
         "authoritative_bench.execute_retrieval", return_value=retrieval_result
     ), patch("authoritative_bench.execute_performance", return_value=performance_result), patch(
         "authoritative_bench.execute_quality", return_value=quality_result
@@ -399,6 +472,31 @@ def test_execute_suite_does_not_block_reduced_workload():
     result = executed["models"][0]["configurations"][0]["result"]
     assert result["status"] == "SUCCESS"
     assert result["workload"]["non_comparable"] is True
+
+
+def test_execute_suite_preflight_preserves_timeout_and_backend_statuses():
+    for status, expected in (
+        ("SSH_TIMEOUT", "PREFLIGHT_SSH_TIMEOUT"),
+        ("REMOTE_TIMEOUT", "PREFLIGHT_TIMEOUT"),
+        ("UNSUPPORTED_BACKEND", "PREFLIGHT_UNSUPPORTED_BACKEND"),
+    ):
+        plan = build_plan(
+            [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+            "suite",
+        )
+        plan["models"][0]["configurations"] = [
+            {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "mode": "full"}
+        ]
+        with patch(
+            "authoritative_bench.run_load_probe",
+            return_value={"status": status, "load_ok": False},
+        ), patch("authoritative_bench.execute_boundary") as boundary:
+            executed = execute_suite(
+                plan, 5, [512], 256, 1, 0.8, 512, 240, 32, 0, 1, "/dataset", 1
+            )
+        result = executed["models"][0]["configurations"][0]["result"]
+        assert result["status"] == expected
+        boundary.assert_not_called()
 
 
 def test_execute_performance_discards_warmup_and_averages_measured_runs():

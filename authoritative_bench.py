@@ -13,7 +13,7 @@ from run_bench import load_dataset
 from src.judge import Judge
 from src.remote import SSH_TARGET, run_host_command
 from src.runner import Runner
-from src.statuses import boundary_summary
+from src.statuses import boundary_summary, preflight_cause
 
 MODEL_DIR = "/home/opencode/llama.cpp/models"
 GPU_MEMORY_BYTES = 2 * 1024**3
@@ -273,6 +273,34 @@ def execute_suite(
         ]
         return child
 
+    raw_preflight = run_load_probe(model, config_template, timeout)
+    preflight = {
+        key: raw_preflight.get(key)
+        for key in (
+            "stage",
+            "status",
+            "load_ok",
+            "elapsed_seconds",
+            "return_code",
+            "command_args",
+        )
+    }
+    if not preflight["load_ok"]:
+        cause = preflight_cause(preflight)
+        config_template["result"] = {
+            "stage": "suite",
+            "status": cause,
+            "source_status": preflight["status"],
+            "cause_status": cause,
+            "error": f"preflight load probe failed: {preflight['status']}",
+            "stages": {"preflight": preflight},
+            "workload": None,
+        }
+        plan["execution_status"] = "completed_suite"
+        plan["authoritative"] = False
+        plan["completed_at"] = datetime.now(timezone.utc).isoformat()
+        return plan
+
     boundary = execute_boundary(
         stage_plan("boundary"), timeout, context_sizes, boundary_step
     )["models"][0]["configurations"][0]["result"]
@@ -293,14 +321,14 @@ def execute_suite(
             "source_status": diagnostic["source_status"],
             "boundary_diagnostic": diagnostic,
             "workload": budget,
-            "stages": {"boundary": boundary},
+            "stages": {"boundary": boundary, "preflight": preflight},
         }
     elif budget["status"] != "SUPPORTED":
         config_template["result"] = {
             "stage": "suite",
             "status": "WORKLOAD_UNSUPPORTED",
             "workload": budget,
-            "stages": {"boundary": boundary},
+            "stages": {"boundary": boundary, "preflight": preflight},
         }
     else:
         retrieval = execute_retrieval(
@@ -360,6 +388,7 @@ def execute_suite(
             "task_pass_rate": quality["task_pass_rate"],
             "workload": budget,
             "stages": {
+                "preflight": preflight,
                 "boundary": boundary,
                 "retrieval": retrieval,
                 "performance": performance,
@@ -913,6 +942,9 @@ def render_matrix(plan: dict, manifest_name: str) -> str:
                     values = [
                         f"WORKLOAD_UNSUPPORTED ({reason})"
                     ] + ["not_run"] * 6
+                elif result.get("cause_status", "").startswith("PREFLIGHT_"):
+                    reason = result["cause_status"]
+                    values = [reason] + ["not_run"] * 6
                 else:
                     required_metrics = {
                         "maximum_allocatable_context",
