@@ -23,6 +23,9 @@ hosts provide hardware-dependent execution only.
 5. Treat generated benchmark artifacts as remote execution output. Copy them
    back with `--sync-results`; review and publish only intentionally selected,
    sanitized reports.
+6. Preview bounded hardware experiments with `--dry-run`. Verify exact model
+   basenames, size classes, configurations, and expected job count before any
+   inference. Never substitute a full inventory for an issue-scoped matrix.
 
 ## Safety rules
 
@@ -33,6 +36,13 @@ hosts provide hardware-dependent execution only.
   resets, or shell-string command interpolation in deployment automation.
 - Keep GGUF weights, credentials, raw logs, manifests, and generated run output
   out of Git unless explicitly sanitized and approved.
+- Sanitize synchronized artifacts before serialization, not only while rendering
+  reports. Persist no raw prompts, responses, stdout/stderr, raw output, private
+  remote targets, absolute model paths, or unsanitized exception/command text.
+- Stop before inference when a bounded plan has unexpected models, size classes,
+  configurations, or job counts. Stop the entire run on privacy, checkout,
+  connectivity, or artifact-write failures; independent hardware outcomes such
+  as OOM or unsupported backend may be recorded and continued.
 - Use SSH key authentication in batch mode; do not embed passwords or private
   keys in scripts.
 

@@ -47,6 +47,37 @@ python scripts/run_remote.py --sync-results -- \
   python authoritative_bench.py --smoke
 ```
 
+### Bounded Vulkan tensor validation
+
+Use exactly one explicitly named small GGUF (`<= 1.9 GB`) and one explicitly
+named large GGUF (`> 1.9 GB`). The dedicated mode plans six serial jobs and
+never runs the full inventory suite.
+
+```bash
+# Required preview: zero inference and zero job manifests
+python scripts/run_remote.py -- \
+  python inventory_bench.py --tensor-validation \
+    --models "<SMALL_GGUF>,<LARGE_GGUF>" \
+    --dry-run --expected-jobs 6 \
+    --output-dir results/issue-5-tensor-validation
+
+# Execute only after the preview shows two models and exactly six jobs
+python scripts/run_remote.py --sync-results -- \
+  python inventory_bench.py --tensor-validation \
+    --models "<SMALL_GGUF>,<LARGE_GGUF>" \
+    --expected-jobs 6 --context-size 512 --prompt-tokens 128 \
+    --max-tokens 16 --warmups 1 --performance-repetitions 1 \
+    --timeout 180 --overall-timeout 1800 \
+    --output-dir results/issue-5-tensor-validation
+```
+
+The preview must report one model in each size class and six jobs. Stop before
+inference if the counts or classes differ. Persisted artifacts are sanitized
+before writing: raw prompts, responses, stdout/stderr, private model paths,
+remote targets, and detailed exception payloads are excluded or reduced to
+safe metadata. Do not execute or sync results unless local tests, the remote
+test gate, and deployment-only gate all succeed.
+
 Runner options must appear before `--`; the command and its arguments appear
 after `--`. The runner deliberately refuses dirty local and remote checkouts
 and never creates commits automatically.
