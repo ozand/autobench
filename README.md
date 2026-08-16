@@ -13,6 +13,7 @@ hardware-dependent runs execute on a dedicated remote host.
 - `src/runner.py` — `llama-cli` execution and failure classification.
 - `src/judge.py` — deterministic and model-assisted quality evaluation.
 - `scripts/run_remote.py` — safe Git/SSH deployment and remote execution.
+- `inventory_report.py` — report-only diagnostic and comparable views from inventory manifests.
 
 ## Local setup
 
@@ -70,6 +71,16 @@ On POSIX shells use `export` instead of `set`.
 Generated manifests, inventory state, run JSON, and comparison reports are
 ignored by default. Use `--sync-results` to copy them into local `results/`,
 then deliberately select sanitized, authoritative reports for publication.
+
+To build a report without rerunning inference:
+
+```bash
+python inventory_report.py --input results/inventory --output results/inventory/report.md
+```
+
+The report keeps load/preflight diagnostics, capacity diagnostics, comparable
+performance/quality metrics, and stage coverage in separate tables. It is
+never a replacement for the authoritative final matrix.
 
 ## License
 
