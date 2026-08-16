@@ -128,6 +128,14 @@ Exiting...
     assert "needle" not in result["response"]
 
 
+def test_tensor_split_serializes_explicit_split_mode():
+    with patch("runner.subprocess.run", return_value=completed(1, stderr="unsupported")) as mocked_run:
+        Runner.run_local_vulkan("test prompt", device="Vulkan0,Vulkan1", ts_split="1,1", split_mode="tensor", timeout=1)
+    command = mocked_run.call_args.args[0][-1]
+    assert "-sm tensor" in command
+    assert "-ts 1,1" in command
+
+
 def test_success_includes_stable_status_and_diagnostics():
     stdout = """\
 > test prompt

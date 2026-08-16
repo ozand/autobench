@@ -204,6 +204,7 @@ def run_context_test(
     device: str,
     ts_split: str,
     needle_val: str = "K7000-KEY-8842",
+    split_mode: str | None = None,
     timeout: int = 180,
     utilization: float = 0.90,
     max_tokens: int = 128,
@@ -232,6 +233,7 @@ def run_context_test(
         timeout=timeout,
         context_length=context_size,
         ts_split=ts_split,
+        split_mode=split_mode,
     )
 
     if not res.get("success"):
@@ -360,12 +362,12 @@ def main():
 
     # Default model targets from evaluated models
     target_models = [
-        {"name": "Qwen-3.5-0.8B", "path": "/home/opencode/llama.cpp/models/Qwen3.5-0.8B-Q4_K_M.gguf", "configs": [("Vulkan0", None), ("Vulkan0,Vulkan1", "1,1")]},
-        {"name": "Qwen-2.5-Coder-1.5B", "path": "/home/opencode/llama.cpp/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf", "configs": [("Vulkan0", None), ("Vulkan0,Vulkan1", "1,1"), ("Vulkan0,Vulkan1", "2,1")]},
-        {"name": "SmolLM2-1.7B", "path": "/home/opencode/llama.cpp/models/smollm2-1.7b-instruct-q4_k_m.gguf", "configs": [("Vulkan0", None), ("Vulkan0,Vulkan1", "1,1")]},
-        {"name": "Gemma-4-E2B", "path": "/home/opencode/llama.cpp/models/gemma-4-E2B-it-Q4_K_M.gguf", "configs": [("Vulkan0", None), ("Vulkan0,Vulkan1", "1,1")]},
-        {"name": "Llama-3.2-3B", "path": "/home/opencode/llama.cpp/models/llama-3.2-3b-instruct-q4_k_m.gguf", "configs": [("Vulkan0,Vulkan1", "1,1")]},
-        {"name": "Nemotron-3-Nano-4B", "path": "/home/opencode/llama.cpp/models/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf", "configs": [("Vulkan0,Vulkan1", "1,1")]},
+        {"name": "Qwen-3.5-0.8B", "path": "/home/opencode/llama.cpp/models/Qwen3.5-0.8B-Q4_K_M.gguf", "configs": [("Vulkan0", None, None), ("Vulkan0,Vulkan1", "1,1", "tensor")]},
+        {"name": "Qwen-2.5-Coder-1.5B", "path": "/home/opencode/llama.cpp/models/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf", "configs": [("Vulkan0", None, None), ("Vulkan0,Vulkan1", "1,1", "tensor"), ("Vulkan0,Vulkan1", "2,1", "tensor")]},
+        {"name": "SmolLM2-1.7B", "path": "/home/opencode/llama.cpp/models/smollm2-1.7b-instruct-q4_k_m.gguf", "configs": [("Vulkan0", None, None), ("Vulkan0,Vulkan1", "1,1", "tensor")]},
+        {"name": "Gemma-4-E2B", "path": "/home/opencode/llama.cpp/models/gemma-4-E2B-it-Q4_K_M.gguf", "configs": [("Vulkan0", None, None), ("Vulkan0,Vulkan1", "1,1", "tensor")]},
+        {"name": "Llama-3.2-3B", "path": "/home/opencode/llama.cpp/models/llama-3.2-3b-instruct-q4_k_m.gguf", "configs": [("Vulkan0,Vulkan1", "1,1", "tensor")]},
+        {"name": "Nemotron-3-Nano-4B", "path": "/home/opencode/llama.cpp/models/NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf", "configs": [("Vulkan0,Vulkan1", "1,1", "tensor")]},
     ]
 
     context_sizes = [int(x.strip()) for x in args.context_sizes.split(",")]
@@ -383,8 +385,8 @@ def main():
         print(f"\n>>> Evaluating Model: {m_name}")
         all_results[m_name] = []
 
-        for device, ts_split in m["configs"]:
-            config_label = f"{device} (ts={ts_split or 'N/A'})"
+        for device, ts_split, split_mode in m["configs"]:
+            config_label = f"{device} (mode={split_mode or 'layer'}, ts={ts_split or 'N/A'})"
             print(f"  --> Configuration Strategy: {config_label}")
 
             for ctx in context_sizes:
@@ -400,6 +402,7 @@ def main():
                         context_size=ctx,
                         device=device,
                         ts_split=ts_split,
+                        split_mode=split_mode,
                         timeout=180,
                         utilization=args.utilization,
                         max_tokens=args.max_tokens,

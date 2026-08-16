@@ -18,6 +18,8 @@ from src.statuses import boundary_summary, preflight_cause
 MODEL_DIR = "/home/opencode/llama.cpp/models"
 GPU_MEMORY_BYTES = 2 * 1024**3
 SINGLE_GPU_FIT_BYTES = 1_900_000_000
+DEFAULT_TENSOR_SPLIT = "1,1"
+DEFAULT_TENSOR_SPLIT_MODE = "tensor"
 FULL_POLICY = {
     "coarse_contexts": [512, 1024, 2048, 4096, 8192],
     "boundary_step": 256,
@@ -156,18 +158,80 @@ def discover_remote_models(timeout: int = 30) -> list[dict]:
     return models
 
 
-def configurations_for_model(size_bytes: int) -> list[dict]:
-    """Plan asymmetry checks for fitting models and load-only checks otherwise."""
-    if size_bytes <= SINGLE_GPU_FIT_BYTES:
-        return [
-            {"device": "Vulkan0", "tensor_split": None, "mode": "full"},
-            {"device": "Vulkan1", "tensor_split": None, "mode": "full"},
-        ]
-    return [
-        {"device": "Vulkan0", "tensor_split": None, "mode": "load_only"},
-        {"device": "Vulkan1", "tensor_split": None, "mode": "load_only"},
-        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "mode": "full"},
+def configurations_for_model(
+    size_bytes: int,
+    include_tensor: bool = False,
+) -> list[dict]:
+    """Plan the legacy matrix, optionally adding the tensor candidate."""
+    single_mode = "full" if size_bytes <= SINGLE_GPU_FIT_BYTES else "load_only"
+    configurations = [
+        {"device": "Vulkan0", "tensor_split": None, "mode": single_mode},
+        {"device": "Vulkan1", "tensor_split": None, "mode": single_mode},
     ]
+    if size_bytes > SINGLE_GPU_FIT_BYTES:
+        configurations.append(
+            {"device": "Vulkan0,Vulkan1", "tensor_split": DEFAULT_TENSOR_SPLIT, "mode": "full"}
+        )
+    if include_tensor:
+        configurations.append(
+            {
+                "device": "Vulkan0,Vulkan1",
+                "tensor_split": DEFAULT_TENSOR_SPLIT,
+                "split_mode": DEFAULT_TENSOR_SPLIT_MODE,
+                "mode": "full",
+                "capability_probe": "pending",
+                "selection_priority": "dual_tensor",
+            }
+        )
+    return configurations
+
+
+def select_working_configuration(configurations: list[dict]) -> dict:
+    """Select a deterministic working configuration and explain the choice."""
+    candidates = []
+    for index, config in enumerate(configurations):
+        result = config.get("result") or {}
+        workload = result.get("workload") or {}
+        if (
+            config.get("mode") != "full"
+            or result.get("status") != "SUCCESS"
+            or workload.get("non_comparable")
+        ):
+            continue
+        candidates.append(
+            (
+                -int(result.get("maximum_reliable_context", 0)),
+                -int(result.get("maximum_allocatable_context", 0)),
+                -float(result.get("gen_ts", 0.0)),
+                -float(result.get("prompt_ts", 0.0)),
+                index,
+                config,
+            )
+        )
+    if not candidates:
+        return {
+            "selected": None,
+            "rationale": "no comparable successful configuration",
+            "candidate_count": 0,
+        }
+    candidates.sort(key=lambda item: item[:-1])
+    selected = candidates[0][-1]
+    result = selected.get("result") or {}
+    return {
+        "selected": {
+            "device": selected.get("device"),
+            "tensor_split": selected.get("tensor_split"),
+            "split_mode": selected.get("split_mode"),
+            "mode": selected.get("mode"),
+        },
+        "rationale": (
+            "maximized reliable context, then allocatable context, then "
+            "generation and prompt throughput; preserved plan order for ties"
+        ),
+        "candidate_count": len(candidates),
+        "maximum_reliable_context": result.get("maximum_reliable_context"),
+        "maximum_allocatable_context": result.get("maximum_allocatable_context"),
+    }
 
 
 def fine_boundary_contexts(last_pass: int, first_failure: int, step: int = 256) -> list[int]:
@@ -199,7 +263,12 @@ def build_plan(models: list[dict], mode: str) -> dict:
         "single_gpu_fit_threshold_bytes": SINGLE_GPU_FIT_BYTES,
         "policy": policy,
         "models": [
-            {**model, "configurations": configurations_for_model(model["size_bytes"])}
+            {
+                **model,
+                "configurations": configurations_for_model(
+                    model["size_bytes"], include_tensor=mode == "matrix"
+                ),
+            }
             for model in models
         ],
     }
@@ -222,9 +291,11 @@ def run_load_probe(model: dict, config: dict, timeout: int) -> dict:
         timeout=timeout,
         context_length=128,
         ts_split=config["tensor_split"],
+        split_mode=config.get("split_mode"),
     )
     return {
         "stage": "load_probe",
+        "probe_type": "tensor_split_capability" if config.get("split_mode") == "tensor" else "model_load",
         "status": result.get("status", "EXECUTION_ERROR"),
         "load_ok": bool(result.get("success")),
         "elapsed_seconds": result.get("elapsed_seconds", 0.0),
@@ -268,6 +339,7 @@ def execute_suite(
             {
                 "device": config_template["device"],
                 "tensor_split": config_template["tensor_split"],
+                "split_mode": config_template.get("split_mode"),
                 "mode": "full",
             }
         ]
@@ -278,6 +350,7 @@ def execute_suite(
         key: raw_preflight.get(key)
         for key in (
             "stage",
+            "probe_type",
             "status",
             "load_ok",
             "elapsed_seconds",
@@ -468,6 +541,7 @@ def execute_performance(
             timeout=timeout,
             context_length=context_size,
             ts_split=config["tensor_split"],
+            split_mode=config.get("split_mode"),
         )
         runs.append(
             {
@@ -566,6 +640,7 @@ def execute_quality(
             timeout=timeout,
             context_length=context_size,
             ts_split=config["tensor_split"],
+            split_mode=config.get("split_mode"),
         )
         result = {
             "task_id": task.get("id"),
@@ -652,6 +727,7 @@ def execute_boundary(
                 context_size=context_size,
                 device=config["device"],
                 ts_split=config["tensor_split"],
+                split_mode=config.get("split_mode"),
                 needle_val=f"BOUNDARY-{model['id']}-{context_size}-8842",
                 timeout=timeout,
                 utilization=0.50,
@@ -770,6 +846,7 @@ def execute_retrieval(
                     context_size=context_size,
                     device=config["device"],
                     ts_split=config["tensor_split"],
+                    split_mode=config.get("split_mode"),
                     needle_val=(
                         f"RETRIEVAL-{model['id']}-{position:.2f}-{repeat}-8842"
                     ),
@@ -845,7 +922,18 @@ def execute_smoke(plan: dict, timeout: int = 180) -> dict:
 
     for model in plan["models"]:
         for config in model["configurations"]:
-            if config["mode"] == "load_only":
+            if config["mode"] in {"load_only", "unsupported"}:
+                if config["mode"] == "unsupported":
+                    config["result"] = {
+                        "stage": "load_probe",
+                        "probe_type": "tensor_split_capability",
+                        "status": config.get("capability_status", "UNSUPPORTED_BACKEND"),
+                        "load_ok": False,
+                        "elapsed_seconds": 0.0,
+                        "return_code": None,
+                        "command_args": [],
+                    }
+                    continue
                 result = run_load_probe(model, config, timeout)
             else:
                 try:
@@ -855,6 +943,7 @@ def execute_smoke(plan: dict, timeout: int = 180) -> dict:
                         context_size=512,
                         device=config["device"],
                         ts_split=config["tensor_split"],
+                        split_mode=config.get("split_mode"),
                         needle_val=f"SMOKE-{model['id']}-{config['device']}-8842",
                         timeout=timeout,
                         utilization=0.50,

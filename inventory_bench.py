@@ -12,25 +12,27 @@ from authoritative_bench import (
     discover_remote_models,
     execute_suite,
     run_load_probe,
+    select_working_configuration,
 )
 
 
 def job_id(model: dict, config: dict) -> str:
     """Return a stable filesystem-safe identifier for one model/configuration."""
-    raw = "_".join(
-        [
-            model["id"],
-            config["device"],
-            config.get("tensor_split") or "none",
-            config["mode"],
-        ]
-    )
+    parts = [
+        model["id"],
+        config["device"],
+        config.get("tensor_split") or "none",
+        config["mode"],
+    ]
+    if config.get("split_mode"):
+        parts.append(config["split_mode"])
+    raw = "_".join(parts)
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", raw)
 
 
-def build_jobs(models: list[dict]) -> list[dict]:
+def build_jobs(models: list[dict], include_tensor: bool = False) -> list[dict]:
     """Expand the inventory plan into deterministic execution jobs."""
-    plan = build_plan(models, "inventory")
+    plan = build_plan(models, "matrix" if include_tensor else "inventory")
     jobs = []
     for model in plan["models"]:
         for config in model["configurations"]:
@@ -84,11 +86,23 @@ def completed_job(path: Path, fingerprint: dict | None = None) -> bool:
 
 
 def execute_job(job: dict, args: argparse.Namespace) -> dict:
-    """Execute a load-only probe or the existing end-to-end suite."""
+    """Execute one configuration with its own bounded preflight."""
     model = job["model"]
     config = job["config"]
-    if config["mode"] == "load_only":
-        result = run_load_probe(model, config, args.timeout)
+    if config["mode"] in {"load_only", "unsupported"}:
+        result = (
+            {
+                "stage": "load_probe",
+                "probe_type": "tensor_split_capability",
+                "status": config.get("capability_status", "UNSUPPORTED_BACKEND"),
+                "load_ok": False,
+                "elapsed_seconds": 0.0,
+                "return_code": None,
+                "command_args": [],
+            }
+            if config["mode"] == "unsupported"
+            else run_load_probe(model, config, args.timeout)
+        )
         return {
             "schema_version": 1,
             "policy_fingerprint": policy_fingerprint(args),
@@ -150,10 +164,36 @@ def inventory_status(
     return status
 
 
+def select_contiguous_jobs(jobs: list[dict], max_jobs: int = 0) -> list[dict]:
+    """Select whole per-model batches without interleaving or splitting models."""
+    if not max_jobs:
+        return list(jobs)
+
+    selected: list[dict] = []
+    batch: list[dict] = []
+    current_model = None
+    for job in jobs:
+        model = job.get("model", {})
+        model_id = model.get("id") or model.get("name") or job["id"]
+        if batch and model_id != current_model:
+            if selected and len(selected) + len(batch) > max_jobs:
+                break
+            selected.extend(batch)
+            batch = []
+        current_model = model_id
+        batch.append(job)
+    if batch and (not selected or len(selected) + len(batch) <= max_jobs):
+        selected.extend(batch)
+    elif batch and not selected:
+        # A model is the scheduling atom; do not split its configurations.
+        selected.extend(batch)
+    return selected
+
+
 def run_inventory(
     jobs: list[dict], output_dir: Path, args: argparse.Namespace
 ) -> dict:
-    """Run pending jobs in order and persist each result immediately."""
+    """Run pending jobs in model-contiguous batches and persist each result."""
     output_dir.mkdir(parents=True, exist_ok=True)
     fingerprint = policy_fingerprint(args)
     summary = {"completed": [], "skipped": [], "failed": [], "pending": []}
@@ -165,8 +205,9 @@ def run_inventory(
         else:
             runnable.append(job)
 
-    selected = runnable[: args.max_jobs] if args.max_jobs else runnable
-    summary["pending"] = [job["id"] for job in runnable[len(selected) :]]
+    selected = select_contiguous_jobs(runnable, args.max_jobs)
+    selected_ids = {job["id"] for job in selected}
+    summary["pending"] = [job["id"] for job in runnable if job["id"] not in selected_ids]
     if args.dry_run:
         summary["pending"] = [job["id"] for job in runnable]
         return summary
@@ -236,7 +277,7 @@ def main() -> None:
         if missing:
             parser.error(f"models not found: {', '.join(sorted(missing))}")
 
-    jobs = build_jobs(models)
+    jobs = build_jobs(models, include_tensor=True)
     if args.status:
         summary = inventory_status(
             jobs, Path(args.output_dir), policy_fingerprint(args)
@@ -244,6 +285,30 @@ def main() -> None:
         summary["skipped"] = []
     else:
         summary = run_inventory(jobs, Path(args.output_dir), args)
+    if not args.status:
+        selections = {}
+        for model in models:
+            model_jobs = [job for job in jobs if job["model"]["id"] == model["id"]]
+            configs = []
+            for job in model_jobs:
+                path = Path(args.output_dir) / f"{job['id']}.json"
+                if not path.exists():
+                    continue
+                try:
+                    data = json.loads(path.read_text())
+                except (OSError, json.JSONDecodeError):
+                    continue
+                config = dict(job["config"])
+                if data.get("execution_status") == "completed_suite":
+                    model_rows = data.get("models") or []
+                    config_rows = model_rows[0].get("configurations", []) if model_rows else []
+                    config["result"] = config_rows[0].get("result", {}) if config_rows else {}
+                else:
+                    config["result"] = data.get("result", {})
+                configs.append(config)
+            selections[model["id"]] = select_working_configuration(configs)
+        summary["selections"] = selections
+
     summary_name = "status.json" if args.status else "summary.json"
     summary_path = Path(args.output_dir) / summary_name
     summary_path.parent.mkdir(parents=True, exist_ok=True)

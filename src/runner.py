@@ -58,6 +58,7 @@ class Runner:
         timeout: int = 60,
         context_length: int = 1024,
         ts_split: str = None,
+        split_mode: str = None,
     ) -> dict:
         """
         Executes llama-cli on k7000 via SSH and parses results.
@@ -70,10 +71,11 @@ class Runner:
             ts_flag = "-ts 1,1 "
         else:
             ts_flag = ""
+        split_mode_flag = f"-sm {split_mode} " if split_mode else ""
         cmd = (
             f"timeout {timeout}s /home/opencode/llama.cpp/build/bin/llama-cli "
             f"-m '{model_path}' "
-            f"-ngl 99 -dev {device} {ts_flag}-c {context_length} -p '{escaped_prompt}' "
+            f"-ngl 99 -dev {device} {split_mode_flag}{ts_flag}-c {context_length} -p '{escaped_prompt}' "
             f"-n {max_tokens} -st -no-cnv --no-display-prompt --simple-io < /dev/null"
         )
 

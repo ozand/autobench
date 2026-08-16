@@ -8,12 +8,14 @@ from unittest.mock import patch
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from inventory_bench import (
+    execute_job,
     build_jobs,
     completed_job,
     inventory_status,
     job_id,
     policy_fingerprint,
     run_inventory,
+    select_contiguous_jobs,
 )
 
 
@@ -45,16 +47,47 @@ def test_build_jobs_expands_every_applicable_configuration():
         {"id": "large", "name": "large.gguf", "path": "/large", "size_bytes": 3_000_000_000},
     ]
 
-    jobs = build_jobs(models)
+    legacy_jobs = build_jobs(models)
+    assert len(legacy_jobs) == 5
 
-    assert len(jobs) == 5
+    jobs = build_jobs(models, include_tensor=True)
+
+    assert len(jobs) == 7
     assert [job["config"]["device"] for job in jobs[:2]] == ["Vulkan0", "Vulkan1"]
-    assert [job["config"]["mode"] for job in jobs[2:]] == [
-        "load_only",
-        "load_only",
-        "full",
+    assert [job["config"]["mode"] for job in jobs[2:4]] == ["full", "load_only"]
+    assert [job["config"].get("split_mode") for job in jobs] == [None, None, "tensor", None, None, None, "tensor"]
+    assert len({job["id"] for job in jobs}) == 7
+
+
+def test_execute_job_preserves_tensor_probe_configuration(tmp_path: Path):
+    model = {"id": "large", "name": "large.gguf", "path": "/large", "size_bytes": 3_000_000_000}
+    config = {
+        "device": "Vulkan0,Vulkan1",
+        "tensor_split": "1,1",
+        "split_mode": "tensor",
+        "mode": "full",
+    }
+    job = {"id": "large_dual_tensor", "model": model, "config": config}
+    with patch(
+        "inventory_bench.execute_suite",
+        return_value={"execution_status": "completed_suite"},
+    ) as execute:
+        # The suite receives the exact tensor configuration; no implicit layer mode is substituted.
+        result = execute_job(job, args())
+    plan = execute.call_args.args[0]
+    assert plan["models"][0]["configurations"][0]["split_mode"] == "tensor"
+    assert plan["models"][0]["configurations"][0]["tensor_split"] == "1,1"
+    assert result["execution_status"] == "completed_suite"
+
+
+def test_select_contiguous_jobs_keeps_model_configurations_together():
+    jobs = [
+        {"id": "a0", "model": {"id": "a"}, "config": {}},
+        {"id": "a1", "model": {"id": "a"}, "config": {}},
+        {"id": "b0", "model": {"id": "b"}, "config": {}},
     ]
-    assert len({job["id"] for job in jobs}) == 5
+    assert [job["id"] for job in select_contiguous_jobs(jobs, max_jobs=1)] == ["a0", "a1"]
+    assert [job["id"] for job in select_contiguous_jobs(jobs, max_jobs=2)] == ["a0", "a1"]
 
 
 def test_job_id_is_stable_and_filesystem_safe():
@@ -75,9 +108,9 @@ def test_complete_inventory_has_expected_job_count_for_mixed_sizes():
         for index in range(10)
     ]
 
-    jobs = build_jobs(models)
+    jobs = build_jobs(models, include_tensor=True)
 
-    assert len(jobs) == 50
+    assert len(jobs) == 70
 
 
 def test_policy_fingerprint_captures_comparable_settings():

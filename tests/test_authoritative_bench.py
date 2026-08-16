@@ -20,6 +20,7 @@ from authoritative_bench import (
     fine_boundary_contexts,
     render_matrix,
     run_load_probe,
+    select_working_configuration,
     select_smoke_models,
     write_artifacts,
 )
@@ -90,6 +91,30 @@ def test_smoke_is_bounded_and_never_authoritative():
     assert plan["authoritative"] is False
     assert plan["policy"]["coarse_contexts"] == [512]
     assert plan["policy"]["retrieval_repetitions"] == 1
+
+
+def test_tensor_candidate_uses_explicit_mode_and_split():
+    from authoritative_bench import configurations_for_model
+
+    configs = configurations_for_model(3_000_000_000, include_tensor=True)
+    assert len(configs) == 4
+    assert configs[2]["device"] == "Vulkan0,Vulkan1"
+    assert configs[2].get("split_mode") is None
+    tensor = configs[-1]
+    assert tensor["device"] == "Vulkan0,Vulkan1"
+    assert tensor["tensor_split"] == "1,1"
+    assert tensor["split_mode"] == "tensor"
+    assert tensor["capability_probe"] == "pending"
+
+
+def test_selection_is_deterministic_and_prefers_reliable_context():
+    configs = [
+        {"device": "Vulkan0", "mode": "full", "result": {"status": "SUCCESS", "maximum_reliable_context": 1024, "maximum_allocatable_context": 1024, "prompt_ts": 20, "gen_ts": 10}},
+        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "tensor", "mode": "full", "result": {"status": "SUCCESS", "maximum_reliable_context": 2048, "maximum_allocatable_context": 2048, "prompt_ts": 10, "gen_ts": 8}},
+    ]
+    selection = select_working_configuration(configs)
+    assert selection["selected"]["device"] == "Vulkan0,Vulkan1"
+    assert "maximized reliable context" in selection["rationale"]
 
 
 def test_fine_boundary_contexts_add_non_power_of_two_steps():
