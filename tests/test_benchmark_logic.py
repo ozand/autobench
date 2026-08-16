@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 # Add AutoBench root and src folders to path
 base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -134,8 +135,9 @@ def test_build_run_manifest_uses_resolved_values():
     assert manifest["device"] == "Vulkan0,Vulkan1"
     assert manifest["context_length"] == 2048
     assert manifest["tensor_split"] == "1,1"
-    assert manifest["command_args"][0] == "timeout"
+    assert manifest["command_args"] == ["timeout", "180s", "llama-cli"]
     assert manifest["provenance"]["model_sha256"] == "abc123"
+    assert "TOP_SECRET_PROMPT" not in json.dumps(manifest)
 
 
 def test_strip_thinking():

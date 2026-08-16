@@ -1004,6 +1004,44 @@ def test_load_probe_uses_bounded_minimal_inference():
     assert runner.call_args.kwargs["timeout"] == 11
 
 
+def test_write_artifacts_sanitizes_nested_runtime_payloads(tmp_path: Path):
+    plan = {
+        "mode": "smoke",
+        "authoritative": False,
+        "policy": {"cache_mode": "f16"},
+        "models": [{
+            "id": "model",
+            "name": "model.gguf",
+            "path": "/models/model.gguf",
+            "size_bytes": 1,
+            "configurations": [{
+                "device": "Vulkan0",
+                "mode": "full",
+                "result": {
+                    "stage": "suite",
+                    "status": "PREFLIGHT_EXECUTION_ERROR",
+                    "error": "raw secret diagnostic",
+                    "stages": {
+                        "preflight": {
+                            "command_args": ["llama-cli", "-p", "SECRET_PROMPT"],
+                            "stdout": "RAW_STDOUT",
+                            "stderr": "RAW_STDERR",
+                            "response": "RAW_RESPONSE",
+                        }
+                    },
+                },
+            }],
+        }],
+    }
+    manifest, _ = write_artifacts(plan, tmp_path)
+    serialized = manifest.read_text()
+    assert "SECRET_PROMPT" not in serialized
+    assert "RAW_STDOUT" not in serialized
+    assert "RAW_STDERR" not in serialized
+    assert "RAW_RESPONSE" not in serialized
+    assert "raw secret diagnostic" not in serialized
+
+
 def test_renderer_has_required_columns_and_manifest_for_every_row(tmp_path: Path):
     plan = build_plan(
         [{"id": "model", "name": "model.gguf", "path": "/models/model.gguf", "size_bytes": 1}],

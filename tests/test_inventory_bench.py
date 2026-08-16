@@ -8,14 +8,18 @@ from unittest.mock import patch
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from inventory_bench import (
-    execute_job,
     build_jobs,
+    build_tensor_validation_jobs,
     completed_job,
+    execute_job,
+    execute_tensor_validation_job,
     inventory_status,
     job_id,
     policy_fingerprint,
     run_inventory,
+    run_tensor_validation,
     select_contiguous_jobs,
+    select_tensor_validation_models,
 )
 
 
@@ -36,9 +40,55 @@ def args(**overrides):
         "force": False,
         "max_jobs": 0,
         "dry_run": False,
+        "expected_jobs": 6,
+        "overall_timeout": 1800,
     }
     values.update(overrides)
     return argparse.Namespace(**values)
+
+
+def tensor_models():
+    return [
+        {"id": "small", "name": "small.gguf", "path": "/small", "size_bytes": 1_000_000_000},
+        {"id": "large", "name": "large.gguf", "path": "/large", "size_bytes": 3_000_000_000},
+    ]
+
+
+def test_tensor_validation_selects_exact_named_size_classes():
+    models = tensor_models() + [
+        {"id": "other", "name": "other.gguf", "path": "/other", "size_bytes": 100},
+    ]
+    selected = select_tensor_validation_models(models, ["large.gguf", "small.gguf"])
+    assert [model["name"] for model in selected] == ["small.gguf", "large.gguf"]
+
+
+def test_tensor_validation_rejects_invalid_selections():
+    models = tensor_models()
+    for requested in (["small.gguf"], ["small.gguf", "small.gguf"], ["small.gguf", "missing.gguf"]):
+        try:
+            select_tensor_validation_models(models, requested)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"selection must fail: {requested}")
+    same_class = models + [
+        {"id": "small2", "name": "small2.gguf", "path": "/small2", "size_bytes": 2},
+    ]
+    try:
+        select_tensor_validation_models(same_class, ["small.gguf", "small2.gguf"])
+    except ValueError as exc:
+        assert "one GGUF <= 1.9 GB" in str(exc)
+    else:
+        raise AssertionError("same-size-class selection must fail")
+
+
+def test_tensor_validation_builds_exact_six_job_matrix():
+    jobs = build_tensor_validation_jobs(tensor_models())
+    assert len(jobs) == 6
+    assert [job["config"]["mode"] for job in jobs] == [
+        "performance", "performance", "load_only", "load_only", "performance", "performance"
+    ]
+    assert [job["config"].get("split_mode") for job in jobs] == [None, None, None, None, None, "tensor"]
 
 
 def test_build_jobs_expands_every_applicable_configuration():
@@ -120,6 +170,74 @@ def test_policy_fingerprint_captures_comparable_settings():
     assert fingerprint["repetitions"] == 1
     assert fingerprint["performance_repetitions"] == 1
     assert fingerprint["dataset_dir"].replace("\\", "/").endswith("/dataset")
+
+
+def test_inventory_persists_sanitized_suite_artifact(tmp_path: Path):
+    job = {
+        "id": "job",
+        "model": {"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1},
+        "config": {"device": "Vulkan0", "mode": "full"},
+    }
+    with patch(
+        "inventory_bench.execute_job",
+        return_value={
+            "execution_status": "completed_suite",
+            "models": [{"configurations": [{"result": {
+                "stage": "suite",
+                "status": "PREFLIGHT_EXECUTION_ERROR",
+                "error": "SECRET_ERROR",
+                "stages": {"preflight": {
+                    "command_args": ["llama-cli", "-p", "SECRET_PROMPT"],
+                    "stdout": "SECRET_STDOUT",
+                }},
+            }}]}],
+        },
+    ):
+        summary = run_inventory([job], tmp_path, args())
+    assert summary["completed"] == ["job"]
+    serialized = (tmp_path / "job.json").read_text()
+    assert "SECRET_PROMPT" not in serialized
+    assert "SECRET_STDOUT" not in serialized
+    assert "SECRET_ERROR" not in serialized
+
+
+def test_tensor_validation_dry_run_writes_nothing(tmp_path: Path):
+    jobs = build_tensor_validation_jobs(tensor_models())
+    with patch("inventory_bench.execute_tensor_validation_job") as execute:
+        summary = run_tensor_validation(jobs, tmp_path, args(dry_run=True))
+    execute.assert_not_called()
+    assert summary["expected_job_count"] == 6
+    assert len(summary["pending"]) == 6
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_tensor_validation_runs_short_performance_not_full_suite():
+    job = build_tensor_validation_jobs(tensor_models())[0]
+    preflight = {
+        "stage": "load_probe", "status": "SUCCESS", "load_ok": True,
+        "elapsed_seconds": 1.0, "return_code": 0, "command_args": [],
+    }
+    measured = {"models": [{"configurations": [{"result": {
+        "stage": "performance", "status": "SUCCESS", "prompt_ts": 10.0, "gen_ts": 5.0
+    }}]}]}
+    with patch("inventory_bench.run_load_probe", return_value=preflight), patch(
+        "inventory_bench.execute_performance", return_value=measured
+    ) as performance, patch("inventory_bench.execute_suite") as suite:
+        result = execute_tensor_validation_job(job, args())
+    suite.assert_not_called()
+    performance.assert_called_once()
+    assert result["execution_status"] == "completed_performance"
+
+
+def test_tensor_validation_stops_starting_jobs_after_overall_deadline(tmp_path: Path):
+    jobs = build_tensor_validation_jobs(tensor_models())
+    with patch("inventory_bench.time.monotonic", side_effect=[0.0, 2.0]), patch(
+        "inventory_bench.execute_tensor_validation_job"
+    ) as execute:
+        summary = run_tensor_validation(jobs, tmp_path, args(overall_timeout=1))
+    execute.assert_not_called()
+    assert summary["deadline_reached"] is True
+    assert len(summary["pending"]) == 6
 
 
 def test_completed_job_requires_terminal_manifest(tmp_path: Path):

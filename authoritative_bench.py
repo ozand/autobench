@@ -13,7 +13,7 @@ from run_bench import load_dataset
 from src.judge import Judge
 from src.remote import SSH_TARGET, run_host_command
 from src.runner import Runner
-from src.statuses import boundary_summary, preflight_cause
+from src.statuses import boundary_summary, preflight_cause, sanitize_artifact
 
 MODEL_DIR = "/home/opencode/llama.cpp/models"
 GPU_MEMORY_BYTES = 2 * 1024**3
@@ -1133,7 +1133,7 @@ def write_artifacts(plan: dict, output_dir: Path) -> tuple[Path, Path]:
     prefix = plan["mode"]
     manifest_path = output_dir / f"{prefix}_plan_{stamp}.json"
     report_path = output_dir / f"{prefix}_matrix_{stamp}.md"
-    manifest_path.write_text(json.dumps(plan, indent=2) + "\n")
+    manifest_path.write_text(json.dumps(sanitize_artifact(plan), indent=2) + "\n")
     report_path.write_text(render_matrix(plan, manifest_path.name))
     return manifest_path, report_path
 

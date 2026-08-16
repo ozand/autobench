@@ -8,6 +8,7 @@ from unittest.mock import patch
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 from runner import Runner
+from statuses import sanitize_artifact
 
 
 def completed(return_code: int, stdout: str = "", stderr: str = ""):
@@ -111,6 +112,42 @@ def test_ssh_failure_is_classified():
     result = run_with_result(completed(255, stderr="Connection refused"))
 
     assert result["status"] == "SSH_ERROR"
+
+
+def test_sanitize_artifact_removes_sensitive_payloads_and_prompt_args():
+    artifact = sanitize_artifact({
+        "command_args": ["llama-cli", "-p", "TOP_SECRET_PROMPT", "-n", "1"],
+        "stdout": "RAW_OUTPUT",
+        "stderr": "RAW_ERROR",
+        "raw_output": "RAW_OUTPUT",
+        "response": "GENERATED_TEXT",
+        "error": "secret diagnostic",
+        "task": {"prompt": "DATASET_PROMPT"},
+        "tasks": [{"response": "TASK_RESPONSE"}],
+        "issues": ["raw judge detail"],
+        "llm_judge_reason": "raw judge reason",
+        "return_code": 134,
+        "stages": [{"command_args": ["-p", "NESTED_PROMPT", "-c", "128"]}],
+    })
+    assert artifact == {
+        "command_args": ["llama-cli", "-n", "1"],
+        "error": "details redacted",
+        "return_code": 134,
+        "stages": [{"command_args": ["-c", "128"]}],
+    }
+
+
+def test_sanitize_artifact_redacts_paths_and_remote_host():
+    artifact = sanitize_artifact({
+        "host": "user@100.64.0.1",
+        "model": {"path": "/private/models/model.gguf", "name": "model.gguf"},
+        "model_path": "C:\\private\\model.gguf",
+    })
+    assert artifact == {
+        "host": "k7000",
+        "model": {"path_basename": "model.gguf", "name": "model.gguf"},
+        "model_path_basename": "model.gguf",
+    }
 
 
 def test_truncated_prompt_echo_is_excluded_from_response():

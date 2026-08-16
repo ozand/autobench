@@ -4,16 +4,20 @@
 import argparse
 import json
 import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
 from authoritative_bench import (
     build_plan,
     discover_remote_models,
+    execute_performance,
     execute_suite,
     run_load_probe,
     select_working_configuration,
+    SINGLE_GPU_FIT_BYTES,
 )
+from src.statuses import sanitize_artifact
 
 
 def job_id(model: dict, config: dict) -> str:
@@ -46,6 +50,62 @@ def build_jobs(models: list[dict], include_tensor: bool = False) -> list[dict]:
                     "config": config,
                 }
             )
+    return jobs
+
+
+def select_tensor_validation_models(models: list[dict], requested_names: list[str]) -> list[dict]:
+    """Resolve exactly one named model on each side of the single-GPU threshold."""
+    if len(requested_names) != 2 or len(set(requested_names)) != 2:
+        raise ValueError("tensor validation requires exactly two distinct GGUF basenames")
+    by_name = {model["name"]: model for model in models}
+    missing = [name for name in requested_names if name not in by_name]
+    if missing:
+        raise ValueError(f"models not found: {', '.join(sorted(missing))}")
+    selected = [by_name[name] for name in requested_names]
+    small = [model for model in selected if model["size_bytes"] <= SINGLE_GPU_FIT_BYTES]
+    large = [model for model in selected if model["size_bytes"] > SINGLE_GPU_FIT_BYTES]
+    if len(small) != 1 or len(large) != 1:
+        raise ValueError("tensor validation requires one GGUF <= 1.9 GB and one GGUF > 1.9 GB")
+    return small + large
+
+
+def build_tensor_validation_jobs(models: list[dict]) -> list[dict]:
+    """Build the fixed six-job validation matrix without the full inventory suite."""
+    if len(models) != 2:
+        raise ValueError("tensor validation requires exactly two models")
+    small, large = models
+    if small["size_bytes"] > SINGLE_GPU_FIT_BYTES or large["size_bytes"] <= SINGLE_GPU_FIT_BYTES:
+        raise ValueError("tensor validation models must be ordered small then large")
+    configurations = {
+        small["id"]: [
+            {"device": "Vulkan0", "tensor_split": None, "mode": "performance"},
+            {"device": "Vulkan1", "tensor_split": None, "mode": "performance"},
+        ],
+        large["id"]: [
+            {"device": "Vulkan0", "tensor_split": None, "mode": "load_only"},
+            {"device": "Vulkan1", "tensor_split": None, "mode": "load_only"},
+            {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "mode": "performance"},
+            {
+                "device": "Vulkan0,Vulkan1",
+                "tensor_split": "1,1",
+                "split_mode": "tensor",
+                "mode": "performance",
+                "capability_probe": "pending",
+            },
+        ],
+    }
+    jobs = []
+    for model in models:
+        for config in configurations[model["id"]]:
+            jobs.append(
+                {
+                    "id": job_id(model, config),
+                    "model": {key: model[key] for key in ("id", "name", "path", "size_bytes")},
+                    "config": config,
+                }
+            )
+    if len(jobs) != 6:
+        raise ValueError("tensor validation must build exactly six jobs")
     return jobs
 
 
@@ -83,6 +143,62 @@ def completed_job(path: Path, fingerprint: dict | None = None) -> bool:
     if fingerprint is None or data.get("execution_status") == "completed_load_probe":
         return True
     return data.get("policy_fingerprint") == fingerprint
+
+
+def execute_tensor_validation_job(job: dict, args: argparse.Namespace) -> dict:
+    """Run one bounded load-only or short performance validation job."""
+    model = job["model"]
+    config = job["config"]
+    started_at = datetime.now(timezone.utc).isoformat()
+    preflight = run_load_probe(model, config, args.timeout)
+    if config["mode"] == "load_only" or not preflight["load_ok"]:
+        return {
+            "schema_version": 2,
+            "job_id": job["id"],
+            "execution_status": "completed_load_probe",
+            "authoritative": False,
+            "started_at": started_at,
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "model": model,
+            "config": config,
+            "workload": {"context_size": 128, "max_tokens": 1, "timeout": args.timeout},
+            "result": preflight,
+        }
+
+    performance_config = dict(config)
+    performance_config["mode"] = "full"
+    plan = build_plan([model], "performance")
+    plan["models"][0]["configurations"] = [performance_config]
+    measured = execute_performance(
+        plan,
+        timeout=args.timeout,
+        context_size=args.context_size,
+        prompt_tokens=args.prompt_tokens,
+        output_tokens=args.max_tokens,
+        warmups=args.warmups,
+        repetitions=args.performance_repetitions,
+    )
+    result = measured["models"][0]["configurations"][0]["result"]
+    return {
+        "schema_version": 2,
+        "job_id": job["id"],
+        "execution_status": "completed_performance",
+        "authoritative": False,
+        "started_at": started_at,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+        "model": model,
+        "config": config,
+        "workload": {
+            "context_size": args.context_size,
+            "prompt_tokens": args.prompt_tokens,
+            "max_tokens": args.max_tokens,
+            "warmups": args.warmups,
+            "performance_repetitions": args.performance_repetitions,
+            "timeout": args.timeout,
+        },
+        "result": result,
+        "preflight": preflight,
+    }
 
 
 def execute_job(job: dict, args: argparse.Namespace) -> dict:
@@ -190,6 +306,57 @@ def select_contiguous_jobs(jobs: list[dict], max_jobs: int = 0) -> list[dict]:
     return selected
 
 
+def run_tensor_validation(
+    jobs: list[dict], output_dir: Path, args: argparse.Namespace
+) -> dict:
+    """Run the fixed matrix serially within an overall deadline."""
+    if len(jobs) != args.expected_jobs:
+        raise ValueError(f"expected {args.expected_jobs} jobs, planned {len(jobs)}")
+    summary = {
+        "schema_version": 2,
+        "mode": "tensor_validation",
+        "expected_job_count": args.expected_jobs,
+        "completed": [],
+        "failed": [],
+        "pending": [job["id"] for job in jobs],
+        "deadline_reached": False,
+    }
+    if args.dry_run:
+        return summary
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + args.overall_timeout
+    for job in jobs:
+        if time.monotonic() >= deadline:
+            summary["deadline_reached"] = True
+            break
+        path = output_dir / f"{job['id']}.json"
+        try:
+            result = execute_tensor_validation_job(job, args)
+            path.write_text(json.dumps(sanitize_artifact(result), indent=2) + "\n")
+            summary["completed"].append(job["id"])
+        except (RuntimeError, ValueError) as exc:
+            failure = {
+                "schema_version": 2,
+                "job_id": job["id"],
+                "execution_status": "failed",
+                "authoritative": False,
+                "status": "EXECUTION_ERROR",
+                "error": str(exc),
+                "model": job["model"],
+                "config": job["config"],
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+            }
+            path.write_text(json.dumps(sanitize_artifact(failure), indent=2) + "\n")
+            summary["failed"].append(job["id"])
+        summary["pending"] = [
+            candidate["id"]
+            for candidate in jobs
+            if candidate["id"] not in summary["completed"] + summary["failed"]
+        ]
+    return summary
+
+
 def run_inventory(
     jobs: list[dict], output_dir: Path, args: argparse.Namespace
 ) -> dict:
@@ -216,7 +383,7 @@ def run_inventory(
         path = output_dir / f"{job['id']}.json"
         try:
             result = execute_job(job, args)
-            path.write_text(json.dumps(result, indent=2) + "\n")
+            path.write_text(json.dumps(sanitize_artifact(result), indent=2) + "\n")
             summary["completed"].append(job["id"])
         except (RuntimeError, ValueError) as exc:
             failure = {
@@ -228,7 +395,7 @@ def run_inventory(
                 "model": job["model"],
                 "config": job["config"],
             }
-            path.write_text(json.dumps(failure, indent=2) + "\n")
+            path.write_text(json.dumps(sanitize_artifact(failure), indent=2) + "\n")
             summary["failed"].append(job["id"])
     return summary
 
@@ -236,6 +403,9 @@ def run_inventory(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--models", help="Comma-separated exact GGUF basenames")
+    parser.add_argument("--tensor-validation", action="store_true", help="Run the fixed bounded two-GGUF tensor matrix")
+    parser.add_argument("--expected-jobs", type=int, default=6, help="Required job count for --tensor-validation")
+    parser.add_argument("--overall-timeout", type=int, default=1800, help="Overall seconds allowed for --tensor-validation")
     parser.add_argument("--max-jobs", type=int, default=0, help="Run at most N pending jobs; 0 means all")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--status", action="store_true", help="Show cumulative persisted state without inference")
@@ -260,8 +430,12 @@ def main() -> None:
         default=str(Path(__file__).parent / "results" / "inventory"),
     )
     args = parser.parse_args()
-    if args.max_jobs < 0 or args.timeout < 1:
-        parser.error("--max-jobs cannot be negative and --timeout must be positive")
+    if args.max_jobs < 0 or args.timeout < 1 or args.overall_timeout < 1:
+        parser.error("--max-jobs cannot be negative and timeouts must be positive")
+    if args.expected_jobs < 1:
+        parser.error("--expected-jobs must be positive")
+    if args.tensor_validation and (args.status or args.max_jobs or args.force):
+        parser.error("--tensor-validation cannot be combined with --status, --max-jobs, or --force")
     try:
         args.context_sizes = [
             int(value.strip()) for value in args.context_sizes.split(",") if value.strip()
@@ -270,8 +444,41 @@ def main() -> None:
         parser.error("--context-sizes must contain integers")
 
     models = discover_remote_models()
+    requested_names = [value.strip() for value in (args.models or "").split(",") if value.strip()]
+    if args.tensor_validation:
+        try:
+            models = select_tensor_validation_models(models, requested_names)
+            jobs = build_tensor_validation_jobs(models)
+        except ValueError as exc:
+            parser.error(str(exc))
+        if len(jobs) != args.expected_jobs:
+            parser.error(f"expected {args.expected_jobs} jobs, planned {len(jobs)}")
+        print("Tensor validation plan")
+        print(f"Models selected: {len(models)}")
+        print("Small models: 1")
+        print("Large models: 1")
+        print(f"Jobs planned: {len(jobs)}")
+        print(f"Inference calls executed: {0 if args.dry_run else 'bounded'}")
+        for job in jobs:
+            model = job["model"]
+            config = job["config"]
+            size_class = "small" if model["size_bytes"] <= SINGLE_GPU_FIT_BYTES else "large"
+            print(
+                f"- {model['name']} | {model['size_bytes']} | {size_class} | "
+                f"{config['device']} | {config['mode']} | "
+                f"{config.get('tensor_split') or '-'} | {config.get('split_mode') or '-'}"
+            )
+        summary = run_tensor_validation(jobs, Path(args.output_dir), args)
+        if args.dry_run:
+            print("Job manifests written: 0")
+            return
+        summary_path = Path(args.output_dir) / "summary.json"
+        summary_path.write_text(json.dumps(sanitize_artifact(summary), indent=2) + "\n")
+        print(f"Summary: {summary_path}")
+        return
+
     if args.models:
-        requested = {value.strip() for value in args.models.split(",") if value.strip()}
+        requested = set(requested_names)
         models = [model for model in models if model["name"] in requested]
         missing = requested - {model["name"] for model in models}
         if missing:

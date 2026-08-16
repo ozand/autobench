@@ -13,6 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 from runner import Runner
 from judge import Judge
 from src.remote import run_host_command
+from src.statuses import sanitize_artifact
 
 
 def load_dataset(dataset_dir: str) -> list:
@@ -88,7 +89,7 @@ def build_run_manifest(
         "max_tokens": args.max_tokens,
         "tensor_split": args.ts_split,
         "run_judge": args.run_judge,
-        "command_args": first_result.get("command_args"),
+        "command_args": sanitize_artifact(first_result.get("command_args")),
         "provenance": provenance,
     }
 
@@ -340,7 +341,7 @@ def main():
     output_path = os.path.join(base_dir, "results", "runs", output_filename)
 
     with open(output_path, "w") as f:
-        json.dump(run_log, f, indent=2)
+        json.dump(sanitize_artifact(run_log), f, indent=2)
 
     print("\n=======================")
     print("=== BENCHMARK REPORT ===")
