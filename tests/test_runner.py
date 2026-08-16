@@ -145,11 +145,13 @@ def test_sanitize_artifact_redacts_paths_and_remote_host():
         "host": "user@100.64.0.1",
         "model": {"path": "/private/models/model.gguf", "name": "model.gguf"},
         "model_path": "C:\\private\\model.gguf",
+        "dataset_dir": "/home/opencode/code/autobench/datasets/validation",
     })
     assert artifact == {
         "host": "k7000",
         "model": {"path_basename": "model.gguf", "name": "model.gguf"},
         "model_path_basename": "model.gguf",
+        "dataset_dir": "validation",
     }
 
 

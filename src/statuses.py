@@ -61,6 +61,8 @@ def sanitize_artifact(value: Any) -> Any:
                 sanitized[key] = item if _safe_error(item) else "details redacted"
             elif key in {"path", "model_path"}:
                 sanitized[f"{key}_basename"] = _basename(item)
+            elif key in {"dataset_dir", "output_dir"}:
+                sanitized[key] = _basename(item)
             elif key == "host":
                 sanitized[key] = "k7000"
             else:
