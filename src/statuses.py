@@ -21,20 +21,30 @@ _SENSITIVE_ARTIFACT_KEYS = {
 
 
 def _sanitize_command_args(arguments: Any) -> list[str] | None:
-    """Keep executable flags while removing prompt values from persisted args."""
+    """Keep safe executable flags while removing prompt and private path values."""
     if not isinstance(arguments, list):
         return None
     sanitized: list[str] = []
     skip_value = False
+    previous_flag: str | None = None
     for argument in arguments:
         value = str(argument)
         if skip_value:
             skip_value = False
+            if previous_flag == "-m":
+                sanitized.append(_basename(value) or "[REDACTED_MODEL]")
             continue
         if value in {"-p", "--prompt"}:
             skip_value = True
+            previous_flag = value
             continue
-        sanitized.append(value)
+        if value == "-m":
+            sanitized.append(value)
+            previous_flag = value
+            skip_value = True
+            continue
+        sanitized.append(_basename(value) if value.startswith("/home/") else value)
+        previous_flag = None
     return sanitized
 
 

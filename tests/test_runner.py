@@ -116,7 +116,10 @@ def test_ssh_failure_is_classified():
 
 def test_sanitize_artifact_removes_sensitive_payloads_and_prompt_args():
     artifact = sanitize_artifact({
-        "command_args": ["llama-cli", "-p", "TOP_SECRET_PROMPT", "-n", "1"],
+        "command_args": [
+            "llama-cli", "-m", "/home/secret/model.gguf",
+            "-p", "TOP_SECRET_PROMPT", "-n", "1",
+        ],
         "stdout": "RAW_OUTPUT",
         "stderr": "RAW_ERROR",
         "raw_output": "RAW_OUTPUT",
@@ -130,7 +133,7 @@ def test_sanitize_artifact_removes_sensitive_payloads_and_prompt_args():
         "stages": [{"command_args": ["-p", "NESTED_PROMPT", "-c", "128"]}],
     })
     assert artifact == {
-        "command_args": ["llama-cli", "-n", "1"],
+        "command_args": ["llama-cli", "-m", "model.gguf", "-n", "1"],
         "error": "details redacted",
         "return_code": 134,
         "stages": [{"command_args": ["-c", "128"]}],
