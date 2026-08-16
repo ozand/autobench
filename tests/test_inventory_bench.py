@@ -109,6 +109,16 @@ def test_build_jobs_expands_every_applicable_configuration():
     assert len({job["id"] for job in jobs}) == 7
 
 
+def test_inventory_authoritative_jobs_exclude_tensor_candidate():
+    models = [
+        {"id": "small", "name": "small.gguf", "path": "/small", "size_bytes": 10},
+        {"id": "large", "name": "large.gguf", "path": "/large", "size_bytes": 3_000_000_000},
+    ]
+    jobs = build_jobs(models, include_tensor=False)
+    assert len(jobs) == 5
+    assert all(job["config"].get("split_mode") != "tensor" for job in jobs)
+
+
 def test_execute_job_preserves_tensor_probe_configuration(tmp_path: Path):
     model = {"id": "large", "name": "large.gguf", "path": "/large", "size_bytes": 3_000_000_000}
     config = {

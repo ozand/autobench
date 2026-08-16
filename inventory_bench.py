@@ -484,7 +484,9 @@ def main() -> None:
         if missing:
             parser.error(f"models not found: {', '.join(sorted(missing))}")
 
-    jobs = build_jobs(models, include_tensor=True)
+    # Tensor mode was rejected by the bounded hardware gate and remains
+    # diagnostic-only; the authoritative inventory uses the validated matrix.
+    jobs = build_jobs(models, include_tensor=False)
     if args.status:
         summary = inventory_status(
             jobs, Path(args.output_dir), policy_fingerprint(args)
