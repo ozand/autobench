@@ -122,7 +122,7 @@ def policy_fingerprint(args: argparse.Namespace) -> dict:
         "warmups": args.warmups,
         "performance_repetitions": args.performance_repetitions,
         "max_tasks": args.max_tasks,
-        "dataset_dir": str(Path(args.dataset_dir).resolve()),
+        "dataset_dir": Path(args.dataset_dir).name,
     }
 
 

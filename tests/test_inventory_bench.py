@@ -179,7 +179,7 @@ def test_policy_fingerprint_captures_comparable_settings():
     assert fingerprint["context_sizes"] == [512]
     assert fingerprint["repetitions"] == 1
     assert fingerprint["performance_repetitions"] == 1
-    assert fingerprint["dataset_dir"].replace("\\", "/").endswith("/dataset")
+    assert fingerprint["dataset_dir"] == "dataset"
 
 
 def test_inventory_persists_sanitized_suite_artifact(tmp_path: Path):
