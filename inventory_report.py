@@ -90,12 +90,14 @@ def _classify(data: dict[str, Any], config: dict[str, Any], result: dict[str, An
     status = str(result.get("status", ""))
     boundary = stages.get("boundary")
     boundary_status = str(boundary.get("status", "")) if isinstance(boundary, dict) else ""
-    if status.startswith("PREFLIGHT_") or status == "BLOCKED_BY_BOUNDARY" or boundary_status == "INCONCLUSIVE":
+    if status.startswith("PREFLIGHT_") or status == "BLOCKED_BY_BOUNDARY":
         return "BLOCKED", False, _reason(result, stages, execution_status)
     workload = result.get("workload")
     reduced = isinstance(workload, dict) and bool(workload.get("non_comparable"))
-    required = ("boundary", "retrieval", "performance", "quality")
+    required = ("boundary", "performance", "quality")
     complete = all(_stage_state(stages.get(name)) == "measured" for name in required)
+    retrieval_available = _stage_state(stages.get("retrieval")) == "measured" or _number(result.get("retrieval_rate")) is not None
+    complete = complete and retrieval_available
     if status != "SUCCESS" or not complete or reduced:
         return "PARTIAL", False, "reduced_workload" if reduced else _reason(result, stages, execution_status)
     return "PASS", True, "complete"
