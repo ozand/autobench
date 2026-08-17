@@ -1,0 +1,24 @@
+{
+  "skill_name": "autobench-pre-run-research",
+  "skill_path": ".agents/skills/autobench-pre-run-research/SKILL.md",
+  "cases": [
+    {
+      "task": "Prepare a bounded run for a new Qwen GGUF model on Vulkan0 and Vulkan1.",
+      "assertions": [
+        "Uses isolated Surf CLI research for the exact model and runtime",
+        "Stores sanitized raw and curated OKF notes with provenance",
+        "Refreshes and queries the project-local QMD collection",
+        "Previews and reviews the plan before inference"
+      ]
+    },
+    {
+      "task": "The first context probe times out while the model appears loaded.",
+      "assertions": [
+        "Classifies the timeout as inconclusive rather than OOM",
+        "Searches local KB and then authoritative Surf sources",
+        "Allows at most one evidence-justified bounded rerun",
+        "Records the cause and rerun rationale in sanitized notes"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "skill_name": "autobench-model-run",
+  "skill_path": ".agents/skills/autobench-model-run/SKILL.md",
+  "cases": [
+    {
+      "task": "Run the next GGUF model on k7000 after selecting it from the remote inventory.",
+      "assertions": [
+        "Requires model-specific Surf research before inference",
+        "Requires sanitized KB/QMD notes and a bounded plan preview",
+        "Runs one model separately rather than launching an unreviewed batch",
+        "Preserves Vulkan0, Vulkan1, and applicable dual-GPU configurations"
+      ]
+    },
+    {
+      "task": "The model run returns SSH_TIMEOUT during a context probe. What should happen next?",
+      "assertions": [
+        "Stops blind retries and parameter sweeps",
+        "Searches local KB/QMD before external investigation",
+        "Uses Surf CLI and authoritative runtime/model sources",
+        "Keeps the result inconclusive unless one justified bounded rerun establishes more"
+      ]
+    },
+    {
+      "task": "A GGUF run fails with an unfamiliar backend error after pre-run research.",
+      "assertions": [
+        "Preserves the original failure class",
+        "Does not collapse it into generic blocked or OOM",
+        "Investigates the exact stable error through KB and Surf",
+        "Captures a reusable lesson when the fix is non-obvious"
+      ]
+    }
+  ]
+}

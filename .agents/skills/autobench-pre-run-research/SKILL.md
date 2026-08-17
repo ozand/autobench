@@ -8,11 +8,16 @@ compatibility: Requires Surf CLI, a Chromium-based browser, and the project-loca
 
 ## When to use
 
-Use immediately before a new model workload, context-boundary probe, or
-configuration experiment. Do not use upstream research as a substitute for
-local capability checks.
+Use immediately before every new GGUF model workload, context-boundary probe,
+or configuration experiment. This is a per-model gate, not a one-time project
+setup. Do not use upstream research as a substitute for local capability checks.
 
 ## Required process
+
+### Per-model gate
+
+Run this sequence separately for each model. Do not prepare one generic note
+for a batch and then launch the batch without model-specific review.
 
 1. Confirm the active GitHub Issue, exact GGUF basename, target context, backend,
    device list, split mode, and timeout budget.
@@ -34,7 +39,9 @@ local capability checks.
    `kb/wiki/`. Separate upstream facts, local observations, and unresolved
    assumptions. Do not store prompts, responses, credentials, private paths,
    host identifiers, raw logs, or raw Surf output.
-5. Refresh and query the project-local QMD collection:
+5. Refresh and query the project-local QMD collection. Search the local KB
+   before asking Surf to investigate a problem, and cite the result in the
+   run note:
 
    ```text
    qmd update -c autobench-kb
@@ -46,6 +53,24 @@ local capability checks.
 6. Review the note and only then run the zero-inference plan preview. Research
    may define the upper probe target, but only hardware results establish what
    the GGUF actually supports.
+7. During execution, stop at the first unexpected failure. Do not perform blind
+   parameter sweeps, retries, or workaround permutations. Classify the failure,
+   search the local KB, and investigate the authoritative upstream cause with
+   Surf CLI before changing one parameter for one bounded rerun.
+8. Record the outcome, cause, source consulted, and rationale for any rerun in
+   the model note. Capture a new recurring/non-obvious fix with `kb-capture`
+   when no existing lesson covers it.
+
+## Failure-response rules
+
+- `OOM`, `CONTEXT_OVERFLOW`, `SSH_TIMEOUT`, `TOKENIZER_ERROR`,
+  `UNSUPPORTED_BACKEND`, `EXECUTION_ERROR`, and `WORKLOAD_UNSUPPORTED` are
+  distinct evidence classes. Preserve the first observed cause.
+- A timeout is inconclusive until an authoritative source-backed diagnosis and
+  one bounded rerun establish more. It is never an invitation to sweep timeouts,
+  context sizes, split ratios, or flags.
+- Search order after a failure: local `qmd`/KB -> official runtime/model source
+  through Surf CLI -> one justified rerun. If evidence is insufficient, stop.
 
 ## Rules
 
