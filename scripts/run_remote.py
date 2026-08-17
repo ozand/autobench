@@ -16,12 +16,16 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 import shlex
 import subprocess
 import sys
 from collections.abc import Sequence
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.model_route import CANONICAL_LUNA_ROUTE, route_is_valid, validate_model_route
 
 DEFAULT_HOST = os.environ.get("AUTOBENCH_REMOTE_HOST", "opencode@100.67.171.58")
 DEFAULT_REMOTE_DIR = os.environ.get(
@@ -182,6 +186,61 @@ def normalize_remote_command(arguments: Sequence[str], remote_dir: str) -> str:
     )
 
 
+def command_requires_model_route(arguments: Sequence[str]) -> bool:
+    """Identify commands that can schedule model inference."""
+    names = {Path(argument).name for argument in arguments if argument.endswith(".py")}
+    benchmark_commands = {
+        "authoritative_bench.py",
+        "context_bench.py",
+        "inventory_bench.py",
+        "run_bench.py",
+    }
+    if not names.intersection(benchmark_commands):
+        return False
+    non_execution_flags = {"--dry-run", "--plan-only", "--status", "--help", "-h"}
+    return not non_execution_flags.intersection(arguments)
+
+
+def validate_required_model_route(args: argparse.Namespace) -> dict | None:
+    """Require an exact, verified provider/model identity before inference."""
+    route_values = (
+        args.required_model_route,
+        args.configured_model_route,
+        args.resolved_provider,
+        args.resolved_model,
+    )
+    required = args.require_model_route or any(value is not None for value in route_values) or args.identity_check is not None
+    if not required:
+        return None
+    if any(value is None for value in route_values) or args.identity_check is None:
+        raise WorkflowError(
+            "Model route validation requires required/configured route, resolved "
+            "provider/model, and identity check before workload scheduling."
+        )
+    try:
+        evidence = validate_model_route(
+            args.configured_model_route,
+            required_route=args.required_model_route,
+            resolved_provider=args.resolved_provider,
+            resolved_model=args.resolved_model,
+            identity_check=args.identity_check,
+        )
+    except ValueError as exc:
+        raise WorkflowError("Model route validation input is invalid.") from exc
+    if not route_is_valid(evidence):
+        raise WorkflowError(
+            "Model route validation failed before workload scheduling: "
+            f"{evidence['status']}"
+        )
+    rendered = json.dumps(evidence, sort_keys=True, separators=(",", ":"))
+    print(f"[route] evidence={rendered}")
+    if args.route_evidence_output:
+        output = Path(args.route_evidence_output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered + "\n", encoding="utf-8")
+    return evidence
+
+
 def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None:
     """Execute a command remotely and stream its output."""
     print(f"[remote] Executing: {shlex.join(arguments)}")
@@ -247,6 +306,42 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--sync-results", action="store_true", help="Copy results back after execution"
     )
+    parser.add_argument(
+        "--require-model-route",
+        action="store_true",
+        help="Block execution unless provider/model identity evidence is verified",
+    )
+    parser.add_argument(
+        "--required-model-route",
+        default=None,
+        help=f"Required provider-qualified supervisor route (default example: {CANONICAL_LUNA_ROUTE})",
+    )
+    parser.add_argument(
+        "--configured-model-route",
+        default=None,
+        help="Provider-qualified route selected by the supervisor",
+    )
+    parser.add_argument(
+        "--resolved-provider",
+        default=None,
+        help="Sanitized provider identity returned by the resolver/completion",
+    )
+    parser.add_argument(
+        "--resolved-model",
+        default=None,
+        help="Sanitized model identity returned by the resolver/completion",
+    )
+    parser.add_argument(
+        "--identity-check",
+        choices=("verified", "unverified", "auth_failed", "rejected"),
+        default=None,
+        help="Result of the provider identity completion check",
+    )
+    parser.add_argument(
+        "--route-evidence-output",
+        default=None,
+        help="Optional local path for sanitized route evidence JSON",
+    )
     parser.add_argument("command", nargs=argparse.REMAINDER)
     args = parser.parse_args()
     if args.command and args.command[0] == "--":
@@ -260,6 +355,7 @@ def main() -> int:
 
     try:
         ensure_clean_local_repository(repo)
+        validate_required_model_route(args)
         ensure_origin_is_expected(repo, args.expected_origin)
         if not args.skip_local_tests:
             run_local_tests(repo)

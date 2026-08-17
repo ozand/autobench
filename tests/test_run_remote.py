@@ -12,7 +12,10 @@ from run_remote import (  # noqa: E402
     WorkflowError,
     ensure_clean_local_repository,
     ensure_origin_is_expected,
+    command_requires_model_route,
     normalize_remote_command,
+    parse_arguments,
+    validate_required_model_route,
 )
 
 
@@ -64,3 +67,69 @@ def test_unexpected_origin_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
 
     with pytest.raises(WorkflowError, match="Unexpected origin URL"):
         ensure_origin_is_expected(Path("."), "https://example.invalid/right.git")
+
+
+def test_workload_commands_require_route_validation() -> None:
+    assert command_requires_model_route(["authoritative_bench.py", "--suite"])
+    assert command_requires_model_route(["inventory_bench.py", "--models", "model.gguf"])
+    assert not command_requires_model_route(["inventory_bench.py", "--dry-run"])
+    assert not command_requires_model_route(["authoritative_bench.py", "--plan-only"])
+    assert not command_requires_model_route(["python", "-m", "pytest"])
+
+
+def test_required_route_validation_accepts_verified_luna(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "run_remote.py",
+            "--require-model-route",
+            "--required-model-route",
+            "litellm-edge/cl/gpt-5.6-luna",
+            "--configured-model-route",
+            "litellm-edge/cl/gpt-5.6-luna",
+            "--resolved-provider",
+            "litellm-edge",
+            "--resolved-model",
+            "cl/gpt-5.6-luna",
+            "--identity-check",
+            "verified",
+            "--route-evidence-output",
+            str(tmp_path / "route.json"),
+            "--",
+            "echo",
+            "ok",
+        ],
+    )
+    args = parse_arguments()
+
+    evidence = validate_required_model_route(args)
+
+    assert evidence["status"] == "MODEL_ROUTE_VALID"
+    assert '"status":"MODEL_ROUTE_VALID"' in (tmp_path / "route.json").read_text()
+
+
+def test_required_route_validation_rejects_silent_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "run_remote.py",
+            "--require-model-route",
+            "--required-model-route",
+            "litellm-edge/cl/gpt-5.6-luna",
+            "--configured-model-route",
+            "litellm-edge/cl/gpt-5.6-luna",
+            "--resolved-provider",
+            "litellm-edge",
+            "--resolved-model",
+            "an/gemini-3.7-flash-high",
+            "--identity-check",
+            "verified",
+            "--",
+            "echo",
+            "never",
+        ],
+    )
+    args = parse_arguments()
+
+    with pytest.raises(WorkflowError, match="MODEL_ROUTE_IDENTITY_MISMATCH"):
+        validate_required_model_route(args)
