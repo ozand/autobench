@@ -17,6 +17,7 @@ results/comparisons/*.md
 # Local agent and tool state
 .config/
 .pi/
+.qmd/
 
 # IDE & OS
 .vscode/
