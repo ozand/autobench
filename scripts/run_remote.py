@@ -209,7 +209,12 @@ def validate_required_model_route(args: argparse.Namespace) -> dict | None:
         args.resolved_provider,
         args.resolved_model,
     )
-    required = args.require_model_route or any(value is not None for value in route_values) or args.identity_check is not None
+    required = (
+        command_requires_model_route(args.command)
+        or args.require_model_route
+        or any(value is not None for value in route_values)
+        or args.identity_check is not None
+    )
     if not required:
         return None
     if any(value is None for value in route_values) or args.identity_check is None:
