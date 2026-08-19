@@ -43,11 +43,18 @@ GitHub issue and read the project `AGENTS.md` plus the relevant local skills.
 6. **Stop on unexpected behavior.** On the first failure or surprising result,
    stop the current model sequence. Do not sweep context sizes, timeouts,
    split ratios, flags, prompts, or retries looking for a passing result.
-7. **Investigate by evidence.** Classify the result first, then search local
-   QMD/KB using the exact stable error text. If no adequate lesson exists, use
-   Surf CLI to consult authoritative model/runtime documentation and issue
-   trackers. Change at most one justified variable and run one bounded rerun.
-   If evidence remains insufficient, report `INCONCLUSIVE` and stop.
+7. **Investigate by evidence.** Classify the result first, then search the
+   workspace KB with `kb-lookup` and the project QMD using the exact stable
+   error text. If no adequate lesson exists, use isolated Surf CLI windows to
+   consult authoritative model/runtime documentation and issue trackers.
+   Inspect benchmark budget, prompt construction, parser, and stage aggregation
+   before blaming the model. Form one falsifiable hypothesis, change at most
+   one justified variable, and run one bounded rerun. If the symptom may be
+   device-specific, request the same bounded reproduction on the approved RTX
+   2080 Super 8 GB host through the omarchy agent, keeping artifacts separate.
+   If evidence remains insufficient, report `INCONCLUSIVE` and continue the
+   documented investigation plan rather than silently advancing to another
+   model.
 8. **Capture and publish.** Update the model's sanitized KB note with the
    observed cause, source consulted, and rerun rationale. Use `kb-capture` for
    a new recurring or non-obvious fix. Publish only sanitized artifacts and

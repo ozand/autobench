@@ -43,6 +43,24 @@ states that `layer` is the default, most compatible multi-GPU split, while
 GGUF and Vulkan devices, and a timeout must remain inconclusive until rerun with
 an appropriate budget.
 
+## Error and unexpected-result investigation
+
+A stop after an unexpected result is a safety boundary for the current
+experiment, not the end of the investigation. Follow the full procedure in
+[`problem-investigation-plan.md`](problem-investigation-plan.md). In short:
+preserve and classify the first result, search the workspace KB with the exact
+stable error text, refresh and query project QMD, use isolated Surf CLI windows
+for authoritative model/runtime research, inspect the benchmark's own budget
+and parser logic, form one falsifiable hypothesis, and run one bounded
+justified diagnostic rerun. Use `kb-lookup` before retrying and `kb-capture`
+when a new recurring or non-obvious fix is found.
+
+When the symptom may be device-specific, use the approved RTX 2080 Super 8 GB
+comparison host through the omarchy agent. Keep the same model and logical
+workload, use an isolated result directory, return only sanitized status, and
+never replace the k7000 evidence with the comparison result. A comparison
+cannot authorize a broad inventory or an unrelated model.
+
 ## Scope and freshness
 
 Research notes are bounded to the active Issue and model. Refresh them when the
