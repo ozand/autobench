@@ -72,8 +72,11 @@ def test_unexpected_origin_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_workload_commands_require_route_validation() -> None:
     assert command_requires_model_route(["authoritative_bench.py", "--suite"])
     assert command_requires_model_route(["inventory_bench.py", "--models", "model.gguf"])
-    assert not command_requires_model_route(["inventory_bench.py", "--dry-run"])
-    assert not command_requires_model_route(["authoritative_bench.py", "--plan-only"])
+    assert command_requires_model_route(["inventory_bench.py", "--dry-run"])
+    assert command_requires_model_route(["authoritative_bench.py", "--plan-only"])
+    assert not command_requires_model_route(["inventory_bench.py", "--status"])
+    assert not command_requires_model_route(["inventory_bench.py", "--help"])
+    assert not command_requires_model_route(["authoritative_bench.py", "-h"])
     assert not command_requires_model_route(["python", "-m", "pytest"])
 
 

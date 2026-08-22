@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 from unittest.mock import patch
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -391,3 +392,52 @@ def test_inventory_failure_is_persisted_and_next_job_continues(tmp_path: Path):
     failure = json.loads((tmp_path / "bad.json").read_text())
     assert failure["execution_status"] == "failed"
     assert failure["error"] == "boom"
+
+
+def test_main_rejects_missing_protocol_receipts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    empty_receipts = tmp_path / "receipts"
+    empty_receipts.mkdir()
+
+    with patch("inventory_bench.discover_remote_models", return_value=[{"id": "m1", "name": "m1.gguf", "path": "/models/m1.gguf", "size_bytes": 1000}]):
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "inventory_bench.py",
+                "--receipt-dir",
+                str(empty_receipts),
+                "--dry-run",
+                "--expected-jobs",
+                "3",
+            ],
+        )
+
+        try:
+            from inventory_bench import main
+            main()
+            assert False, "main() should have exited"
+        except SystemExit as exc:
+            assert exc.code != 0
+            captured = capsys.readouterr()
+            assert "model protocol receipt verification failed" in captured.err
+            assert "m1.gguf" in captured.err
+
+
+
+
+def test_main_status_allows_execution_without_receipts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    manifest_dir = tmp_path / "manifests"
+    manifest_dir.mkdir()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "inventory_bench.py",
+            "--status",
+            "--output-dir",
+            str(manifest_dir),
+        ],
+    )
+
+    from inventory_bench import main
+    # Should not raise SystemExit
+    main()
+

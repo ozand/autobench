@@ -1,7 +1,9 @@
+import json
 import os
 import sys
 from pathlib import Path
 from unittest.mock import Mock, patch
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -1247,3 +1249,32 @@ def test_full_plan_report_is_not_claimed_as_authoritative():
     text = render_matrix(plan, "full.json")
     assert "Planned / Non-Authoritative" in text
     assert "not_run" in text
+
+
+def test_authoritative_main_rejects_missing_protocol_receipts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    empty_receipts = tmp_path / "receipts"
+    empty_receipts.mkdir()
+
+    with patch("authoritative_bench.discover_remote_models", return_value=[{"id": "m1", "name": "m1.gguf", "path": "/models/m1.gguf", "size_bytes": 1000}]):
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "authoritative_bench.py",
+                "--plan-only",
+                "--receipt-dir",
+                str(empty_receipts),
+            ],
+        )
+
+        try:
+            from authoritative_bench import main
+            main()
+            assert False, "main() should have exited"
+        except SystemExit as exc:
+            assert exc.code != 0
+            captured = capsys.readouterr()
+            assert "model protocol receipt verification failed" in captured.err
+            assert "m1.gguf" in captured.err
+
+
+

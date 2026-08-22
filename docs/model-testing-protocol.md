@@ -70,13 +70,16 @@ Stage 1 is complete for the exact GGUF and current runtime assumptions.
    qmd search "<model> <context> <backend>" -c autobench-kb --no-rerank
    ```
 
-3. Record that the checker passed and that the model/runtime facts are
+3. Generate and verify a sanitized model receipt (`results/receipts/<model>.json`)
+   binding exact GGUF identity, research sources, and pre-run validation checks.
+   Record that the checker passed and that the model/runtime facts are
    discoverable. If the collection is absent, register it before updating.
 
 ### Stop conditions
 
 Stop before any `--dry-run` or inference if the checker fails, links are broken,
-QMD is unavailable or stale, the search cannot find the model-specific note, or
+QMD is unavailable or stale, the search cannot find the model-specific note,
+the protocol receipt is missing or invalid, or
 private/raw runtime material is present. Fix the knowledge gate first; do not
 continue on the basis of memory or chat history.
 
@@ -84,7 +87,7 @@ continue on the basis of memory or chat history.
 
 ### Prerequisite
 
-Stages 1 and 2 are complete and their evidence has been reviewed.
+Stages 1 and 2 are complete, the model receipt is verified, and their evidence has been reviewed.
 
 ### Required evidence: bounded plan
 

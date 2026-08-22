@@ -187,7 +187,7 @@ def normalize_remote_command(arguments: Sequence[str], remote_dir: str) -> str:
 
 
 def command_requires_model_route(arguments: Sequence[str]) -> bool:
-    """Identify commands that can schedule model inference."""
+    """Identify commands that can schedule model inference or targeted planning."""
     names = {Path(argument).name for argument in arguments if argument.endswith(".py")}
     benchmark_commands = {
         "authoritative_bench.py",
@@ -197,7 +197,7 @@ def command_requires_model_route(arguments: Sequence[str]) -> bool:
     }
     if not names.intersection(benchmark_commands):
         return False
-    non_execution_flags = {"--dry-run", "--plan-only", "--status", "--help", "-h"}
+    non_execution_flags = {"--status", "--help", "-h"}
     return not non_execution_flags.intersection(arguments)
 
 

@@ -11,6 +11,10 @@ from pathlib import Path
 from context_bench import build_context_prompt, run_context_test
 from run_bench import load_dataset
 from src.judge import Judge
+from src.protocol_receipt import (
+    ProtocolReceiptError,
+    assert_all_models_have_valid_receipts,
+)
 from src.remote import SSH_TARGET, run_host_command
 from src.runner import Runner
 from src.statuses import boundary_summary, preflight_cause, sanitize_artifact
@@ -1181,6 +1185,16 @@ def main() -> None:
         "--output-dir",
         default=os.path.join(os.path.dirname(__file__), "results", "manifests"),
     )
+    parser.add_argument(
+        "--receipt-dir",
+        default=None,
+        help="Directory containing verified protocol receipts (default: results/receipts)",
+    )
+    parser.add_argument(
+        "--receipt",
+        default=None,
+        help="Explicit receipt path for single-model execution",
+    )
     args = parser.parse_args()
     if args.timeout < 1:
         parser.error("--timeout must be at least 1 second")
@@ -1213,6 +1227,15 @@ def main() -> None:
         models = select_smoke_models(models)
     if selected_mode == "smoke" and len(models) > 2:
         parser.error("--smoke accepts at most two models")
+
+    try:
+        assert_all_models_have_valid_receipts(
+            models,
+            receipt_dir=args.receipt_dir,
+            receipt_paths={models[0]["name"]: args.receipt} if args.receipt and len(models) == 1 else None,
+        )
+    except ProtocolReceiptError as exc:
+        parser.error(str(exc))
     if selected_mode in {"retrieval", "boundary", "quality", "performance", "suite"}:
         if len(models) != 1:
             parser.error(f"--{selected_mode} requires exactly one --models basename")

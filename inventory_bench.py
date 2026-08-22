@@ -17,6 +17,10 @@ from authoritative_bench import (
     select_working_configuration,
     SINGLE_GPU_FIT_BYTES,
 )
+from src.protocol_receipt import (
+    ProtocolReceiptError,
+    assert_all_models_have_valid_receipts,
+)
 from src.statuses import sanitize_artifact
 
 
@@ -429,6 +433,16 @@ def main() -> None:
         "--output-dir",
         default=str(Path(__file__).parent / "results" / "inventory"),
     )
+    parser.add_argument(
+        "--receipt-dir",
+        default=None,
+        help="Directory containing verified protocol receipts (default: results/receipts)",
+    )
+    parser.add_argument(
+        "--receipt",
+        default=None,
+        help="Explicit receipt path for single-model execution",
+    )
     args = parser.parse_args()
     if args.max_jobs < 0 or args.timeout < 1 or args.overall_timeout < 1:
         parser.error("--max-jobs cannot be negative and timeouts must be positive")
@@ -448,8 +462,13 @@ def main() -> None:
     if args.tensor_validation:
         try:
             models = select_tensor_validation_models(models, requested_names)
+            assert_all_models_have_valid_receipts(
+                models,
+                receipt_dir=args.receipt_dir,
+                receipt_paths={models[0]["name"]: args.receipt} if args.receipt and len(models) == 1 else None,
+            )
             jobs = build_tensor_validation_jobs(models)
-        except ValueError as exc:
+        except (ValueError, ProtocolReceiptError) as exc:
             parser.error(str(exc))
         if len(jobs) != args.expected_jobs:
             parser.error(f"expected {args.expected_jobs} jobs, planned {len(jobs)}")
@@ -493,6 +512,14 @@ def main() -> None:
         )
         summary["skipped"] = []
     else:
+        try:
+            assert_all_models_have_valid_receipts(
+                models,
+                receipt_dir=args.receipt_dir,
+                receipt_paths={models[0]["name"]: args.receipt} if args.receipt and len(models) == 1 else None,
+            )
+        except ProtocolReceiptError as exc:
+            parser.error(str(exc))
         summary = run_inventory(jobs, Path(args.output_dir), args)
     if not args.status:
         selections = {}
