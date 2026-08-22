@@ -3,12 +3,12 @@ import time
 import sqlite3
 import argparse
 import sys
-import tempfile
+import os
+import subprocess
 from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.remote import run_host_command
 
 def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchmarks.db"):
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -78,13 +78,13 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 
                 cmd = (
                     f"timeout 60s /home/opencode/llama.cpp/build/bin/llama-cli "
-                    f"-m '{model_path}' "
+                    f"-m {model_path} "
                     f"-ngl 99 -dev {dev} {sm_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_flag}-c {ctx} -f {prompt_file} "
-                    f"-n 16 -st -no-cnv --no-display-prompt --simple-io < /dev/null"
+                    f"-n 16 -st --no-display-prompt --simple-io < /dev/null"
                 )
                 
-                res = run_host_command(cmd, timeout=70)
-                out_text = (res.stdout or "") + (res.stderr or "")
+                proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                out_text = (proc.stdout or "") + (proc.stderr or "")
                 
                 prompt_ts = 0.0
                 eval_ts = 0.0
@@ -102,7 +102,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 
                 passed_needle = secret_needle in out_text
                 retrieval = 1.0 if passed_needle else (0.5 if "8892" in out_text else 0.0)
-                success = res.returncode == 0
+                success = proc.returncode == 0
                 status = "PASS" if success and passed_needle else ("PARTIAL_FAILURE" if success else ("OOM" if "out of memory" in out_text.lower() or "vk::" in out_text.lower() else "FAILED"))
                 
                 print(f"   -> Status: {status}, Prompt: {prompt_ts:.1f} t/s, Gen: {eval_ts:.1f} t/s, Retrieval: {retrieval*100:.0f}%", flush=True)
@@ -125,6 +125,12 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-name", required=True)
-    parser.add_argument("--model-path", required=True)
+    parser.add_argument("--model-path", default="")
     args = parser.parse_args()
-    run_matrix(args.model_name, args.model_path)
+    
+    # Auto-resolve path if relative or MSYS mangled
+    model_path = args.model_path
+    if not model_path or "Program Files" in model_path:
+        model_path = f"/home/opencode/llama.cpp/models/{args.model_name}"
+        
+    run_matrix(args.model_name, model_path)
