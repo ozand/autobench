@@ -3,11 +3,12 @@ import time
 import sqlite3
 import argparse
 import sys
+import tempfile
 from pathlib import Path
 
 # Add project root to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from src.runner import Runner
+from src.remote import run_host_command
 
 def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchmarks.db"):
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -49,6 +50,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
     ]
     
     secret_needle = "SECRET_PIN_8892"
+    prompt_file = "/tmp/matrix_prompt.txt"
     
     print(f"Starting matrix run for {model_name}...")
     total_runs = len(contexts) * len(quant_options) * len(device_configs)
@@ -62,32 +64,48 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 dev_label = dev if dev == "Vulkan0" else "Dual-GPU (1,1)"
                 print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ...", flush=True)
                 
-                pad_len = max(10, int((ctx - 250) * 0.6))
+                pad_len = max(10, int((ctx - 150) * 0.5))
                 padding = "The quick brown fox jumps over the lazy dog. " * max(1, pad_len // 10)
                 test_prompt = f"{padding}\nImportant Note: The secret passcode is {secret_needle}.\n{padding}\nQuestion: What is the secret passcode? Answer with just the passcode:"
                 
-                res = Runner.run_local_vulkan(
-                    prompt=test_prompt,
-                    max_tokens=32,
-                    device=dev,
-                    model_path=model_path,
-                    timeout=90,
-                    context_length=ctx,
-                    ts_split=ts,
-                    split_mode=sm,
-                    cache_type_k=ctk if ctk != 'f16' else None,
-                    cache_type_v=ctv if ctv != 'f16' else None,
-                    no_kv_offload=no_kv
+                Path(prompt_file).write_text(test_prompt, encoding="utf-8")
+                
+                ts_flag = f"-ts {ts} " if ts else ""
+                sm_flag = f"-sm {sm} " if sm else ""
+                ctk_flag = f"-ctk {ctk} " if ctk != 'f16' else ""
+                ctv_flag = f"-ctv {ctv} " if ctv != 'f16' else ""
+                no_kv_flag = "--no-kv-offload " if no_kv else ""
+                
+                cmd = (
+                    f"timeout 60s /home/opencode/llama.cpp/build/bin/llama-cli "
+                    f"-m '{model_path}' "
+                    f"-ngl 99 -dev {dev} {sm_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_flag}-c {ctx} -f {prompt_file} "
+                    f"-n 16 -st -no-cnv --no-display-prompt --simple-io < /dev/null"
                 )
                 
-                prompt_ts = res.get("prompt_eval_tokens_per_second") or 0.0
-                eval_ts = res.get("eval_tokens_per_second") or 0.0
-                out_text = res.get("stdout", "") + res.get("output", "")
+                res = run_host_command(cmd, timeout=70)
+                out_text = (res.stdout or "") + (res.stderr or "")
+                
+                prompt_ts = 0.0
+                eval_ts = 0.0
+                for line in out_text.splitlines():
+                    if "prompt eval time" in line and "t/s" in line:
+                        try:
+                            prompt_ts = float(line.split("=")[-1].replace("t/s", "").strip().split()[0])
+                        except Exception:
+                            pass
+                    elif "eval time" in line and "t/s" in line and "prompt" not in line:
+                        try:
+                            eval_ts = float(line.split("=")[-1].replace("t/s", "").strip().split()[0])
+                        except Exception:
+                            pass
+                
                 passed_needle = secret_needle in out_text
                 retrieval = 1.0 if passed_needle else (0.5 if "8892" in out_text else 0.0)
-                status = "PASS" if res.get("success") and passed_needle else ("PARTIAL_FAILURE" if res.get("success") else res.get("status", "FAILED"))
+                success = res.returncode == 0
+                status = "PASS" if success and passed_needle else ("PARTIAL_FAILURE" if success else ("OOM" if "out of memory" in out_text.lower() or "vk::" in out_text.lower() else "FAILED"))
                 
-                print(f"   -> Status: {status}, Prompt: {prompt_ts:.1f} t/s, Gen: {eval_ts:.1f} t/s, Retrieval: {retrieval*100:.0f}%")
+                print(f"   -> Status: {status}, Prompt: {prompt_ts:.1f} t/s, Gen: {eval_ts:.1f} t/s, Retrieval: {retrieval*100:.0f}%", flush=True)
                 
                 cur.execute("""
                 INSERT INTO model_benchmarks (
@@ -97,7 +115,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0,
-                    prompt_ts, eval_ts, retrieval, 1.0 if res.get("success") else 0.0, status
+                    prompt_ts, eval_ts, retrieval, 1.0 if success else 0.0, status
                 ))
                 conn.commit()
 
