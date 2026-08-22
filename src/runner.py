@@ -66,22 +66,24 @@ class Runner:
         """
         Executes llama-cli on k7000 via SSH and parses results.
         """
-        # Escaping quotes for SSH execution
-        escaped_prompt = prompt.replace("'", "'\"'\"'")
+        # All user-supplied string arguments are shell-quoted to prevent injection.
+        q_model_path = shlex.quote(model_path)
+        q_device = shlex.quote(device)
+        q_prompt = shlex.quote(prompt)
         if ts_split:
-            ts_flag = f"-ts {ts_split} "
+            ts_flag = f"-ts {shlex.quote(ts_split)} "
         elif "," in device:
             ts_flag = "-ts 1,1 "
         else:
             ts_flag = ""
-        split_mode_flag = f"-sm {split_mode} " if split_mode else ""
-        ctk_flag = f"-ctk {cache_type_k} " if cache_type_k else ""
-        ctv_flag = f"-ctv {cache_type_v} " if cache_type_v else ""
+        split_mode_flag = f"-sm {shlex.quote(split_mode)} " if split_mode else ""
+        ctk_flag = f"-ctk {shlex.quote(cache_type_k)} " if cache_type_k else ""
+        ctv_flag = f"-ctv {shlex.quote(cache_type_v)} " if cache_type_v else ""
         no_kv_offload_flag = "--no-kv-offload " if no_kv_offload else ""
         cmd = (
             f"timeout {timeout}s /home/opencode/llama.cpp/build/bin/llama-cli "
-            f"-m '{model_path}' "
-            f"-ngl 99 -dev {device} {split_mode_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_offload_flag}-c {context_length} -p '{escaped_prompt}' "
+            f"-m {q_model_path} "
+            f"-ngl 99 -dev {q_device} {split_mode_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_offload_flag}-c {context_length} -p {q_prompt} "
             f"-n {max_tokens} -st -no-cnv --no-display-prompt --simple-io < /dev/null"
         )
 

@@ -5,6 +5,7 @@ import argparse
 import sys
 import os
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -67,6 +68,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
     ]
     device_configs = [
         ('Vulkan0', None, None),
+        ('Vulkan1', None, None),
         ('Vulkan0,Vulkan1', '1,1', 'layer')
     ]
     
@@ -106,16 +108,18 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 
                 cache_k = ctk if ctk != 'f16' else None
                 cache_v = ctv if ctv != 'f16' else None
-                
-                ts_flag = f"-ts {ts} " if ts else ("-ts 1,1 " if "," in dev else "")
-                sm_flag = f"-sm {sm} " if sm else ""
-                ctk_flag = f"-ctk {cache_k} " if cache_k else ""
-                ctv_flag = f"-ctv {cache_v} " if cache_v else ""
+
+                q_model_path = shlex.quote(model_path)
+                q_dev = shlex.quote(dev)
+                ts_flag = f"-ts {shlex.quote(ts)} " if ts else ("-ts 1,1 " if "," in dev else "")
+                sm_flag = f"-sm {shlex.quote(sm)} " if sm else ""
+                ctk_flag = f"-ctk {shlex.quote(cache_k)} " if cache_k else ""
+                ctv_flag = f"-ctv {shlex.quote(cache_v)} " if cache_v else ""
                 no_kv_flag = "--no-kv-offload " if no_kv else ""
-                
+
                 cmd = (
                     f"/home/opencode/llama.cpp/build/bin/llama-cli "
-                    f"-m '{model_path}' -ngl 99 -dev {dev} {sm_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_flag}"
+                    f"-m {q_model_path} -ngl 99 -dev {q_dev} {sm_flag}{ts_flag}{ctk_flag}{ctv_flag}{no_kv_flag}"
                     f"-c {ctx} -f /tmp/autobench_prompt.txt -n 16 -st -no-cnv --no-display-prompt --simple-io < /dev/null"
                 )
                 
