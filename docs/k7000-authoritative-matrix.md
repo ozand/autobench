@@ -60,6 +60,7 @@ published here.
 
 ## Source references
 
+- Historical runs audit & protocol ledger: `docs/historical-runs-audit.md`
 - Sanitized inventory report: local ignored artifact `results/inventory/report.md`
 - Inventory execution: GitHub issue #7
 - Report-only diagnostics: GitHub issue #14
