@@ -8,7 +8,8 @@
         "Uses isolated Surf CLI research for the exact model and runtime",
         "Stores sanitized raw and curated OKF notes with provenance",
         "Refreshes and queries the project-local QMD collection",
-        "Previews and reviews the plan before inference"
+        "Previews and reviews the plan before inference",
+        "Runs the zero-inference repository research checker"
       ]
     },
     {

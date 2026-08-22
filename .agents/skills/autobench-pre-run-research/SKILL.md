@@ -50,9 +50,17 @@ for a batch and then launch the batch without model-specific review.
 
    If the collection is not registered, create it with `qmd collection add kb
    --name autobench-kb` before updating.
-6. Review the note and only then run the zero-inference plan preview. Research
-   may define the upper probe target, but only hardware results establish what
-   the GGUF actually supports.
+6. Run the zero-inference repository gate and review its output:
+
+   ```text
+   python scripts/pre_run_research_check.py
+   qmd update
+   qmd search "<model> <context> <backend>" -c autobench-kb --no-rerank
+   ```
+
+   Research may define the upper probe target, but only hardware results
+   establish what the GGUF actually supports. The checker never launches a
+   model and is safe to run before review.
 7. During execution, stop at the first unexpected failure. Do not perform blind
    parameter sweeps, retries, or workaround permutations. Classify the failure,
    search the local KB, and investigate the authoritative upstream cause with
