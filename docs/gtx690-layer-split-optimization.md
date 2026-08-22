@@ -2,7 +2,13 @@
 
 ## Overview
 
-This guide defines the multi-GPU layer split ratios (`-sm layer -ts <ratio>`) for executing GGUF models across the dual GK104 cores of the NVIDIA GeForce GTX 690 (2x 2 GB VRAM) on the `k7000` testbed.
+This guide supports the dual-GPU decision in Stage 3 of the mandatory
+[`model-testing-protocol.md`](model-testing-protocol.md). It defines the
+multi-GPU layer split ratios (`-sm layer -ts <ratio>`) for executing GGUF models
+across the dual GK104 cores of the NVIDIA GeForce GTX 690 (2x 2 GB VRAM) on the
+`k7000` testbed. It is a planning reference, not authorization to run every
+ratio: each model plan must choose the smallest evidence-backed set or document
+why dual-GPU testing is excluded.
 
 ## Hardware & Runtime Architecture
 
@@ -10,6 +16,17 @@ This guide defines the multi-GPU layer split ratios (`-sm layer -ts <ratio>`) fo
 - **Backend:** Vulkan (`-dev Vulkan0,Vulkan1`).
 - **Split Mode:** Layer split (`-sm layer`). Row/tensor split (`-sm tensor`) is unsupported by the Vulkan backend (`does not support split buffers`).
 - **Main Device Overhead:** `Vulkan0` acts as the primary device hosting graph compute buffers, token embeddings, and final output logits. Consequently, `Vulkan0` experiences an inherent 50–150 MB buffer overhead compared to `Vulkan1`.
+
+## Protocol use
+
+- Establish matched Vulkan0 and Vulkan1 baselines before dual-GPU comparison.
+- Start with `1,1` when dual-layer testing applies.
+- Add one asymmetric ratio only for a documented memory or main-device-overhead
+  hypothesis. Do not sweep all ratios.
+- Preview the exact reviewed plan with `--dry-run`; successful preview does not
+  authorize inference.
+- Stop at the first unexpected result and follow
+  [`problem-investigation-plan.md`](problem-investigation-plan.md).
 
 ## Split Ratio Matrix & Evaluation
 

@@ -1,8 +1,11 @@
 # Pre-run research gate
 
-AutoBench hardware runs must begin with a bounded research pass. Research
-provides assumptions and provenance; it does not prove local device capability
-or authorize an unbounded workload.
+This document expands Stages 1 and 2 of the canonical
+[`model-testing-protocol.md`](model-testing-protocol.md). AutoBench hardware runs
+must begin with a bounded research pass. Research provides assumptions and
+provenance; it does not prove local device capability or authorize an unbounded
+workload. A successful checker or later `--dry-run` is necessary evidence, not
+permission to bypass review or launch inference.
 
 ## Required sequence
 
@@ -20,7 +23,7 @@ or authorize an unbounded workload.
 
    ```bash
    python scripts/pre_run_research_check.py
-   qmd update
+   qmd update -c autobench-kb
    qmd search "<model> <context> <backend>" -c autobench-kb --no-rerank
    ```
 
@@ -32,8 +35,14 @@ or authorize an unbounded workload.
    `kb-bootstrap validate --dir kb` is supported.
 8. Review the note for secrets, private paths, host identifiers, raw browser
    output, prompts, responses, and unsanitized runtime payloads.
-9. Only after the note is reviewed, preview the hardware plan and run it through
-   the pinned remote-execution workflow.
+9. Only after the note is reviewed, prepare the Stage 3 model-specific plan from
+   [`model-testing-protocol.md`](model-testing-protocol.md). It must explicitly
+   decide matched Vulkan0/Vulkan1 baselines, applicable dual-GPU `-sm layer`
+   ratios, and bounded context/KV-cache coverage or evidence-backed exclusions.
+10. Preview the exact plan with `--dry-run`, verify all configurations and the
+    expected job count, then stop for explicit review. A successful dry-run does
+    **not** authorize inference; remove `--dry-run` only after the KB evidence and
+    plan are approved.
 
 ## Evidence classes
 

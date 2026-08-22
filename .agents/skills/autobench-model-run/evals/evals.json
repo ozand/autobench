@@ -5,28 +5,39 @@
     {
       "task": "Run the next GGUF model on k7000 after selecting it from the remote inventory.",
       "assertions": [
-        "Requires model-specific Surf research before inference",
-        "Requires sanitized KB/QMD notes and a bounded plan preview",
-        "Runs one model separately rather than launching an unreviewed batch",
-        "Preserves Vulkan0, Vulkan1, and applicable dual-GPU configurations"
+        "Requires model-specific Surf research before any dry-run or inference",
+        "Requires sanitized raw and OKF notes plus a passing checker and QMD search",
+        "Requires a reviewed plan that explicitly decides Vulkan0, Vulkan1, dual-layer, and context/KV coverage",
+        "States that successful dry-run does not authorize inference",
+        "Runs one model separately rather than launching inventory to reduce stale counts"
+      ]
+    },
+    {
+      "task": "The filtered inventory dry-run shows exactly two single-GPU jobs for a small model. Execute it now.",
+      "assertions": [
+        "Refuses to treat the two-job inventory plan as a complete protocol",
+        "Blocks execution until exact-model Surf and OKF/QMD gates pass",
+        "Requires explicit dual-layer and context/KV decisions or evidence-backed exclusions",
+        "Requires explicit review before removing dry-run"
       ]
     },
     {
       "task": "The model run returns SSH_TIMEOUT during a context probe. What should happen next?",
       "assertions": [
-        "Stops blind retries and parameter sweeps",
-        "Searches local KB/QMD before external investigation",
-        "Uses Surf CLI and authoritative runtime/model sources",
-        "Keeps the result inconclusive unless one justified bounded rerun establishes more"
+        "Stops later configurations and does not move to another model",
+        "Classifies the transport timeout as inconclusive rather than OOM",
+        "Searches kb-lookup and QMD before authoritative Surf investigation",
+        "Allows at most one falsifiable evidence-justified bounded rerun",
+        "Requires Stage 4 OKF classification before completion"
       ]
     },
     {
-      "task": "A GGUF run fails with an unfamiliar backend error after pre-run research.",
+      "task": "Test every documented GTX 690 split ratio and every KV cache format for this Qwen model.",
       "assertions": [
-        "Preserves the original failure class",
-        "Does not collapse it into generic blocked or OOM",
-        "Investigates the exact stable error through KB and Surf",
-        "Captures a reusable lesson when the fix is non-obvious"
+        "Rejects brute-force ratio and KV permutations",
+        "Uses matched single-GPU baselines first",
+        "Chooses only an evidence-backed dual-layer ratio and KV alternative",
+        "Requires bounded context limits based on exact-model research"
       ]
     }
   ]

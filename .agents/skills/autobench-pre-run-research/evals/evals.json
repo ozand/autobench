@@ -5,20 +5,31 @@
     {
       "task": "Prepare a bounded run for a new Qwen GGUF model on Vulkan0 and Vulkan1.",
       "assertions": [
-        "Uses isolated Surf CLI research for the exact model and runtime",
+        "Uses isolated Surf CLI research for the exact model and runtime before dry-run",
         "Stores sanitized raw and curated OKF notes with provenance",
+        "Runs the zero-inference repository checker and verifies links/sanitization",
         "Refreshes and queries the project-local QMD collection",
-        "Previews and reviews the plan before inference",
-        "Runs the zero-inference repository research checker"
+        "Hands off to explicit single-GPU, dual-layer, and context/KV planning",
+        "States that dry-run requires explicit review before inference"
+      ]
+    },
+    {
+      "task": "We researched Qwen2.5 Q4_K_M last week. Run the Q8_0 GGUF now using the old note.",
+      "assertions": [
+        "Checks whether the existing research applies to the exact Q8_0 artifact and current runtime",
+        "Refreshes or extends provenance instead of assuming another quantization is covered",
+        "Blocks planning and dry-run until the exact-model OKF/QMD evidence is discoverable",
+        "Does not treat chat history as repository evidence"
       ]
     },
     {
       "task": "The first context probe times out while the model appears loaded.",
       "assertions": [
         "Classifies the timeout as inconclusive rather than OOM",
-        "Searches local KB and then authoritative Surf sources",
+        "Requires kb-lookup and QMD search before external Surf investigation",
         "Allows at most one evidence-justified bounded rerun",
-        "Records the cause and rerun rationale in sanitized notes"
+        "Records the cause and rerun rationale in sanitized notes",
+        "Does not authorize advancing to another model"
       ]
     }
   ]
