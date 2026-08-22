@@ -194,3 +194,20 @@ Exiting...
     assert result["prompt_speed_ts"] == 12.5
     assert result["generation_speed_ts"] == 22.0
     assert result["command_args"][0] == "timeout"
+
+
+def test_runner_supports_kv_quantization_and_host_offload():
+    with patch("runner.subprocess.run", return_value=completed(0, stdout="[ Prompt: 100.0 t/s | Generation: 20.0 t/s ]\nExiting...")) as mocked_run:
+        res = Runner.run_local_vulkan(
+            "test prompt",
+            cache_type_k="q8_0",
+            cache_type_v="q4_0",
+            no_kv_offload=True,
+            timeout=1,
+        )
+
+    assert res["success"] is True
+    cmd = mocked_run.call_args.args[0][-1]
+    assert "-ctk q8_0" in cmd
+    assert "-ctv q4_0" in cmd
+    assert "--no-kv-offload" in cmd
