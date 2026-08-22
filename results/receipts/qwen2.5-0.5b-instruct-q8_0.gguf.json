@@ -1,33 +1,50 @@
 {
   "schema_version": 1,
-  "model_basename": "qwen2.5-0.5b-instruct-q8_0.gguf",
   "status": "PROTOCOL_RECEIPT_VALID",
-  "created_at": "2026-08-22T15:50:00.000000+00:00",
-  "research": {
-    "model_name": "qwen2.5-0.5b-instruct-q8_0.gguf",
-    "architecture": "qwen2",
-    "context_limit": 32768,
-    "quantization": "Q8_0",
-    "source_url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
-    "raw_notes_path": "kb/raw/qwen2.5-0.5b-instruct-q8_0.md",
-    "okf_note_path": "kb/wiki/KB-QWEN25-05B-Q8_0.md",
-    "okf_id": "KB-QWEN25-05B-Q8_0"
+  "model_name": "qwen2.5-0.5b-instruct-q8_0.gguf",
+  "model_id": "qwen2.5-0.5b-instruct-q8_0.gguf",
+  "backend": "vulkan",
+  "governing_issue": 1,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2.5-0.5b-instruct-q8_0.md",
+      "retrieval_date": "2026-08-22",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN25-05B-Q8_0.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "expected_job_count": 3,
+      "review_evidence": "Bounded 3-job matrix for Vulkan0, Vulkan1, and Vulkan0,Vulkan1 layer split 1,1 reviewed under Issue #1."
+    }
   },
-  "plan": {
-    "single_gpu_devices": [
-      "Vulkan0",
-      "Vulkan1"
-    ],
-    "dual_gpu_split_mode": "layer",
-    "dual_gpu_tensor_split": "1,1",
-    "context_progression": [
-      1024,
-      2048,
-      4096
-    ],
-    "kv_cache_modes": [
-      "f16"
-    ],
-    "expected_jobs_count": 3
-  }
+  "approved_configurations": [
+    {
+      "device": "Vulkan0",
+      "tensor_split": null,
+      "split_mode": null,
+      "ngl": 33
+    },
+    {
+      "device": "Vulkan1",
+      "tensor_split": null,
+      "split_mode": null,
+      "ngl": 33
+    },
+    {
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "split_mode": "layer",
+      "ngl": 33
+    }
+  ]
 }
