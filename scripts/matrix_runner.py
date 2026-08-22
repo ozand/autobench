@@ -4,11 +4,35 @@ import sqlite3
 import argparse
 import sys
 from pathlib import Path
+
+# Add project root to sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.runner import Runner
 
 def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchmarks.db"):
+    Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
+    
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS model_benchmarks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        model_name TEXT NOT NULL,
+        size_bytes INTEGER,
+        device TEXT NOT NULL,
+        tensor_split TEXT,
+        context_length INTEGER NOT NULL,
+        kv_quant TEXT NOT NULL,
+        kv_offload BOOLEAN NOT NULL,
+        prompt_tokens_per_sec REAL,
+        eval_tokens_per_sec REAL,
+        retrieval_rate REAL,
+        quality_pass_rate REAL,
+        status TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    conn.commit()
     
     contexts = [1024, 2048, 4096, 8192, 16384, 32768]
     quant_options = [
