@@ -1,34 +1,50 @@
 {
+  "schema_version": 1,
+  "status": "PROTOCOL_RECEIPT_VALID",
   "model_name": "Qwen3.5-0.8B-Q4_K_M.gguf",
-  "model_family": "qwen3.5",
-  "size_bytes": 532454656,
-  "size_class": "small",
-  "research_provenance": "kb/raw/qwen3.5-0.8b-q4_k_m.md",
-  "kb_lesson_id": "QWEN35-001",
-  "kb_lesson_path": "kb/wiki/QWEN35-001-qwen35-08b-vulkan-diagnostic.md",
-  "hardware_target": "GTX 690 (Dual GK104, 2x2048 MiB VRAM)",
-  "reviewed_configurations": [
+  "model_id": "Qwen3.5-0.8B-Q4_K_M.gguf",
+  "backend": "vulkan",
+  "governing_issue": 1,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen3.5-0.8b-q4_k_m.md",
+      "retrieval_date": "2026-08-22",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen3.5-0.8B-GGUF"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/QWEN35-001-qwen35-08b-vulkan-diagnostic.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "expected_job_count": 3,
+      "review_evidence": "Bounded 3-job matrix for Vulkan0, Vulkan1, and Vulkan0,Vulkan1 layer split 1,1 reviewed under Issue #1."
+    }
+  },
+  "approved_configurations": [
     {
       "device": "Vulkan0",
-      "split_mode": "none",
-      "workload": "full",
-      "context": 2048,
-      "ngl": 99
+      "tensor_split": null,
+      "split_mode": null,
+      "ngl": 33
     },
     {
       "device": "Vulkan1",
-      "split_mode": "none",
-      "workload": "full",
-      "context": 2048,
-      "ngl": 99
-    }
-  ],
-  "unsupported_configurations": [
+      "tensor_split": null,
+      "split_mode": null,
+      "ngl": 33
+    },
     {
-      "split_mode": "tensor",
-      "reason": "Vulkan split buffers unsupported on hardware testbed"
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "split_mode": "layer",
+      "ngl": 33
     }
-  ],
-  "plan_created_at": "2026-08-22T15:20:00Z",
-  "reviewer": "protocol-enforcer"
+  ]
 }
