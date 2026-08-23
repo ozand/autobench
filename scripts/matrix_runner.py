@@ -84,7 +84,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 current += 1
                 kv_label = f"{ctk}" if not no_kv else f"{ctk}_no_offload"
                 dev_label = dev if "," not in dev else "Dual-GPU (1,1)"
-                if failed_state is not None and "," not in dev:
+                if failed_state is not None :
                     print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ... (cascaded {failed_state})", flush=True)
                     cur.execute("DELETE FROM model_benchmarks WHERE model_name=? AND device=? AND context_length=? AND kv_quant=? AND kv_offload=?", (model_name, dev, ctx, ctk, 1 if no_kv else 0))
                     cur.execute("INSERT INTO model_benchmarks (model_name, size_bytes, device, tensor_split, context_length, kv_quant, kv_offload, prompt_tokens_per_sec, eval_tokens_per_sec, retrieval_rate, quality_pass_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0, 0.0, 0.0, 0.0, 0.0, failed_state))
@@ -150,7 +150,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 retrieval = 1.0 if passed_needle else (0.5 if "8892" in out_text else 0.0)
                 quality = 1.0 if status == "SUCCESS" else 0.0
                 
-                if status in ("TIMEOUT", "OOM", "FAILED") and "," not in dev:
+                if status in ("TIMEOUT", "OOM", "FAILED") :
                     failed_state = status
                 print(f"   -> Status: {status}, Prompt: {prompt_ts:.1f} t/s, Gen: {eval_ts:.1f} t/s, Retrieval: {retrieval*100:.0f}%", flush=True)
                 
