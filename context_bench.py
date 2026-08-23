@@ -124,13 +124,30 @@ def execution_stages(result: dict, generated_tokens: int = 0) -> dict:
     }
 
 
+def classify_retrieval_attempt(
+    response_text: str,
+    expected_answer: str,
+    status: str,
+    generated_tokens: int,
+) -> dict:
+    """Classify one bounded retrieval attempt without treating missing evidence as a miss."""
+    if status != "SUCCESS" or generated_tokens <= 0:
+        return {"outcome": "INCONCLUSIVE", "reason": "execution_or_generation_incomplete"}
+    if not response_text.strip():
+        return {"outcome": "INCONCLUSIVE", "reason": "empty_response"}
+    normalized = response_text.strip()
+    if normalized == expected_answer or expected_answer in normalized:
+        return {"outcome": "VERIFIED", "reason": "exact_answer_present"}
+    return {"outcome": "MISSED", "reason": "answer_absent"}
+
+
 def summarize_context_runs(
     runs: list[dict],
     reliability_threshold: float,
     min_prompt_ts: float,
     min_gen_ts: float,
 ) -> dict:
-    """Summarize technical capacity, retrieval reliability, and operations separately."""
+    """Summarize technical capacity and explicit retrieval outcomes separately."""
     by_context: dict[int, list[dict]] = {}
     for run in runs:
         by_context.setdefault(run["context_size"], []).append(run)
@@ -139,9 +156,17 @@ def summarize_context_runs(
     for context_size, attempts in sorted(by_context.items()):
         total = len(attempts)
         successful = [run for run in attempts if run["status"] == "SUCCESS"]
-        retrieved = [run for run in successful if run["retrieved"]]
+        outcomes = [
+            run.get("retrieval_outcome")
+            or ("VERIFIED" if run.get("status") == "SUCCESS" and run.get("retrieved") else
+                "MISSED" if run.get("status") == "SUCCESS" else "INCONCLUSIVE")
+            for run in attempts
+        ]
+        verified = [run for run, outcome in zip(attempts, outcomes) if outcome == "VERIFIED"]
+        missed = [run for run, outcome in zip(attempts, outcomes) if outcome == "MISSED"]
+        inconclusive = [run for run, outcome in zip(attempts, outcomes) if outcome == "INCONCLUSIVE"]
         allocation_rate = len(successful) / total
-        retrieval_rate = len(retrieved) / total
+        retrieval_rate = len(verified) / total
         avg_prompt = (
             sum(run["prompt_ts"] for run in successful) / len(successful)
             if successful
@@ -156,6 +181,15 @@ def summarize_context_runs(
             "attempts": total,
             "allocation_rate": allocation_rate,
             "retrieval_rate": retrieval_rate,
+            "verified_attempts": len(verified),
+            "missed_attempts": len(missed),
+            "inconclusive_attempts": len(inconclusive),
+            "retrieval_outcome": (
+                "INCONCLUSIVE" if inconclusive else
+                "VERIFIED" if len(verified) == total else
+                "MISSED" if len(missed) == total else
+                "MIXED"
+            ),
             "avg_prompt_ts": avg_prompt,
             "avg_gen_ts": avg_gen,
             "allocatable": allocation_rate >= reliability_threshold,
@@ -253,6 +287,8 @@ def run_context_test(
             "prompt_ts": 0.0,
             "gen_ts": 0.0,
             "retrieved": False,
+            "retrieval_outcome": "INCONCLUSIVE",
+            "retrieval_reason": "execution_or_generation_incomplete",
             "elapsed_seconds": res.get("elapsed_seconds", 0.0),
             "execution": execution_stages(res),
             "retrieval": {"correct": False},
@@ -267,10 +303,16 @@ def run_context_test(
         }
 
     response_text = res.get("response", "")
-    retrieved = needle_val in response_text
     generated_tokens = Runner.count_local_tokens(
         model_path, response_text, timeout=min(timeout, 60)
     )
+    retrieval_result = classify_retrieval_attempt(
+        response_text=response_text,
+        expected_answer=needle_val,
+        status=res.get("status", "EXECUTION_ERROR"),
+        generated_tokens=generated_tokens,
+    )
+    retrieved = retrieval_result["outcome"] == "VERIFIED"
 
     return {
         "context_size": context_size,
@@ -289,6 +331,8 @@ def run_context_test(
         "prompt_ts": res.get("prompt_speed_ts", 0.0),
         "gen_ts": res.get("generation_speed_ts", 0.0),
         "retrieved": retrieved,
+        "retrieval_outcome": retrieval_result["outcome"],
+        "retrieval_reason": retrieval_result["reason"],
         "elapsed_seconds": res.get("elapsed_seconds", 0.0),
         "response": response_text[:120],
         "execution": execution_stages(res, generated_tokens),

@@ -7,6 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__))))
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 from context_bench import (
+    classify_retrieval_attempt,
     build_context_prompt,
     execution_stages,
     generate_haystack,
@@ -89,6 +90,21 @@ def test_build_context_prompt_validates_utilization():
         assert "utilization" in str(exc)
     else:
         raise AssertionError("invalid utilization must fail")
+
+
+def test_retrieval_classification_distinguishes_verified_missed_and_inconclusive():
+    assert classify_retrieval_attempt("TEST-KEY", "TEST-KEY", "SUCCESS", 3) == {
+        "outcome": "VERIFIED", "reason": "exact_answer_present"
+    }
+    assert classify_retrieval_attempt("wrong", "TEST-KEY", "SUCCESS", 3) == {
+        "outcome": "MISSED", "reason": "answer_absent"
+    }
+    assert classify_retrieval_attempt("", "TEST-KEY", "SUCCESS", 0) == {
+        "outcome": "INCONCLUSIVE", "reason": "execution_or_generation_incomplete"
+    }
+    assert classify_retrieval_attempt("wrong", "TEST-KEY", "TIMEOUT", 3) == {
+        "outcome": "INCONCLUSIVE", "reason": "execution_or_generation_incomplete"
+    }
 
 
 def test_execution_stages_keep_retrieval_separate():
