@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "model_size_bytes": 1117409280,
+  "governing_issue": 31,
+  "status": "PROTOCOL_RECEIPT_VALID",
+  "created_at": "2026-08-22T19:40:00.000000+00:00",
+  "stages": {
+    "research": {
+      "status": "COMPLETED",
+      "provenance_path": "kb/raw/qwen2.5-coder-1.5b-instruct-q4_k_m.md",
+      "architecture": "qwen2",
+      "context_limit": 32768,
+      "parameter_count_b": 1.54,
+      "quantization": "Q4_K_M",
+      "vulkan_support": true,
+      "multi_gpu_support": "layer_split_only"
+    },
+    "plan": {
+      "status": "COMPLETED",
+      "okf_note_path": "kb/wiki/KB-QWEN25-CODER-15B-Q4KM.md",
+      "qmd_verified": true,
+      "pre_run_research_check_passed": true,
+      "baseline_devices": [
+        "Vulkan0",
+        "Vulkan1"
+      ],
+      "dual_gpu_layer_split_ratios": [
+        "1,1"
+      ],
+      "context_progression": [
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ],
+      "kv_cache_modes": [
+        "f16",
+        "q8_0",
+        "q4_0"
+      ]
+    }
+  }
+}
