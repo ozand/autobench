@@ -17,22 +17,32 @@
             --badge-amber: #f59e0b;
             --badge-red: #ef4444;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            line-height: 1.5;
             padding: 2rem;
+            line-height: 1.5;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
         header {
             margin-bottom: 2rem;
             border-bottom: 1px solid var(--border);
             padding-bottom: 1.5rem;
         }
-        h1 { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-        p.subtitle { color: var(--text-muted); font-size: 1rem; }
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
         .controls {
             display: flex;
             gap: 1rem;
@@ -74,25 +84,27 @@
             user-select: none;
         }
         th:hover { color: var(--accent); }
-        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+        tr:hover { background-color: rgba(255, 255, 255, 0.02); }
         .badge {
             display: inline-block;
-            padding: 0.25rem 0.6rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
+            text-transform: uppercase;
         }
         .badge-green { background: rgba(34, 197, 94, 0.2); color: var(--badge-green); }
         .badge-amber { background: rgba(245, 158, 11, 0.2); color: var(--badge-amber); }
         .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--badge-red); }
-        .speed-val { font-family: "SFMono-Regular", Consolas, Menlo, monospace; font-weight: 600; }
+        .speed-val { font-family: monospace; font-size: 0.95rem; color: var(--accent); }
+        .error-msg { padding: 2rem; text-align: center; color: var(--badge-red); font-size: 1.1rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>⚡ AutoBench: Матрица производительности GGUF (k7000)</h1>
-            <p class="subtitle">Стенд: Dual GTX 690 (Kepler Vulkan 2×2GB) • Режим кэша: --no-kv-offload • Тестирование контекста и квантования</p>
+            <h1>⚡ AutoBench: LLM Benchmark Results (k7000)</h1>
+            <p class="subtitle">Авторитетные замеры скорости генерации, поиска фактов (Retrieval) и контекстного окна на NVIDIA GTX 690 (Dual-GPU / Vulkan)</p>
         </header>
 
         <div class="controls">
@@ -130,7 +142,7 @@
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <!-- Заполняется JavaScript -->
+                    <tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Загрузка данных...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -141,39 +153,62 @@
 
         async function loadData() {
             try {
-                const res = await fetch('benchmarks_data.json');
+                const res = await fetch('./benchmarks_data.json?t=' + Date.now());
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 benchmarkData = await res.json();
                 renderTable(benchmarkData);
             } catch (err) {
-                console.error("Ошибка загрузки данных:", err);
+                console.error('Ошибка загрузки данных:', err);
+                const tbody = document.getElementById('table-body');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="9" class="error-msg">Не удалось загрузить benchmarks_data.json: ' + err.message + '</td></tr>';
+                }
             }
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('table-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">Нет данных по выбранному фильтру</td></tr>';
+                return;
+            }
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                const promptSpeed = row.prompt_tokens_per_sec ? row.prompt_tokens_per_sec.toFixed(1) : '-';
-                const genSpeed = row.eval_tokens_per_sec ? row.eval_tokens_per_sec.toFixed(1) : '-';
-                const retrieval = row.retrieval_rate !== null && row.retrieval_rate !== undefined 
-                    ? (row.retrieval_rate * 100).toFixed(1) + '%' : '-';
-                const quality = row.quality_pass_rate !== null && row.quality_pass_rate !== undefined 
-                    ? (row.quality_pass_rate * 100).toFixed(0) + '%' : '-';
+                const promptSpeed = (row.prompt_tokens_per_sec !== null && row.prompt_tokens_per_sec !== undefined && row.prompt_tokens_per_sec > 0) ? Number(row.prompt_tokens_per_sec).toFixed(1) : '-';
+                const genSpeed = (row.eval_tokens_per_sec !== null && row.eval_tokens_per_sec !== undefined && row.eval_tokens_per_sec > 0) ? Number(row.eval_tokens_per_sec).toFixed(1) : '-';
+                const retrieval = (row.retrieval_rate !== null && row.retrieval_rate !== undefined && row.retrieval_rate > 0) 
+                    ? (Number(row.retrieval_rate) * 100).toFixed(1) + '%' : '-';
+                const quality = (row.quality_pass_rate !== null && row.quality_pass_rate !== undefined && row.quality_pass_rate > 0) 
+                    ? (Number(row.quality_pass_rate) * 100).toFixed(0) + '%' : '-';
 
-                let statusBadge = `<span class="badge badge-green">PASS</span>`;
-                if (row.status === 'PARTIAL_FAILURE') {
-                    statusBadge = `<span class="badge badge-amber">PARTIAL</span>`;
+                let statusBadge = '<span class="badge badge-green">PASS</span>';
+                if (row.status === 'PARTIAL_FAILURE' || row.status === 'PARTIAL') {
+                    statusBadge = '<span class="badge badge-amber">PARTIAL</span>';
+                } else if (row.status === 'TIMEOUT') {
+                    statusBadge = '<span class="badge badge-amber">TIMEOUT</span>';
                 } else if (row.status === 'FAILED' || row.status === 'OOM') {
-                    statusBadge = `<span class="badge badge-red">${row.status}</span>`;
+                    statusBadge = '<span class="badge badge-red">' + row.status + '</span>';
+                }
+
+                let devText = row.device || 'Vulkan0';
+                if (row.tensor_split && row.tensor_split !== 'none') {
+                    devText += ' (' + row.tensor_split + ')';
+                }
+
+                let kvText = row.kv_quant || 'f16';
+                if (row.kv_offload) {
+                    kvText += ' (RAM)';
                 }
 
                 tr.innerHTML = `
-                    <td><strong>${row.model_name}</strong></td>
-                    <td>${row.device} ${row.tensor_split !== 'none' ? '(' + row.tensor_split + ')' : ''}</td>
-                    <td>${row.context_length}</td>
-                    <td>${row.kv_quant || 'f16'}</td>
+                    <td><strong>${row.model_name || ''}</strong></td>
+                    <td>${devText}</td>
+                    <td>${row.context_length || ''}</td>
+                    <td>${kvText}</td>
                     <td class="speed-val">${promptSpeed}</td>
                     <td class="speed-val">${genSpeed}</td>
                     <td>${retrieval}</td>
@@ -185,18 +220,62 @@
         }
 
         function filterTable() {
-            const query = document.getElementById('search').value.toLowerCase();
-            const dev = document.getElementById('device-filter').value;
-            const ctx = document.getElementById('ctx-filter').value;
+            const query = (document.getElementById('search')?.value || '').toLowerCase();
+            const dev = document.getElementById('device-filter')?.value || 'all';
+            const ctx = document.getElementById('ctx-filter')?.value || 'all';
 
             const filtered = benchmarkData.filter(row => {
-                const matchName = row.model_name.toLowerCase().includes(query);
-                const matchDev = dev === 'all' || (dev === '1_1' ? (row.tensor_split && row.tensor_split.includes('1,1')) : row.device.includes(dev));
-                const matchCtx = ctx === 'all' || row.context_length.toString() === ctx;
+                const matchName = (row.model_name || '').toLowerCase().includes(query);
+                const matchDev = dev === 'all' || (dev === '1_1' ? (row.tensor_split && row.tensor_split.includes('1,1')) : (row.device && row.device.includes(dev)));
+                const matchCtx = ctx === 'all' || (row.context_length !== undefined && row.context_length !== null && row.context_length.toString() === ctx);
                 return matchName && matchDev && matchCtx;
             });
 
             renderTable(filtered);
+        }
+
+        function sortTable(n) {
+            const table = document.getElementById('bench-table');
+            let rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            switching = true;
+            dir = 'asc';
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName('TD')[n];
+                    y = rows[i + 1].getElementsByTagName('TD')[n];
+                    if (!x || !y) continue;
+                    let xVal = x.innerText.toLowerCase();
+                    let yVal = y.innerText.toLowerCase();
+                    let xNum = parseFloat(xVal);
+                    let yNum = parseFloat(yVal);
+                    if (!isNaN(xNum) && !isNaN(yNum)) {
+                        if (dir === 'asc') {
+                            if (xNum > yNum) { shouldSwitch = true; break; }
+                        } else if (dir === 'desc') {
+                            if (xNum < yNum) { shouldSwitch = true; break; }
+                        }
+                    } else {
+                        if (dir === 'asc') {
+                            if (xVal > yVal) { shouldSwitch = true; break; }
+                        } else if (dir === 'desc') {
+                            if (xVal < yVal) { shouldSwitch = true; break; }
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === 'asc') {
+                        dir = 'desc';
+                        switching = true;
+                    }
+                }
+            }
         }
 
         loadData();
