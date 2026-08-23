@@ -123,8 +123,8 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                     f"-c {ctx} -f /tmp/autobench_prompt.txt -n 16 -st -no-cnv --no-display-prompt --simple-io < /dev/null"
                 )
                 
-                # Context scaling timeout: allow up to 300s for 32k
-                timeout_sec = max(60, min(300, int(ctx / 60) + 40))
+                # Optimized prompt & timeout
+                timeout_sec = 45 if ctx <= 4096 else 60
                 
                 start_t = time.time()
                 try:
