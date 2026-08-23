@@ -79,10 +79,17 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
     
     for dev, ts, sm in device_configs:
         for ctk, ctv, no_kv in quant_options:
+            failed_state = None
             for ctx in contexts:
                 current += 1
                 kv_label = f"{ctk}" if not no_kv else f"{ctk}_no_offload"
-                dev_label = dev if dev == "Vulkan0" else "Dual-GPU (1,1)"
+                dev_label = dev if "," not in dev else "Dual-GPU (1,1)"
+                if failed_state is not None and "," not in dev:
+                    print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ... (cascaded {failed_state})", flush=True)
+                    cur.execute("DELETE FROM model_benchmarks WHERE model_name=? AND device=? AND context_length=? AND kv_quant=? AND kv_offload=?", (model_name, dev, ctx, ctk, 1 if no_kv else 0))
+                    cur.execute("INSERT INTO model_benchmarks (model_name, size_bytes, device, tensor_split, context_length, kv_quant, kv_offload, prompt_tokens_per_sec, eval_tokens_per_sec, retrieval_rate, quality_pass_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0, 0.0, 0.0, 0.0, 0.0, failed_state))
+                    conn.commit()
+                    continue
                 print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ...", flush=True)
                 
                 cur.execute("""
@@ -124,13 +131,14 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 )
                 
                 # Optimized prompt & timeout
-                timeout_sec = 45 if ctx <= 4096 else 60
+                timeout_sec = 10 if ctx <= 2048 else (18 if ctx <= 8192 else 25)
                 
                 start_t = time.time()
                 try:
                     proc = run_host_command(cmd, timeout=timeout_sec)
                     res = parse_output(proc.stdout, proc.stderr, proc.returncode)
                 except subprocess.TimeoutExpired:
+                    run_host_command("killall -9 llama-cli")
                     res = {"status": "TIMEOUT", "prompt_ts": 0.0, "gen_ts": 0.0, "raw_output": ""}
                 
                 status = res["status"]
@@ -142,6 +150,8 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 retrieval = 1.0 if passed_needle else (0.5 if "8892" in out_text else 0.0)
                 quality = 1.0 if status == "SUCCESS" else 0.0
                 
+                if status in ("TIMEOUT", "OOM", "FAILED") and "," not in dev:
+                    failed_state = status
                 print(f"   -> Status: {status}, Prompt: {prompt_ts:.1f} t/s, Gen: {eval_ts:.1f} t/s, Retrieval: {retrieval*100:.0f}%", flush=True)
                 
                 cur.execute("""
