@@ -122,18 +122,20 @@ class Runner:
             }
 
         stdout = res.stdout
-
-        # Regex to parse generation speed
-        # e.g. [ Prompt: 287.8 t/s | Generation: 36.7 t/s ]
-        speed_match = re.search(
-            r"\[\s*Prompt:\s*([\d.]+)\s*t/s\s*\|\s*Generation:\s*([\d.]+)\s*t/s\s*\]",
-            stdout,
-        )
-        prompt_ts = 0.0
-        gen_ts = 0.0
-        if speed_match:
-            prompt_ts = float(speed_match.group(1))
-            gen_ts = float(speed_match.group(2))
+        stderr = res.stderr
+        prompt_ts, gen_ts = Runner._parse_performance_metrics(stdout, stderr)
+        if prompt_ts is None or gen_ts is None:
+            return {
+                "success": False,
+                "status": "METRIC_PARSE_FAILED",
+                "error": "llama-cli completed without an unambiguous performance summary",
+                "return_code": res.returncode,
+                "stdout": res.stdout,
+                "stderr": res.stderr,
+                "raw_output": res.stdout,
+                "elapsed_seconds": elapsed,
+                "command_args": command_args,
+            }
 
         # Extract response text
         # llama-cli prints the generated response immediately before '[ Prompt: XX t/s | Generation: YY t/s ]'
@@ -189,6 +191,27 @@ class Runner:
             "stderr": res.stderr,
             "command_args": command_args,
         }
+
+    @staticmethod
+    def _parse_performance_metrics(stdout: str, stderr: str) -> tuple[float | None, float | None]:
+        """Parse llama-cli speed summaries from either output stream."""
+        combined = f"{stdout}\n{stderr}"
+        patterns = (
+            re.compile(
+                r"Prompt:\s*([\d.]+)\s*t/s\s*\|\s*Generation:\s*([\d.]+)\s*t/s",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"prompt eval time.*?\(([\d.]+)\s*tokens per second\).*?"
+                r"eval time.*?\(([\d.]+)\s*tokens per second\)",
+                re.IGNORECASE | re.DOTALL,
+            ),
+        )
+        for pattern in patterns:
+            match = pattern.search(combined)
+            if match:
+                return float(match.group(1)), float(match.group(2))
+        return None, None
 
     @staticmethod
     def _classify_local_failure(return_code: int, stdout: str, stderr: str) -> str:

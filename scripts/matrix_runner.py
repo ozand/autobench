@@ -21,7 +21,10 @@ def parse_output(stdout: str, stderr: str, returncode: int):
             return {"status": "UNSUPPORTED_BACKEND", "prompt_ts": 0.0, "gen_ts": 0.0, "raw_output": ""}
         return {"status": "FAILED", "prompt_ts": 0.0, "gen_ts": 0.0, "raw_output": stdout}
     
-    speed_match = re.search(r"\[\s*Prompt:\s*([\d.]+)\s*t/s\s*\|\s*Generation:\s*([\d.]+)\s*t/s\s*\]", stdout)
+    combined = f"{stdout}\n{stderr}"
+    speed_match = re.search(r"\[\s*Prompt:\s*([\d.]+)\s*t/s\s*\|\s*Generation:\s*([\d.]+)\s*t/s\s*\]", combined)
+    if not speed_match:
+        speed_match = re.search(r"Prompt:\s*([\d.]+)\s*t/s\s*\|\s*Generation:\s*([\d.]+)\s*t/s", combined)
     prompt_ts = float(speed_match.group(1)) if speed_match else 0.0
     gen_ts = float(speed_match.group(2)) if speed_match else 0.0
     

@@ -178,6 +178,22 @@ def test_tensor_split_serializes_explicit_split_mode():
     assert "-ts 1,1" in command
 
 
+def test_runner_parses_metrics_from_stderr_summary():
+    stderr = "prompt eval time = 1.0 ms / 100 tokens (100.0 tokens per second)\\neval time = 2.0 ms / 40 tokens (20.0 tokens per second)"
+    result = run_with_result(completed(0, stderr=stderr))
+
+    assert result["success"] is True
+    assert result["prompt_speed_ts"] == 100.0
+    assert result["generation_speed_ts"] == 20.0
+
+
+def test_runner_rejects_success_without_metrics():
+    result = run_with_result(completed(0, stdout="model completed\\n"))
+
+    assert result["success"] is False
+    assert result["status"] == "METRIC_PARSE_FAILED"
+
+
 def test_success_includes_stable_status_and_diagnostics():
     stdout = """\
 > test prompt
