@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "model_name": "smollm2-1.7b-instruct-q4_k_m.gguf",
+  "model_size_bytes": 1055609536,
+  "governing_issue": 30,
+  "status": "PROTOCOL_RECEIPT_VALID",
+  "created_at": "2026-08-23T00:55:00.000000+00:00",
+  "stages": {
+    "research": {
+      "status": "COMPLETED",
+      "provenance_path": "kb/raw/smollm2-1.7b-instruct-q4_k_m.md",
+      "architecture": "llama",
+      "context_limit": 8192,
+      "parameter_count_b": 1.71,
+      "quantization": "Q4_K_M",
+      "vulkan_support": true,
+      "multi_gpu_support": "layer_split_only"
+    },
+    "plan": {
+      "status": "COMPLETED",
+      "okf_note_path": "kb/wiki/KB-SMOLLM2-17B-Q4KM.md",
+      "qmd_verified": true,
+      "pre_run_research_check_passed": true,
+      "baseline_devices": [
+        "Vulkan0",
+        "Vulkan1"
+      ],
+      "dual_gpu_layer_split_ratios": [
+        "1,1"
+      ],
+      "context_progression": [
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768
+      ],
+      "kv_cache_modes": [
+        "f16",
+        "q8_0",
+        "q4_0"
+      ]
+    }
+  }
+}
