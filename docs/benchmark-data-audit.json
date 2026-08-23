@@ -1,0 +1,14 @@
+{
+  "policy": {
+    "authoritative": "SUCCESS with positive prompt and generation speeds",
+    "ambiguous": "SUCCESS without both positive speed metrics",
+    "non_authoritative": "Any non-SUCCESS execution status",
+    "deletion": "none; historical rows are retained"
+  },
+  "classification_counts": {
+    "AUTHORITATIVE": 122,
+    "AMBIGUOUS": 95,
+    "NON_AUTHORITATIVE": 708
+  },
+  "exported_rows": 925
+}

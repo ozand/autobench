@@ -12,6 +12,73 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.remote import run_host_command, host_command
 
+
+def classify_row(status: str, prompt_ts, gen_ts) -> str:
+    """Classify whether a row is safe for authoritative publication."""
+    speed_ok = (
+        isinstance(prompt_ts, (int, float))
+        and isinstance(gen_ts, (int, float))
+        and prompt_ts > 0
+        and gen_ts > 0
+    )
+    if status == "SUCCESS" and speed_ok:
+        return "AUTHORITATIVE"
+    if status == "SUCCESS":
+        return "AMBIGUOUS"
+    return "NON_AUTHORITATIVE"
+
+
+def ensure_schema(conn):
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(model_benchmarks)")}
+    if "publication_class" not in columns:
+        conn.execute(
+            "ALTER TABLE model_benchmarks ADD COLUMN publication_class TEXT NOT NULL DEFAULT 'AMBIGUOUS'"
+        )
+    if "provenance" not in columns:
+        conn.execute(
+            "ALTER TABLE model_benchmarks ADD COLUMN provenance TEXT NOT NULL DEFAULT 'legacy_audit'"
+        )
+
+
+def audit_existing_rows(conn) -> dict[str, int]:
+    """Classify legacy rows without deleting recoverable historical evidence."""
+    ensure_schema(conn)
+    rows = conn.execute(
+        "SELECT id, status, prompt_tokens_per_sec, eval_tokens_per_sec FROM model_benchmarks"
+    ).fetchall()
+    counts = {"AUTHORITATIVE": 0, "AMBIGUOUS": 0, "NON_AUTHORITATIVE": 0}
+    for row_id, status, prompt_ts, gen_ts in rows:
+        publication_class = classify_row(status, prompt_ts, gen_ts)
+        reason = (
+            "measured_success_with_positive_speed"
+            if publication_class == "AUTHORITATIVE"
+            else "success_without_complete_speed_metrics"
+            if publication_class == "AMBIGUOUS"
+            else "execution_not_success"
+        )
+        conn.execute(
+            "UPDATE model_benchmarks SET publication_class=?, provenance=? WHERE id=?",
+            (publication_class, f"legacy_audit:{reason}", row_id),
+        )
+        counts[publication_class] += 1
+    conn.commit()
+    return counts
+
+
+def export_dashboard(conn, json_path: str = "docs/benchmarks_data.json"):
+    conn.row_factory = sqlite3.Row
+    rows = [
+        dict(row)
+        for row in conn.execute(
+            "SELECT * FROM model_benchmarks ORDER BY model_name, context_length, id"
+        )
+    ]
+    path = Path(json_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(rows, indent=2, ensure_ascii=False), encoding="utf-8")
+    return len(rows)
+
+
 def parse_output(stdout: str, stderr: str, returncode: int):
     diag = f"{stdout}\n{stderr}".lower()
     if returncode != 0:
@@ -29,7 +96,7 @@ def parse_output(stdout: str, stderr: str, returncode: int):
     gen_ts = float(speed_match.group(2)) if speed_match else 0.0
     
     return {
-        "status": "SUCCESS",
+        "status": "SUCCESS" if speed_match else "METRIC_PARSE_FAILED",
         "prompt_ts": prompt_ts,
         "gen_ts": gen_ts,
         "raw_output": stdout
@@ -55,9 +122,14 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
         retrieval_rate REAL,
         quality_pass_rate REAL,
         status TEXT,
+        publication_class TEXT NOT NULL DEFAULT 'AMBIGUOUS',
+        provenance TEXT NOT NULL DEFAULT 'matrix_run',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    conn.commit()
+    ensure_schema(conn)
+    audit_existing_rows(conn)
     conn.commit()
     
     contexts = [1024, 2048, 4096, 8192, 16384, 32768]
@@ -90,7 +162,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 if failed_state is not None :
                     print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ... (cascaded {failed_state})", flush=True)
                     cur.execute("DELETE FROM model_benchmarks WHERE model_name=? AND device=? AND context_length=? AND kv_quant=? AND kv_offload=?", (model_name, dev, ctx, ctk, 1 if no_kv else 0))
-                    cur.execute("INSERT INTO model_benchmarks (model_name, size_bytes, device, tensor_split, context_length, kv_quant, kv_offload, prompt_tokens_per_sec, eval_tokens_per_sec, retrieval_rate, quality_pass_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0, 0.0, 0.0, 0.0, 0.0, failed_state))
+                    cur.execute("INSERT INTO model_benchmarks (model_name, size_bytes, device, tensor_split, context_length, kv_quant, kv_offload, prompt_tokens_per_sec, eval_tokens_per_sec, retrieval_rate, quality_pass_rate, status, publication_class, provenance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0, None, None, None, None, failed_state, "NON_AUTHORITATIVE", "matrix_run:cascaded_failure"))
                     conn.commit()
                     continue
                 print(f"[{current}/{total_runs}] Device: {dev_label}, Ctx: {ctx}, KV: {kv_label} ...", flush=True)
@@ -147,6 +219,7 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 status = res["status"]
                 prompt_ts = res["prompt_ts"]
                 eval_ts = res["gen_ts"]
+                publication_class = classify_row(status, prompt_ts, eval_ts)
                 out_text = res["raw_output"]
                 
                 passed_needle = secret_needle in out_text
@@ -166,28 +239,27 @@ def run_matrix(model_name: str, model_path: str, db_path: str = "results/benchma
                 INSERT INTO model_benchmarks (
                     model_name, size_bytes, device, tensor_split, context_length,
                     kv_quant, kv_offload, prompt_tokens_per_sec, eval_tokens_per_sec,
-                    retrieval_rate, quality_pass_rate, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    retrieval_rate, quality_pass_rate, status, publication_class, provenance
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     model_name, 0, dev, sm, ctx, ctk, 1 if no_kv else 0,
-                    prompt_ts, eval_ts, retrieval, quality, status
+                    prompt_ts if publication_class == "AUTHORITATIVE" else None,
+                    eval_ts if publication_class == "AUTHORITATIVE" else None,
+                    retrieval if publication_class == "AUTHORITATIVE" else None,
+                    quality if publication_class == "AUTHORITATIVE" else None,
+                    status,
+                    publication_class,
+                    "matrix_run:measured" if publication_class == "AUTHORITATIVE" else "matrix_run:unpublished",
                 ))
                 conn.commit()
 
     conn.close()
     
-    # Export to JSON
+    # Export sanitized rows with explicit publication classification.
     conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM model_benchmarks ORDER BY model_name, context_length")
-    rows = [dict(r) for r in cur.fetchall()]
+    exported = export_dashboard(conn)
     conn.close()
-    
-    json_path = Path("docs/benchmarks_data.json")
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json.dumps(rows, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Exported {len(rows)} rows to {json_path}")
+    print(f"Exported {exported} rows to docs/benchmarks_data.json")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

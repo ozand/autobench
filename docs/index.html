@@ -178,14 +178,17 @@
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
-                const promptSpeed = (row.prompt_tokens_per_sec !== null && row.prompt_tokens_per_sec !== undefined && row.prompt_tokens_per_sec > 0) ? Number(row.prompt_tokens_per_sec).toFixed(1) : '-';
-                const genSpeed = (row.eval_tokens_per_sec !== null && row.eval_tokens_per_sec !== undefined && row.eval_tokens_per_sec > 0) ? Number(row.eval_tokens_per_sec).toFixed(1) : '-';
-                const retrieval = (row.retrieval_rate !== null && row.retrieval_rate !== undefined && row.retrieval_rate > 0) 
+                const publishable = row.publication_class === 'AUTHORITATIVE';
+                const promptSpeed = (publishable && row.prompt_tokens_per_sec !== null && row.prompt_tokens_per_sec !== undefined && row.prompt_tokens_per_sec > 0) ? Number(row.prompt_tokens_per_sec).toFixed(1) : '-';
+                const genSpeed = (publishable && row.eval_tokens_per_sec !== null && row.eval_tokens_per_sec !== undefined && row.eval_tokens_per_sec > 0) ? Number(row.eval_tokens_per_sec).toFixed(1) : '-';
+                const retrieval = (publishable && row.retrieval_rate !== null && row.retrieval_rate !== undefined && row.retrieval_rate > 0)
                     ? (Number(row.retrieval_rate) * 100).toFixed(1) + '%' : '-';
-                const quality = (row.quality_pass_rate !== null && row.quality_pass_rate !== undefined && row.quality_pass_rate > 0) 
+                const quality = (publishable && row.quality_pass_rate !== null && row.quality_pass_rate !== undefined && row.quality_pass_rate > 0)
                     ? (Number(row.quality_pass_rate) * 100).toFixed(0) + '%' : '-';
 
-                let statusBadge = '<span class="badge badge-green">PASS</span>';
+                let statusBadge = publishable
+                    ? '<span class="badge badge-green">AUTHORITATIVE</span>'
+                    : '<span class="badge badge-amber">' + (row.publication_class || 'UNCLASSIFIED') + '</span>';
                 if (row.status === 'PARTIAL_FAILURE' || row.status === 'PARTIAL') {
                     statusBadge = '<span class="badge badge-amber">PARTIAL</span>';
                 } else if (row.status === 'TIMEOUT') {
