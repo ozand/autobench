@@ -63,6 +63,8 @@ def sanitize_artifact(value: Any) -> Any:
                 sanitized[f"{key}_basename"] = _basename(item)
             elif key in {"dataset_dir", "output_dir"}:
                 sanitized[key] = _basename(item)
+            elif key == "execution_evidence":
+                sanitized[key] = sanitize_artifact(item)
             elif key == "host":
                 sanitized[key] = "k7000"
             else:

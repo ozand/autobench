@@ -192,6 +192,17 @@ def test_runner_rejects_success_without_metrics():
 
     assert result["success"] is False
     assert result["status"] == "METRIC_PARSE_FAILED"
+    assert result["metric_parse_status"] == "MISSING_OR_AMBIGUOUS"
+    assert result["execution_evidence"]["status"] == "METRIC_PARSE_FAILED"
+
+
+def test_runner_execution_evidence_is_bounded_and_sanitizable():
+    result = run_with_result(completed(0, stdout="model completed\\n"))
+    sanitized = sanitize_artifact(result)
+
+    assert "stdout" not in sanitized
+    assert sanitized["execution_evidence"]["status"] == "METRIC_PARSE_FAILED"
+    assert sanitized["execution_evidence"]["stdout_present"] is True
 
 
 def test_success_includes_stable_status_and_diagnostics():

@@ -104,6 +104,14 @@ class Runner:
                 "raw_output": exc.stdout or "",
                 "elapsed_seconds": elapsed,
                 "command_args": command_args,
+                "metric_parse_status": "NOT_ATTEMPTED",
+                "execution_evidence": Runner._execution_evidence(
+                    status="SSH_TIMEOUT",
+                    return_code=None,
+                    elapsed_seconds=elapsed,
+                    stdout=exc.stdout or "",
+                    stderr=exc.stderr or "",
+                ),
             }
 
         elapsed = time.time() - start_time
@@ -119,6 +127,14 @@ class Runner:
                 "raw_output": res.stdout,
                 "elapsed_seconds": elapsed,
                 "command_args": command_args,
+                "metric_parse_status": "NOT_ATTEMPTED",
+                "execution_evidence": Runner._execution_evidence(
+                    status=status,
+                    return_code=res.returncode,
+                    elapsed_seconds=elapsed,
+                    stdout=res.stdout,
+                    stderr=res.stderr,
+                ),
             }
 
         stdout = res.stdout
@@ -135,6 +151,14 @@ class Runner:
                 "raw_output": res.stdout,
                 "elapsed_seconds": elapsed,
                 "command_args": command_args,
+                "metric_parse_status": "MISSING_OR_AMBIGUOUS",
+                "execution_evidence": Runner._execution_evidence(
+                    status="METRIC_PARSE_FAILED",
+                    return_code=res.returncode,
+                    elapsed_seconds=elapsed,
+                    stdout=stdout,
+                    stderr=stderr,
+                ),
             }
 
         # Extract response text
@@ -190,6 +214,33 @@ class Runner:
             "stdout": res.stdout,
             "stderr": res.stderr,
             "command_args": command_args,
+            "metric_parse_status": "PARSED",
+            "execution_evidence": Runner._execution_evidence(
+                status="SUCCESS",
+                return_code=res.returncode,
+                elapsed_seconds=elapsed,
+                stdout=stdout,
+                stderr=stderr,
+            ),
+        }
+
+    @staticmethod
+    def _execution_evidence(
+        status: str,
+        return_code: int | None,
+        elapsed_seconds: float,
+        stdout: str,
+        stderr: str,
+    ) -> dict:
+        """Return bounded, non-payload evidence for auditing execution outcomes."""
+        return {
+            "status": status,
+            "return_code": return_code,
+            "elapsed_seconds": round(float(elapsed_seconds), 3),
+            "stdout_present": bool(stdout),
+            "stderr_present": bool(stderr),
+            "stdout_bytes": len(stdout.encode("utf-8", errors="replace")),
+            "stderr_bytes": len(stderr.encode("utf-8", errors="replace")),
         }
 
     @staticmethod
