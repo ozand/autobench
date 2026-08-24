@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "model_name": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+  "model_id": "Ministral-3-3B-Instruct-2512-Q4_K_M",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 44,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/Ministral-3-3B-Instruct-2512-Q4_K_M.md",
+      "retrieval_date": "2026-08-24",
+      "source_urls": [
+        "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512",
+        "https://github.com/ggml-org/llama.cpp/wiki/Home",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-MINISTRAL-3B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue 44 bounded plan: exact GGUF, Vulkan0/Vulkan1 baselines, applicable Vulkan layer split 1,1, bounded context progression, and f16 KV baseline.",
+      "planned_configurations": [
+        {"device": "Vulkan0", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan1", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "layer", "mode": "full"}
+      ],
+      "expected_job_count": 3
+    }
+  },
+  "validation_timestamp": "2026-08-24T00:00:00+00:00",
+  "status": "PROTOCOL_RECEIPT_VALID"
+}
