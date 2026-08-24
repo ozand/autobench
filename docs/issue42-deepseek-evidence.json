@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "issue": 42,
+  "model_name": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+  "publication_class": "INCONCLUSIVE",
+  "authoritative": false,
+  "scope": "Issue 42 bounded Vulkan0 diagnostic evidence",
+  "reviewed_plan": {
+    "baseline_device": "Vulkan0",
+    "dual_gpu_layer_split": "planned but not executed after first unexpected result",
+    "context_progression": [1024, 2048, 4096, 8192, 16384, 32768],
+    "kv_baseline": "f16",
+    "expected_full_configurations": 3
+  },
+  "stage_results": {
+    "preflight": {"status": "SUCCESS"},
+    "boundary": {
+      "status": "INCONCLUSIVE",
+      "maximum_allocatable_context": 1024,
+      "next_probe_status": "SSH_TIMEOUT"
+    },
+    "retrieval": {
+      "status": "PARTIAL_FAILURE",
+      "attempts": 15,
+      "outcomes": {"VERIFIED": 0, "MISSED": 14, "INCONCLUSIVE": 1},
+      "retrieval_rate_claim": null
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "prompt_tokens_per_sec": 4.9,
+      "eval_tokens_per_sec": 28.3666666667
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "tasks_passed": 0,
+      "tasks_total": 2,
+      "quality_pass_rate": 0.0
+    }
+  },
+  "disposition": {
+    "status": "PARTIAL_FAILURE",
+    "reason": "boundary transport timeout and no VERIFIED retrieval attempt",
+    "next_action": "investigate the first unexpected Vulkan0 boundary/retrieval behavior before any Vulkan1 or dual-GPU execution"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

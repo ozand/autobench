@@ -1,5 +1,9 @@
 # DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M Research Notes
 
+- Source URL: https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+- Source URL: https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md
+- Retrieved via Surf CLI: 2026-08-24
+
 ## Model Identity
 - **Model Checkpoint**: `deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B`
 - **GGUF File**: `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf`

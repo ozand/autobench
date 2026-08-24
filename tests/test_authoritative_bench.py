@@ -58,6 +58,7 @@ def test_configuration_policy_covers_device_asymmetry_and_load_only():
     assert oversized[2] == {
         "device": "Vulkan0,Vulkan1",
         "tensor_split": "1,1",
+        "split_mode": "layer",
         "mode": "full",
     }
 
@@ -101,7 +102,7 @@ def test_tensor_candidate_uses_explicit_mode_and_split():
     configs = configurations_for_model(3_000_000_000, include_tensor=True)
     assert len(configs) == 4
     assert configs[2]["device"] == "Vulkan0,Vulkan1"
-    assert configs[2].get("split_mode") is None
+    assert configs[2]["split_mode"] == "layer"
     tensor = configs[-1]
     assert tensor["device"] == "Vulkan0,Vulkan1"
     assert tensor["tensor_split"] == "1,1"

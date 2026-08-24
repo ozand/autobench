@@ -106,7 +106,7 @@ def test_build_jobs_expands_every_applicable_configuration():
     assert len(jobs) == 7
     assert [job["config"]["device"] for job in jobs[:2]] == ["Vulkan0", "Vulkan1"]
     assert [job["config"]["mode"] for job in jobs[2:4]] == ["full", "load_only"]
-    assert [job["config"].get("split_mode") for job in jobs] == [None, None, "tensor", None, None, None, "tensor"]
+    assert [job["config"].get("split_mode") for job in jobs] == [None, None, "tensor", None, None, "layer", "tensor"]
     assert len({job["id"] for job in jobs}) == 7
 
 

@@ -174,7 +174,12 @@ def configurations_for_model(
     ]
     if size_bytes > SINGLE_GPU_FIT_BYTES:
         configurations.append(
-            {"device": "Vulkan0,Vulkan1", "tensor_split": DEFAULT_TENSOR_SPLIT, "mode": "full"}
+            {
+                "device": "Vulkan0,Vulkan1",
+                "tensor_split": DEFAULT_TENSOR_SPLIT,
+                "split_mode": "layer",
+                "mode": "full",
+            }
         )
     if include_tensor:
         configurations.append(
