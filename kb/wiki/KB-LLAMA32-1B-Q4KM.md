@@ -4,7 +4,7 @@ title: Llama-3.2-1B-Instruct-Q4_K_M Vulkan Diagnostics and Single-GPU Baseline
 category: models
 status: validated
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-08-24
 tags:
   - llama
   - vulkan
@@ -26,6 +26,19 @@ Llama-3.2-1B-Instruct-Q4_K_M (size ~770.3 MiB, 1.23B parameters) passed full Sta
 - **Context Limit**: 131,072 tokens native, tested safely up to 2048/4096 on k7000.
 - **Backend**: Vulkan single-GPU (Vulkan0, Vulkan1) and dual-GPU layer split (-sm layer).
 - **Quantization**: Q4_K_M (~770.3 MiB).
+
+## Issue 43 Evidence (Stage 4)
+- Stage 1/2 receipt validation passed for the exact GGUF.
+- The inventory dry-run planned two fitting single-GPU jobs; the reviewed dual-GPU layer configuration remains planned separately because the current inventory path uses the fitting-model two-job envelope.
+- Vulkan0 preflight and performance succeeded: prompt `6.8 t/s`, generation `35.25 t/s`.
+- Vulkan0 boundary reached `2048` and remained `INCONCLUSIVE` at the next boundary step.
+- Vulkan0 retrieval had 1 `VERIFIED`, 7 `MISSED`, and 1 `INCONCLUSIVE` attempt; the aggregate is not authoritative.
+- Vulkan0 quality completed with `0/2` tasks passed.
+- Vulkan1 preflight and performance succeeded: prompt `6.8 t/s`, generation `34.05 t/s`.
+- Vulkan1 boundary reached `2048` and remained `INCONCLUSIVE` at the next boundary step.
+- Vulkan1 retrieval completed with 9 `MISSED` and 0 `VERIFIED` attempts.
+- Vulkan1 quality completed with `1/2` tasks passed.
+- The model remains `PARTIAL_FAILURE` / non-authoritative until boundary and Retrieval evidence are reconciled and the dual-GPU layer configuration is executed under a reviewed follow-up.
 
 ## Empirical Findings (Stage 4)
 - **Prompt Speed**: ~6.8 tokens/sec on Vulkan0 (GK104 memory bandwidth bound).
