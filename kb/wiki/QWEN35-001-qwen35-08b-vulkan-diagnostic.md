@@ -5,7 +5,7 @@ category: research
 tags: [qwen3.5, gguf, q4_k_m, llama-cpp, vulkan, hybrid-attention, tokenizer]
 status: active
 created: 2026-08-19
-updated: 2026-08-19
+updated: 2026-08-25
 environment:
   os: Linux remote GPU host
   shell: POSIX shell
@@ -69,6 +69,19 @@ was run separately on Vulkan0 and Vulkan1 with route validation enabled.
   performance-stage invocation.
 - Overall model result: PARTIAL_FAILURE, with tokenizer/calibration/runtime
   compatibility unresolved. It is not OOM and not a backend-load failure.
+
+## Issue 48 execution evidence
+- Stage 1/2 receipt validation passed for the exact GGUF.
+- Dry-run planned two fitting single-GPU jobs, Vulkan0 and Vulkan1; the dual-GPU layer configuration remains separately planned because the current inventory path uses the fitting-model two-job envelope.
+- Vulkan0 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so the boundary is `INCONCLUSIVE`.
+- Vulkan0 performance: prompt `12.35 t/s`, generation `35.8 t/s`.
+- Vulkan0 Retrieval: 9 `MISSED`, 0 `VERIFIED`, 0 `INCONCLUSIVE`; no authoritative pass-rate claim.
+- Vulkan0 quality: `0/2` tasks passed.
+- Vulkan1 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so the boundary is `INCONCLUSIVE`.
+- Vulkan1 performance: prompt `12.5 t/s`, generation `36.25 t/s`.
+- Vulkan1 Retrieval: 9 `MISSED`, 0 `VERIFIED`, 0 `INCONCLUSIVE`; no authoritative pass-rate claim.
+- Vulkan1 quality: `0/2` tasks passed.
+- Overall Issue 48 disposition: `PARTIAL_FAILURE` / non-authoritative.
 
 ## Investigation and stop decision
 
