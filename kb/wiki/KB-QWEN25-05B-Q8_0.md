@@ -34,6 +34,19 @@ error_signatures:
    - Speed: ~18.3 t/s prompt eval, ~34.3 t/s generation.
    - Quality deterministic pass rate: 50% (1/2).
    - Repeated needle retrieval @ 4096: 60.0% (9/15 correct).
+## Issue 56 execution evidence
+- Stage 1/2 receipt validation passed for the exact GGUF.
+- Dry-run planned two fitting single-GPU jobs, Vulkan0 and Vulkan1; dual-GPU layer remains separately planned because the current inventory path uses the fitting-model two-job envelope.
+- Vulkan0 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
+- Vulkan0 performance: prompt `18.1 t/s`, generation `35.15 t/s`.
+- Vulkan0 Retrieval: 5 `VERIFIED`, 4 `MISSED`; recorded rate `5/9`, not authoritative.
+- Vulkan0 quality: `2/2` tasks passed.
+- Vulkan1 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
+- Vulkan1 performance: prompt `18.35 t/s`, generation `35.35 t/s`.
+- Vulkan1 Retrieval: 5 `VERIFIED`, 4 `MISSED`; recorded rate `5/9`, not authoritative.
+- Vulkan1 quality: `2/2` tasks passed.
+- Overall Issue 56 disposition: `PARTIAL_FAILURE` / non-authoritative.
+
 3. **Multi-GPU Behavior**:
    - Tensor split (`-sm tensor`) is unsupported on Kepler Vulkan (`device does not support split buffers`).
    - Layer split (`-sm layer`) with `-ts 1,1` is supported when needed for larger models, but unnecessary for this size class (<700 MiB).
