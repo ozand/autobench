@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "issue": 54,
+  "model_name": "llama-3.2-3b-instruct-q4_k_m.gguf",
+  "publication_class": "NON_AUTHORITATIVE",
+  "authoritative": false,
+  "scope": "Issue 54 bounded Vulkan and dual-layer diagnostic evidence",
+  "reviewed_plan": {
+    "baseline_devices": ["Vulkan0", "Vulkan1"],
+    "dual_gpu_layer_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "kv_baseline": "f16",
+    "expected_full_configurations": 3,
+    "dry_run_jobs": 3
+  },
+  "stage_results": {
+    "Vulkan0": {"mode": "load_only", "status": "SUCCESS", "load_ok": true},
+    "Vulkan1": {"mode": "load_only", "status": "SUCCESS", "load_ok": true},
+    "Vulkan0,Vulkan1": {
+      "mode": "full",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "preflight": "SUCCESS",
+      "boundary": {"status": "INCONCLUSIVE", "cause": "BOUNDARY_SSH_TIMEOUT", "context_size": 1024},
+      "suite_status": "BOUNDARY_SSH_TIMEOUT",
+      "workload_status": "WORKLOAD_UNSUPPORTED",
+      "retrieval_status": "NOT_ATTEMPTED",
+      "performance_status": "NOT_ATTEMPTED",
+      "quality_status": "NOT_ATTEMPTED"
+    }
+  },
+  "disposition": {
+    "status": "NON_AUTHORITATIVE",
+    "reason": "dual-GPU boundary SSH timeout prevented a comparable workload despite successful single-GPU load probes",
+    "next_action": "classify the dual-GPU boundary limitation; do not publish speed or Retrieval values"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

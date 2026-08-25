@@ -1,30 +1,38 @@
 {
   "schema_version": 1,
   "model_name": "llama-3.2-3b-instruct-q4_k_m.gguf",
-  "model_size_bytes": 2019377600,
-  "governing_issue": 36,
-  "status": "PROTOCOL_RECEIPT_VALID",
-  "created_at": "2026-08-23T04:10:00.000000+00:00",
+  "model_id": "llama-3.2-3b-instruct-q4_k_m",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 54,
   "stages": {
-    "research": {
-      "status": "COMPLETED",
-      "provenance_path": "kb/raw/llama-3.2-3b-instruct-q4_k_m.md",
-      "architecture": "llama",
-      "context_limit": 131072,
-      "parameter_count_b": 3.21,
-      "quantization": "Q4_K_M",
-      "vulkan_support": true,
-      "multi_gpu_support": "layer_split_only"
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/llama-3.2-3b-instruct-q4_k_m.md",
+      "retrieval_date": "2026-08-25",
+      "source_urls": [
+        "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
     },
-    "plan": {
-      "status": "COMPLETED",
-      "okf_note_path": "kb/wiki/KB-LLAMA32-3B-Q4KM.md",
-      "qmd_verified": true,
-      "pre_run_research_check_passed": true,
-      "baseline_devices": ["Vulkan0", "Vulkan1"],
-      "dual_gpu_layer_split_ratios": ["1,1"],
-      "context_progression": [1024, 2048, 4096, 8192, 16384, 32768],
-      "kv_cache_modes": ["f16", "q8_0", "q4_0", "no_offload"]
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-LLAMA32-3B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue 54 bounded plan: Vulkan0/Vulkan1 load-only baselines, dual-GPU Vulkan layer split 1,1, bounded context progression, and f16 KV baseline.",
+      "planned_configurations": [
+        {"device": "Vulkan0", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan1", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "layer", "mode": "full"}
+      ],
+      "expected_job_count": 3
     }
-  }
+  },
+  "validation_timestamp": "2026-08-25T00:00:00+00:00",
+  "status": "PROTOCOL_RECEIPT_VALID"
 }
