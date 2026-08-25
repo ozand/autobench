@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "model_name": "gemma-4-E2B-it-Q4_K_M.gguf",
+  "model_id": "gemma-4-E2B-it-Q4_K_M",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 52,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/gemma-4-E2B-it-Q4_K_M.md",
+      "retrieval_date": "2026-08-25",
+      "source_urls": [
+        "https://huggingface.co/google/gemma-4-E2B-it",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-GEMMA4-E2B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue 52 bounded plan: Vulkan0/Vulkan1 load-only baselines, dual-GPU Vulkan layer split 1,1, bounded context progression, and f16 KV baseline.",
+      "planned_configurations": [
+        {"device": "Vulkan0", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan1", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "layer", "mode": "full"}
+      ],
+      "expected_job_count": 3
+    }
+  },
+  "validation_timestamp": "2026-08-25T00:00:00+00:00",
+  "status": "PROTOCOL_RECEIPT_VALID"
+}

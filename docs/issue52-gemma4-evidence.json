@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "issue": 52,
+  "model_name": "gemma-4-E2B-it-Q4_K_M.gguf",
+  "publication_class": "NON_AUTHORITATIVE",
+  "authoritative": false,
+  "scope": "Issue 52 bounded Vulkan and dual-layer diagnostic evidence",
+  "reviewed_plan": {
+    "baseline_devices": ["Vulkan0", "Vulkan1"],
+    "dual_gpu_layer_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "kv_baseline": "f16",
+    "expected_full_configurations": 3,
+    "dry_run_jobs": 3
+  },
+  "stage_results": {
+    "Vulkan0": {"mode": "load_only", "status": "SUCCESS", "load_ok": true},
+    "Vulkan1": {"mode": "load_only", "status": "SUCCESS", "load_ok": true},
+    "Vulkan0,Vulkan1": {
+      "mode": "full",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "preflight": "EXECUTION_ERROR",
+      "suite_status": "PREFLIGHT_EXECUTION_ERROR",
+      "return_code": 134,
+      "boundary_status": "NOT_ATTEMPTED",
+      "retrieval_status": "NOT_ATTEMPTED",
+      "performance_status": "NOT_ATTEMPTED",
+      "quality_status": "NOT_ATTEMPTED"
+    }
+  },
+  "disposition": {
+    "status": "NON_AUTHORITATIVE",
+    "reason": "dual-GPU layer preflight failed with EXECUTION_ERROR after both single-GPU load probes succeeded",
+    "next_action": "investigate the dual-GPU Gemma 4 runtime failure; do not publish speed or Retrieval values"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
