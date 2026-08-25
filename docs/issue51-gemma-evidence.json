@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "issue": 51,
+  "model_name": "gemma-2-2b-it-Q4_K_M.gguf",
+  "publication_class": "INCONCLUSIVE",
+  "authoritative": false,
+  "scope": "Issue 51 bounded Vulkan0/Vulkan1 diagnostic evidence",
+  "reviewed_plan": {
+    "baseline_devices": ["Vulkan0", "Vulkan1"],
+    "dual_gpu_layer_split": "planned but not started after single-GPU boundary surprise",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "kv_baseline": "f16",
+    "expected_full_configurations": 3,
+    "dry_run_jobs": 2
+  },
+  "stage_results": {
+    "Vulkan0": {
+      "preflight": "SUCCESS",
+      "boundary": {"status": "INCONCLUSIVE", "last_successful_context": 1024, "next_probe": 2048, "next_probe_status": "SSH_TIMEOUT"},
+      "retrieval": {"status": "PARTIAL_FAILURE", "attempts": 9, "outcomes": {"VERIFIED": 4, "MISSED": 0, "INCONCLUSIVE": 5}, "retrieval_rate": null},
+      "performance": {"status": "SUCCESS", "prompt_tokens_per_sec": 3.2, "eval_tokens_per_sec": 15.9},
+      "quality": {"status": "SUCCESS", "tasks_passed": 2, "tasks_total": 2, "quality_pass_rate": 1.0},
+      "suite_status": "PARTIAL_FAILURE"
+    },
+    "Vulkan1": {
+      "preflight": "SUCCESS",
+      "boundary": {"status": "INCONCLUSIVE", "last_successful_context": 1024, "next_probe": 2048, "next_probe_status": "SSH_TIMEOUT"},
+      "retrieval": {"status": "PARTIAL_FAILURE", "attempts": 9, "outcomes": {"VERIFIED": 8, "MISSED": 0, "INCONCLUSIVE": 1}, "retrieval_rate": null},
+      "performance": {"status": "SUCCESS", "prompt_tokens_per_sec": 3.2, "eval_tokens_per_sec": 16.2},
+      "quality": {"status": "SUCCESS", "tasks_passed": 2, "tasks_total": 2, "quality_pass_rate": 1.0},
+      "suite_status": "PARTIAL_FAILURE"
+    }
+  },
+  "disposition": {
+    "status": "PARTIAL_FAILURE",
+    "reason": "both boundary probes timed out at 2048 and Retrieval includes inconclusive attempts on both devices",
+    "next_action": "investigate boundary timeout and preserve Retrieval as non-authoritative until inconclusive attempts are resolved"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
