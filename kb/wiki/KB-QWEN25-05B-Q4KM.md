@@ -46,6 +46,19 @@ error_signatures:
 3. **Unsupported Configurations**:
    - `-sm tensor`: Strictly unsupported on Vulkan (`device does not support split buffers`). Classified as `UNSUPPORTED_BACKEND`.
 
+## Issue 55 execution evidence
+- Stage 1/2 receipt validation passed for the exact GGUF.
+- Dry-run planned two fitting single-GPU jobs, Vulkan0 and Vulkan1; dual-GPU layer remains separately planned because the current inventory path uses the fitting-model two-job envelope.
+- Vulkan0 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
+- Vulkan0 performance: prompt `17.8 t/s`, generation `34.85 t/s`.
+- Vulkan0 Retrieval: 4 `VERIFIED`, 5 `MISSED`; recorded rate `4/9`, not authoritative.
+- Vulkan0 quality: `2/2` tasks passed.
+- Vulkan1 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
+- Vulkan1 performance: prompt `18.0 t/s`, generation `34.15 t/s`.
+- Vulkan1 Retrieval: 2 `VERIFIED`, 7 `MISSED`; recorded rate `2/9`, not authoritative.
+- Vulkan1 quality: `2/2` tasks passed.
+- Overall Issue 55 disposition: `PARTIAL_FAILURE` / non-authoritative.
+
 4. **Classification & Findings**:
    - Model is fully functional on single-GPU Vulkan up to 4096 context with 100% task quality pass rate on standard validation tasks.
    - Retrieval degradation observed at positions 0.5 and 0.9 under context 4096 due to model capacity limits (0.49B parameters).
