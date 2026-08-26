@@ -36,3 +36,5 @@ updated: '2026-08-23'
 - Vulkan0: preflight `SUCCESS`; parsed performance `3.9` prompt t/s and `25.45` generation t/s; Retrieval: 6 `VERIFIED`, 0 `MISSED`, 3 `INCONCLUSIVE`; quality `2/2`; boundary `INCONCLUSIVE` after `BOUNDARY_SSH_TIMEOUT` at context `1024`.
 - Vulkan1: preflight `SUCCESS`; parsed performance `3.9` prompt t/s and `24.7` generation t/s; Retrieval: 7 `VERIFIED`, 1 `MISSED`, 1 `INCONCLUSIVE`; quality `1/2`; boundary `INCONCLUSIVE` after `BOUNDARY_SSH_TIMEOUT` at context `1024`.
 - Speed, Retrieval, and quality values are diagnostic only. No authoritative publication was made. Further dual-GPU inference requires a reviewed follow-up after investigating the boundary timeout.
+- Vulkan1 completed after the interrupted process: performance `3.9` prompt t/s and `24.7` generation t/s; Retrieval 7 `VERIFIED`, 1 `MISSED`, 1 `INCONCLUSIVE`; quality `1/2`; boundary remained `INCONCLUSIVE` with `BOUNDARY_SSH_TIMEOUT` at context `1024`.
+- The dual-GPU layer configuration was not started because the remote SSH transport then failed during banner exchange. The transport symptom is recorded as `SSH_TIMEOUT`, not as a model or backend result.
