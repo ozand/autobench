@@ -1,46 +1,44 @@
 {
   "schema_version": 1,
-  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
-  "model_size_bytes": 1117409280,
-  "governing_issue": 31,
   "status": "PROTOCOL_RECEIPT_VALID",
-  "created_at": "2026-08-22T19:40:00.000000+00:00",
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "model_id": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "backend": "vulkan",
+  "quantization": "Q4_K_M",
+  "governing_issue": 58,
   "stages": {
-    "research": {
-      "status": "COMPLETED",
-      "provenance_path": "kb/raw/qwen2.5-coder-1.5b-instruct-q4_k_m.md",
-      "architecture": "qwen2",
-      "context_limit": 32768,
-      "parameter_count_b": 1.54,
-      "quantization": "Q4_K_M",
-      "vulkan_support": true,
-      "multi_gpu_support": "layer_split_only"
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2.5-coder-1.5b-instruct-q4_k_m.md",
+      "retrieval_date": "2026-08-25",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
     },
-    "plan": {
-      "status": "COMPLETED",
-      "okf_note_path": "kb/wiki/KB-QWEN25-CODER-15B-Q4KM.md",
-      "qmd_verified": true,
-      "pre_run_research_check_passed": true,
-      "baseline_devices": [
-        "Vulkan0",
-        "Vulkan1"
-      ],
-      "dual_gpu_layer_split_ratios": [
-        "1,1"
-      ],
-      "context_progression": [
-        1024,
-        2048,
-        4096,
-        8192,
-        16384,
-        32768
-      ],
-      "kv_cache_modes": [
-        "f16",
-        "q8_0",
-        "q4_0"
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN25-CODER-15B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "expected_job_count": 3,
+      "review_evidence": "Issue 58 bounded plan: matched Vulkan0/Vulkan1 load-only baselines, dual-GPU Vulkan layer split 1,1 full suite, context progression 1024 to 8192 with first-failure stop, and f16 KV baseline.",
+      "context_progression": [1024, 2048, 4096, 8192],
+      "kv_baseline": "f16",
+      "planned_configurations": [
+        {"device": "Vulkan0", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan1", "tensor_split": null, "split_mode": null, "mode": "load_only"},
+        {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "layer", "mode": "full"}
       ]
     }
-  }
+  },
+  "approved_configurations": [
+    {"device": "Vulkan0", "tensor_split": null, "split_mode": null, "ngl": 33},
+    {"device": "Vulkan1", "tensor_split": null, "split_mode": null, "ngl": 33},
+    {"device": "Vulkan0,Vulkan1", "tensor_split": "1,1", "split_mode": "layer", "ngl": 33}
+  ]
 }
