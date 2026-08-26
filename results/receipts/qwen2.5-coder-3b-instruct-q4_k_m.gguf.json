@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "status": "PROTOCOL_RECEIPT_VALID",
+  "model_name": "qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+  "model_id": "qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+  "backend": "vulkan",
+  "quantization": "Q4_K_M",
+  "governing_issue": 60,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2.5-coder-3b-instruct-q4_k_m.md",
+      "retrieval_date": "2026-08-26",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct/raw/main/config.json",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN25-CODER-3B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "expected_job_count": 3,
+      "review_evidence": "Issue 60 bounded plan: Vulkan0/Vulkan1 matched baselines, dual-GPU Vulkan layer split 1,1, context progression 1024 to 8192 with first-failure stop, and f16 KV baseline.",
+      "context_progression": [
+        1024,
+        2048,
+        4096,
+        8192
+      ],
+      "kv_baseline": "f16",
+      "planned_configurations": [
+        {
+          "device": "Vulkan0",
+          "tensor_split": null,
+          "split_mode": null,
+          "mode": "full"
+        },
+        {
+          "device": "Vulkan1",
+          "tensor_split": null,
+          "split_mode": null,
+          "mode": "full"
+        },
+        {
+          "device": "Vulkan0,Vulkan1",
+          "tensor_split": "1,1",
+          "split_mode": "layer",
+          "mode": "full"
+        }
+      ]
+    }
+  }
+}
