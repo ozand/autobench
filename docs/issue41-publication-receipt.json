@@ -2,9 +2,12 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "TERMINALLY_CLASSIFIED_PENDING_UNRESOLVED_AUTHORITATIVE_EVIDENCE",
+  "status": "INCONCLUSIVE_PENDING_AUTHORITATIVE_RERUN",
   "scope": {
-    "affected_issue_range": [42, 61],
+    "affected_issue_range": [
+      42,
+      61
+    ],
     "affected_model_count": 20,
     "model_specific_evidence_required": true,
     "historical_rows_deleted": false,
@@ -22,32 +25,116 @@
   },
   "publication_policy": {
     "authoritative_speed_source": "successfully parsed evidence only",
-    "retrieval_outcomes": ["VERIFIED", "MISSED", "INCONCLUSIVE"],
+    "retrieval_outcomes": [
+      "VERIFIED",
+      "MISSED",
+      "INCONCLUSIVE"
+    ],
     "inconclusive_excluded_from_pass_rates": true,
     "zero_or_missing_metrics_published_as_authoritative": false,
     "diagnostic_metrics_published_as_authoritative": false
   },
   "affected_results": [
-    {"issue": 42, "model": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 43, "model": "Llama-3.2-1B-Instruct-Q4_K_M.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 44, "model": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 45, "model": "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 46, "model": "Phi-4-mini-instruct-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 47, "model": "Qwen3-4B-Thinking-2507-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 48, "model": "Qwen3.5-0.8B-Q4_K_M.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 49, "model": "Qwen3.5-2B-Q4_K_M.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 50, "model": "Qwen3.5-4B-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 51, "model": "gemma-2-2b-it-Q4_K_M.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 52, "model": "gemma-4-E2B-it-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 53, "model": "gemma-4-E4B-it-Q4_K_M.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 54, "model": "llama-3.2-3b-instruct-q4_k_m.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 55, "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 56, "model": "qwen2.5-0.5b-instruct-q8_0.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 57, "model": "qwen2.5-3b-instruct-q4_k_m.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 58, "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 59, "model": "qwen2.5-coder-1.5b-instruct-q8_0.gguf", "classification": "INCONCLUSIVE"},
-    {"issue": 60, "model": "qwen2.5-coder-3b-instruct-q4_k_m.gguf", "classification": "NON_AUTHORITATIVE"},
-    {"issue": 61, "model": "smollm2-1.7b-instruct-q4_k_m.gguf", "classification": "INCONCLUSIVE"}
+    {
+      "issue": 42,
+      "model": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 43,
+      "model": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 44,
+      "model": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 45,
+      "model": "NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 46,
+      "model": "Phi-4-mini-instruct-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 47,
+      "model": "Qwen3-4B-Thinking-2507-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 48,
+      "model": "Qwen3.5-0.8B-Q4_K_M.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 49,
+      "model": "Qwen3.5-2B-Q4_K_M.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 50,
+      "model": "Qwen3.5-4B-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 51,
+      "model": "gemma-2-2b-it-Q4_K_M.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 52,
+      "model": "gemma-4-E2B-it-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 53,
+      "model": "gemma-4-E4B-it-Q4_K_M.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 54,
+      "model": "llama-3.2-3b-instruct-q4_k_m.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 55,
+      "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 56,
+      "model": "qwen2.5-0.5b-instruct-q8_0.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 57,
+      "model": "qwen2.5-3b-instruct-q4_k_m.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 58,
+      "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 59,
+      "model": "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
+      "classification": "INCONCLUSIVE"
+    },
+    {
+      "issue": 60,
+      "model": "qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+      "classification": "NON_AUTHORITATIVE"
+    },
+    {
+      "issue": 61,
+      "model": "smollm2-1.7b-instruct-q4_k_m.gguf",
+      "classification": "INCONCLUSIVE"
+    }
   ],
   "before_publication": {
     "report_models": 20,
@@ -93,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Keep Issue 41 open for reviewed follow-up investigations and do not claim an authoritative refreshed ranking."
+    "next_action": "Use recovered transport only for a new reviewed model-specific follow-up; do not run broad inventory or promote existing rows."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -102,5 +189,13 @@
     "credentials_persisted": false,
     "private_host_identifiers_persisted": false,
     "absolute_model_paths_persisted": false
+  },
+  "transport_investigation": {
+    "status": "VERIFIED_RECOVERED",
+    "probes": [
+      "remote-ok",
+      "remote GGUF inventory probe"
+    ],
+    "result": "k7000 SSH transport is currently reachable"
   }
 }
