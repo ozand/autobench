@@ -223,6 +223,14 @@
       "retrieval": "MISSED",
       "generated_tokens": 16,
       "evidence": "docs/issue41-qwen-coder-layer-diagnostic-4096.json"
+    },
+    "diagnostic_probe_8192": {
+      "context_size": 8192,
+      "status": "SUCCESS",
+      "performance": "diagnostic only: 5.8 prompt t/s, 18.2 generation t/s",
+      "retrieval": "MISSED",
+      "generated_tokens": 16,
+      "evidence": "docs/issue41-qwen-coder-layer-diagnostic-8192.json"
     }
   }
 }
