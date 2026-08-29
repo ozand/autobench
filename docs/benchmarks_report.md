@@ -31,6 +31,8 @@
 
 > Issue 41 follow-up: an 8192-context dual-GPU probe at 25% utilization completed successfully, but remains diagnostic-only and does not establish an authoritative boundary. See `docs/issue41-qwen-coder-boundary-8192-diagnostic.json`.
 
+> Issue 41 follow-up: the second complete dual-GPU suite reproduced `BOUNDARY_SSH_TIMEOUT` at context 8192 after successful 1024–4096 probes. Metrics remain diagnostic-only. See `docs/issue41-qwen-coder-suite-rerun.json`.
+
 ## Сводка
 
 - Моделей: **20**

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "kv_baseline": "f16",
+    "prompt_tokens": 512,
+    "output_tokens": 64
+  },
+  "execution": {
+    "status": "PARTIAL_FAILURE",
+    "authoritative": false,
+    "preflight": "SUCCESS",
+    "boundary": {
+      "status": "INCONCLUSIVE",
+      "cause": "BOUNDARY_SSH_TIMEOUT",
+      "successful_contexts": [
+        1024,
+        2048,
+        4096
+      ],
+      "first_unexpected_context": 8192
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "prompt_tokens_per_sec": 5.1,
+      "generation_tokens_per_sec": 20.7
+    },
+    "retrieval": {
+      "status": "SUCCESS",
+      "verified": 4,
+      "missed": 5,
+      "inconclusive": 0
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "passed": 2,
+      "total": 2
+    }
+  },
+  "disposition": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "reason": "bounded suite remains diagnostic because boundary did not complete without an unexpected result",
+    "authoritative_publication": false
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

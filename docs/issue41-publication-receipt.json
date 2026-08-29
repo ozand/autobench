@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_PENDING_COMPLETE_AUTHENTICATED_SUITE",
+  "status": "INCONCLUSIVE_BOUNDARY_TIMEOUT_REPRODUCED",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Retain the bounded 8192 hypothesis probe as diagnostic; create a reviewed complete suite only if authoritative publication remains required."
+    "next_action": "Retain repeated timeout classification; do not promote metrics. A separate runtime/transport investigation is required before another complete suite."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -288,6 +288,14 @@
       "elapsed_seconds": 292.02536034584,
       "hypothesis_result": "supports a workload-budget/latency contribution to the prior timeout; does not establish authoritative boundary",
       "evidence": "docs/issue41-qwen-coder-boundary-8192-diagnostic.json"
+    },
+    "complete_suite_rerun_2": {
+      "status": "PARTIAL_FAILURE",
+      "boundary": "SUCCESS through 4096; INCONCLUSIVE / BOUNDARY_SSH_TIMEOUT at 8192",
+      "performance": "diagnostic only: 5.1 prompt t/s, 20.7 generation t/s",
+      "retrieval": "4 VERIFIED, 5 MISSED, 0 INCONCLUSIVE",
+      "quality": "2/2",
+      "evidence": "docs/issue41-qwen-coder-suite-rerun.json"
     }
   }
 }
