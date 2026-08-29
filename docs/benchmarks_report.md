@@ -25,6 +25,8 @@
 
 > Issue 41 follow-up: bounded dual-GPU quality stage completed with execution `SUCCESS` but deterministic pass rate `0/2`; output validation failures keep the result diagnostic-only. See `docs/issue41-qwen-coder-layer-quality.json`.
 
+> Issue 41 follow-up: bounded dual-GPU quality rerun with 64 output tokens passed `2/2`, but isolated evidence remains diagnostic-only and does not promote speed/Retrieval rows. See `docs/issue41-qwen-coder-layer-quality-64.json`.
+
 ## Сводка
 
 - Моделей: **20**
