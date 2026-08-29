@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_PENDING_REPEATED_EVIDENCE",
+  "status": "INCONCLUSIVE_PENDING_QUALITY_AND_PUBLICATION",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Prepare a reviewed bounded repeated evidence plan for the dual-GPU layer configuration; do not promote isolated probes."
+    "next_action": "Retain repeated boundary probe as diagnostic; do not promote because quality and complete authoritative suite evidence remain absent."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -247,6 +247,14 @@
       "retrieval": "MISSED",
       "generated_tokens": 15,
       "evidence": "docs/issue41-qwen-coder-layer-diagnostic-32768.json"
+    },
+    "repeated_probe_32768": {
+      "repetitions": 3,
+      "status": "SUCCESS",
+      "performance": "diagnostic only: mean 6.3 prompt t/s, 19.6333 generation t/s",
+      "retrieval": "0 VERIFIED, 3 MISSED, 0 INCONCLUSIVE",
+      "quality": "NOT_ATTEMPTED",
+      "evidence": "docs/issue41-qwen-coder-layer-repeated-32768.json"
     }
   }
 }
