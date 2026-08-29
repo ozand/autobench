@@ -17,6 +17,8 @@
 
 > Issue 41 follow-up: a bounded dual-GPU layer probe at context 8192 completed successfully but remains diagnostic-only; repeated boundary, Retrieval, and quality evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-8192.json`.
 
+> Issue 41 follow-up: a bounded dual-GPU layer probe at context 16384 completed successfully but remains diagnostic-only; repeated boundary, Retrieval, and quality evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-16384.json`.
+
 ## Сводка
 
 - Моделей: **20**
