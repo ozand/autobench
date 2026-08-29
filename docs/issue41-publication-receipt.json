@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Investigate the 8192 boundary SSH timeout with one bounded falsifiable diagnostic; do not promote suite metrics."
+    "next_action": "Retain sanitized suite summary only; investigate 8192 boundary timeout with a new reviewed diagnostic if needed."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -188,7 +188,8 @@
     "raw_runtime_output_persisted": false,
     "credentials_persisted": false,
     "private_host_identifiers_persisted": false,
-    "absolute_model_paths_persisted": false
+    "absolute_model_paths_persisted": false,
+    "unsanitized_followup_manifest_removed": true
   },
   "transport_investigation": {
     "status": "VERIFIED_RECOVERED",
@@ -274,7 +275,8 @@
       "performance": "diagnostic only: 6.3 prompt t/s, 18.5 generation t/s",
       "retrieval": "1 VERIFIED, 7 MISSED, 1 INCONCLUSIVE",
       "quality": "2/2",
-      "evidence": "docs/issue41-qwen-coder-authoritative-suite.json"
+      "evidence": "docs/issue41-qwen-coder-authoritative-suite.json",
+      "manifest": "removed: contained unsanitized runtime fields"
     }
   }
 }
