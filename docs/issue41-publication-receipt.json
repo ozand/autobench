@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_PENDING_AUTHORITATIVE_RERUN",
+  "status": "INCONCLUSIVE_PENDING_COMPLETE_BOUNDARY",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Retain the bounded dual-GPU result as diagnostic; do not rerun or promote without a new reviewed investigation."
+    "next_action": "Prepare a new reviewed bounded boundary-only plan to test the next approved context once; do not publish the diagnostic probe as authoritative."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -202,11 +202,19 @@
     "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
     "configuration": "Vulkan0,Vulkan1 layer split 1,1",
     "status": "PARTIAL_FAILURE",
-    "boundary": "INCONCLUSIVE / BOUNDARY_SSH_TIMEOUT at context 2048",
+    "boundary": "Prior 2048 SSH timeout was not reproduced by one bounded diagnostic probe; complete boundary remains unresolved.",
     "performance": "diagnostic only: 5.1 prompt t/s, 21.05 generation t/s",
     "retrieval": "diagnostic only: 1 VERIFIED, 8 MISSED, 0 INCONCLUSIVE",
     "quality": "diagnostic only: 1/2",
     "authoritative_rows_added": 0,
-    "evidence": "docs/issue41-qwen-coder-layer-followup.json"
+    "evidence": "docs/issue41-qwen-coder-layer-followup.json",
+    "diagnostic_probe": {
+      "context_size": 2048,
+      "status": "SUCCESS",
+      "performance": "diagnostic only: 6.3 prompt t/s, 20.8 generation t/s",
+      "retrieval": "MISSED",
+      "generated_tokens": 16,
+      "evidence": "docs/issue41-qwen-coder-layer-diagnostic.json"
+    }
   }
 }

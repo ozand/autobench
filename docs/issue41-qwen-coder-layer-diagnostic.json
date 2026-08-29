@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_size": 2048,
+    "utilization": 0.5,
+    "max_tokens": 16,
+    "hypothesis": "the prior boundary SSH timeout may have been transient transport/runtime latency rather than a deterministic model capacity failure"
+  },
+  "result": {
+    "status": "SUCCESS",
+    "performance": {"prompt_tokens_per_sec": 6.3, "generation_tokens_per_sec": 20.8},
+    "retrieval_outcome": "MISSED",
+    "retrieval_reason": "answer_absent",
+    "generated_tokens": 16,
+    "elapsed_seconds": 171.8535873889923
+  },
+  "classification": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "reason": "single bounded diagnostic probe; it does not resolve the complete boundary, Retrieval, or quality publication gate"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
