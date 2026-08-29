@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "kv_baseline": "f16"
+  },
+  "execution": {
+    "status": "PARTIAL_FAILURE",
+    "authoritative": false,
+    "preflight": "SUCCESS",
+    "boundary": {
+      "status": "INCONCLUSIVE",
+      "cause": "BOUNDARY_SSH_TIMEOUT",
+      "context_size": 2048,
+      "maximum_allocatable_context": 2048,
+      "first_failed_context": null
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "prompt_tokens_per_sec": 5.1,
+      "generation_tokens_per_sec": 21.05
+    },
+    "retrieval": {
+      "status": "SUCCESS",
+      "verified": 1,
+      "missed": 8,
+      "inconclusive": 0,
+      "diagnostic_rate": 0.1111111111
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "passed": 1,
+      "total": 2
+    },
+    "workload": {
+      "status": "SUPPORTED",
+      "operational_context": 1024,
+      "prompt_tokens": 512,
+      "output_tokens": 64
+    }
+  },
+  "disposition": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "reason": "boundary evaluation became inconclusive at context 2048 despite successful dual-GPU preflight and workload stages",
+    "authoritative_publication": false,
+    "next_action": "retain as diagnostic evidence; do not rerun or promote without a new reviewed investigation"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

@@ -10,6 +10,9 @@
 
 > **Статус публикации:** отчёт содержит все сохранённые исторические и диагностические строки. Сравнительные выводы разрешены только для строк с классификацией `AUTHORITATIVE`. Reruns Issues #42–#61 не добавили новых authoritative rows; diagnostic и inconclusive values остаются non-authoritative. См. `docs/issue41-publication-receipt.json`.
 
+
+> Issue 41 follow-up: the reviewed Qwen2.5 Coder dual-GPU layer run remains diagnostic (`PARTIAL_FAILURE`); boundary became `INCONCLUSIVE` at context 2048. See `docs/issue41-qwen-coder-layer-followup.json`.
+
 ## Сводка
 
 - Моделей: **20**

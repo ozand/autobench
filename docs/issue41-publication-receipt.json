@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Use recovered transport only for a new reviewed model-specific follow-up; do not run broad inventory or promote existing rows."
+    "next_action": "Retain the bounded dual-GPU result as diagnostic; do not rerun or promote without a new reviewed investigation."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -197,5 +197,16 @@
       "remote GGUF inventory probe"
     ],
     "result": "k7000 SSH transport is currently reachable"
+  },
+  "follow_up_investigation": {
+    "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "configuration": "Vulkan0,Vulkan1 layer split 1,1",
+    "status": "PARTIAL_FAILURE",
+    "boundary": "INCONCLUSIVE / BOUNDARY_SSH_TIMEOUT at context 2048",
+    "performance": "diagnostic only: 5.1 prompt t/s, 21.05 generation t/s",
+    "retrieval": "diagnostic only: 1 VERIFIED, 8 MISSED, 0 INCONCLUSIVE",
+    "quality": "diagnostic only: 1/2",
+    "authoritative_rows_added": 0,
+    "evidence": "docs/issue41-qwen-coder-layer-followup.json"
   }
 }
