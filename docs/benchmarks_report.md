@@ -13,6 +13,8 @@
 
 > Issue 41 follow-up: the reviewed Qwen2.5 Coder dual-GPU layer run remains diagnostic (`PARTIAL_FAILURE`); boundary became `INCONCLUSIVE` at context 2048. See `docs/issue41-qwen-coder-layer-followup.json`.
 
+> Issue 41 follow-up: a bounded dual-GPU layer probe at context 4096 completed successfully but remains diagnostic-only; complete boundary and repeated evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-4096.json`.
+
 ## Сводка
 
 - Моделей: **20**
