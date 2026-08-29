@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_size": 32768,
+    "utilization": 0.03125,
+    "max_tokens": 16,
+    "hypothesis": "the dual-GPU layer configuration can sustain the researched native context limit after successful probes through 16384"
+  },
+  "result": {
+    "status": "SUCCESS",
+    "performance": {"prompt_tokens_per_sec": 6.3, "generation_tokens_per_sec": 20.7},
+    "retrieval_outcome": "MISSED",
+    "retrieval_reason": "answer_absent",
+    "generated_tokens": 15,
+    "elapsed_seconds": 167.50936889648438
+  },
+  "classification": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "reason": "single bounded diagnostic probe; complete repeated boundary, Retrieval, and quality evidence remain absent"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
