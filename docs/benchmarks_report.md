@@ -29,6 +29,8 @@
 
 > Issue 41 follow-up: the complete bounded dual-GPU suite reached contexts 1024, 2048, and 4096, then stopped at an inconclusive `SSH_TIMEOUT` on 8192. Performance/Retrieval/quality remain non-authoritative. See `docs/issue41-qwen-coder-authoritative-suite.json`.
 
+> Issue 41 follow-up: an 8192-context dual-GPU probe at 25% utilization completed successfully, but remains diagnostic-only and does not establish an authoritative boundary. See `docs/issue41-qwen-coder-boundary-8192-diagnostic.json`.
+
 ## Сводка
 
 - Моделей: **20**

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_PENDING_BOUNDARY_INVESTIGATION",
+  "status": "INCONCLUSIVE_PENDING_COMPLETE_AUTHENTICATED_SUITE",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Retain sanitized suite summary only; investigate 8192 boundary timeout with a new reviewed diagnostic if needed."
+    "next_action": "Retain the bounded 8192 hypothesis probe as diagnostic; create a reviewed complete suite only if authoritative publication remains required."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -277,6 +277,17 @@
       "quality": "2/2",
       "evidence": "docs/issue41-qwen-coder-authoritative-suite.json",
       "manifest": "removed: contained unsanitized runtime fields"
+    },
+    "boundary_diagnostic_8192_utilization_25": {
+      "status": "SUCCESS",
+      "context_size": 8192,
+      "utilization": "25%",
+      "performance": "diagnostic only: 7.1 prompt t/s, 19.2 generation t/s",
+      "retrieval": "MISSED",
+      "generated_tokens": 16,
+      "elapsed_seconds": 292.02536034584,
+      "hypothesis_result": "supports a workload-budget/latency contribution to the prior timeout; does not establish authoritative boundary",
+      "evidence": "docs/issue41-qwen-coder-boundary-8192-diagnostic.json"
     }
   }
 }
