@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_BOUNDARY_TIMEOUT_REPRODUCED",
+  "status": "INCONCLUSIVE_STANDARD_WORKLOAD_BOUNDARY",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Retain repeated timeout classification; do not promote metrics. A separate runtime/transport investigation is required before another complete suite."
+    "next_action": "Retain standard-workload timeout and low-utilization successes as separate diagnostic classes; do not promote either to authoritative publication."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -296,6 +296,17 @@
       "retrieval": "4 VERIFIED, 5 MISSED, 0 INCONCLUSIVE",
       "quality": "2/2",
       "evidence": "docs/issue41-qwen-coder-suite-rerun.json"
+    },
+    "boundary_diagnostic_8192_repeated_utilization_25": {
+      "status": "SUCCESS",
+      "repetitions": 3,
+      "context_size": 8192,
+      "utilization": "25%",
+      "performance": "diagnostic only: 7.2 prompt t/s, 19.2 generation t/s mean",
+      "retrieval": "0 VERIFIED, 3 MISSED, 0 INCONCLUSIVE",
+      "quality": "NOT_ATTEMPTED",
+      "hypothesis_result": "repeated low-utilization probes complete successfully; standard 50% workload timeout remains a workload/latency boundary for this testbed",
+      "evidence": "docs/issue41-qwen-coder-boundary-8192-repeated-u25.json"
     }
   }
 }

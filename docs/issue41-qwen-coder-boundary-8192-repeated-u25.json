@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_size": 8192,
+    "utilization": 0.25,
+    "max_tokens": 16,
+    "repetitions": 3
+  },
+  "results": [
+    {"attempt": 1, "status": "SUCCESS", "prompt_tokens_per_sec": 7.2, "generation_tokens_per_sec": 17.1, "generated_tokens": 16, "retrieval_outcome": "MISSED", "elapsed_seconds": 293.3160967826843},
+    {"attempt": 2, "status": "SUCCESS", "prompt_tokens_per_sec": 7.2, "generation_tokens_per_sec": 20.3, "generated_tokens": 16, "retrieval_outcome": "MISSED", "elapsed_seconds": 293.0148012638092},
+    {"attempt": 3, "status": "SUCCESS", "prompt_tokens_per_sec": 7.2, "generation_tokens_per_sec": 20.2, "generated_tokens": 16, "retrieval_outcome": "MISSED", "elapsed_seconds": 291.29751467704773}
+  ],
+  "aggregate": {
+    "status": "SUCCESS",
+    "all_attempts_completed": true,
+    "prompt_tokens_per_sec_mean": 7.2,
+    "generation_tokens_per_sec_mean": 19.2,
+    "retrieval_verified": 0,
+    "retrieval_missed": 3,
+    "retrieval_inconclusive": 0,
+    "quality": "NOT_ATTEMPTED"
+  },
+  "classification": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "reason": "repeated bounded hypothesis probes only; full authoritative boundary, Retrieval, and quality evidence remain absent"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
