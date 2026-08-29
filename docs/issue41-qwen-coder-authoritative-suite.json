@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192, 16384, 32768],
+    "kv_baseline": "f16",
+    "prompt_tokens": 1024,
+    "output_tokens": 64
+  },
+  "execution": {
+    "status": "PARTIAL_FAILURE",
+    "authoritative": false,
+    "preflight": "SUCCESS",
+    "boundary": {
+      "status": "INCONCLUSIVE",
+      "cause": "BOUNDARY_SSH_TIMEOUT",
+      "successful_contexts": [1024, 2048, 4096],
+      "timeout_context": 8192,
+      "maximum_allocatable_context": 4096,
+      "first_failed_context": null
+    },
+    "performance": {"status": "SUCCESS", "prompt_tokens_per_sec": 6.3, "generation_tokens_per_sec": 18.5},
+    "retrieval": {"status": "PARTIAL_FAILURE", "verified": 1, "missed": 7, "inconclusive": 1, "diagnostic_rate": 0.1111111111},
+    "quality": {"status": "SUCCESS", "passed": 2, "total": 2}
+  },
+  "disposition": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "reason": "complete suite stopped at the first 8192 boundary SSH timeout; later contexts were not executed and Retrieval contains an inconclusive attempt",
+    "authoritative_publication": false,
+    "next_action": "preserve this complete bounded suite as diagnostic evidence; do not promote metrics"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

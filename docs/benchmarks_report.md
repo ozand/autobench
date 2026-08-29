@@ -27,6 +27,8 @@
 
 > Issue 41 follow-up: bounded dual-GPU quality rerun with 64 output tokens passed `2/2`, but isolated evidence remains diagnostic-only and does not promote speed/Retrieval rows. See `docs/issue41-qwen-coder-layer-quality-64.json`.
 
+> Issue 41 follow-up: the complete bounded dual-GPU suite reached contexts 1024, 2048, and 4096, then stopped at an inconclusive `SSH_TIMEOUT` on 8192. Performance/Retrieval/quality remain non-authoritative. See `docs/issue41-qwen-coder-authoritative-suite.json`.
+
 ## Сводка
 
 - Моделей: **20**
