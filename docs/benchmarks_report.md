@@ -23,6 +23,8 @@
 
 > Issue 41 follow-up: three repeated dual-GPU layer probes at context 32768 succeeded, but all Retrieval attempts were `MISSED` and quality was not attempted; results remain diagnostic-only. See `docs/issue41-qwen-coder-layer-repeated-32768.json`.
 
+> Issue 41 follow-up: bounded dual-GPU quality stage completed with execution `SUCCESS` but deterministic pass rate `0/2`; output validation failures keep the result diagnostic-only. See `docs/issue41-qwen-coder-layer-quality.json`.
+
 ## Сводка
 
 - Моделей: **20**

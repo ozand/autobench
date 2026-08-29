@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_size": 32768,
+    "max_tokens": 16,
+    "dataset": "datasets/validation",
+    "tasks": 2
+  },
+  "result": {
+    "status": "SUCCESS",
+    "task_pass_rate": 0.0,
+    "tasks_passed": 0,
+    "tasks_total": 2,
+    "elapsed_seconds": 60.20138692855835,
+    "task_outcomes": [
+      {"task_id": "analyze_001", "execution": "SUCCESS", "deterministic_passed": false, "deterministic_score": 0.0, "issue_class": "OUTPUT_FORMAT_MISMATCH"},
+      {"task_id": "analyze_002", "execution": "SUCCESS", "deterministic_passed": false, "deterministic_score": 0.0, "issue_class": "OUTPUT_FORMAT_AND_REQUIRED_PATTERN_MISMATCH"}
+    ]
+  },
+  "classification": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "reason": "quality execution completed but deterministic task pass rate was 0/2; this bounded stage does not repair missing boundary or Retrieval evidence"
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

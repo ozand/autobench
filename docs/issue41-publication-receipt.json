@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_PENDING_QUALITY_AND_PUBLICATION",
+  "status": "INCONCLUSIVE_PENDING_AUTHORITATIVE_REPRODUCTION",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Retain repeated boundary probe as diagnostic; do not promote because quality and complete authoritative suite evidence remain absent."
+    "next_action": "Retain layer probes and quality result as diagnostic; do not promote. A complete authoritative suite requires a new reviewed plan with boundary and Retrieval evidence."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -255,6 +255,12 @@
       "retrieval": "0 VERIFIED, 3 MISSED, 0 INCONCLUSIVE",
       "quality": "NOT_ATTEMPTED",
       "evidence": "docs/issue41-qwen-coder-layer-repeated-32768.json"
+    },
+    "quality_probe": {
+      "status": "SUCCESS",
+      "task_pass_rate": "0/2",
+      "task_outcomes": "both execution-successful tasks failed deterministic validation due output format/pattern mismatch",
+      "evidence": "docs/issue41-qwen-coder-layer-quality.json"
     }
   }
 }
