@@ -327,5 +327,19 @@
     "fallback_timeout_seconds": 1200,
     "fallback_condition": "only after a 600-second timeout without terminal result",
     "evidence": "docs/issue41-qwen-coder-suite-timeout-policy.json"
+  },
+  "reviewed_suite_timeout600_plan": {
+    "status": "APPROVED",
+    "expected_job_count": 1,
+    "configuration": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf; Vulkan0,Vulkan1; layer; 1,1",
+    "contexts": [
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "primary_timeout_seconds": 600,
+    "fallback_timeout_seconds": 1200,
+    "evidence": "docs/issue41-qwen-coder-suite-timeout600-plan.json"
   }
 }

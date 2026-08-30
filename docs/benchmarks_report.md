@@ -37,6 +37,8 @@
 
 > Issue 41 follow-up: the standard 8192 workload completed only with a 600-second timeout (597.36 s), confirming a high-latency boundary. The result remains diagnostic-only and is not authoritative. See `docs/issue41-qwen-coder-boundary-8192-timeout600.json`.
 
+> Issue 41 follow-up: the reviewed Qwen2.5 Coder suite uses a 600-second primary timeout and a 1200-second fallback only when no terminal result is produced. See `docs/issue41-qwen-coder-suite-timeout600-plan.json`.
+
 ## Сводка
 
 - Моделей: **20**

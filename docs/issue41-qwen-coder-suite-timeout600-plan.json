@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "plan_status": "APPROVED",
+  "scope": "one complete dual-GPU suite only",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "kv_baseline": "f16",
+    "prompt_tokens": 512,
+    "output_tokens": 64
+  },
+  "timeout_policy": {
+    "primary_seconds": 600,
+    "fallback_seconds": 1200,
+    "fallback_condition": "only if the primary run times out without a terminal result",
+    "fallback_is_separate_evidence": true
+  },
+  "stop_rule": "stop at the first unexpected result and classify it before further inference",
+  "expected_job_count": 1,
+  "publication": {
+    "authoritative": false,
+    "promotion_requires_complete_boundary_and_verified_retrieval_quality": true
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
