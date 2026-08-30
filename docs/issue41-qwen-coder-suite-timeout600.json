@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "timeout_seconds": 600,
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "kv_baseline": "f16"
+  },
+  "execution": {
+    "status": "SUCCESS",
+    "authoritative": false,
+    "preflight": "SUCCESS",
+    "boundary": {
+      "status": "SUCCESS",
+      "cause": null,
+      "successful_contexts": [
+        1024,
+        2048,
+        4096,
+        8192
+      ],
+      "first_unexpected_context": null
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "prompt_tokens_per_sec": 5.1,
+      "generation_tokens_per_sec": 20.85
+    },
+    "retrieval": {
+      "status": "SUCCESS",
+      "verified": 2,
+      "missed": 7,
+      "inconclusive": 0
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "passed": 2,
+      "total": 2
+    }
+  },
+  "disposition": {
+    "publication_class": "NON_AUTHORITATIVE",
+    "reason": "extended-timeout suite remains diagnostic because authoritative publication requires stable complete evidence under one reviewed policy and Retrieval/quality criteria",
+    "authoritative_publication": false
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}
