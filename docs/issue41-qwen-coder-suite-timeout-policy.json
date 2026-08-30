@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "context_progression": [1024, 2048, 4096, 8192],
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "kv_baseline": "f16"
+  },
+  "review_decision": {
+    "status": "APPROVED",
+    "primary_timeout_seconds": 600,
+    "fallback_timeout_seconds": 1200,
+    "fallback_condition": "use only if the 600-second run reaches a timeout before producing a terminal stage result; record the fallback separately",
+    "scope": "one model and one dual-GPU layer configuration; no broad inventory; no tensor/row split",
+    "stop_rule": "stop at the first unexpected result and classify it before any further inference"
+  },
+  "evidence_basis": {
+    "prior_standard_timeout": "BOUNDARY_SSH_TIMEOUT at context 8192",
+    "prior_extended_timeout": "SUCCESS at context 8192 with 600 seconds, elapsed 597.36 seconds",
+    "prior_low_utilization_repeats": "3/3 SUCCESS at context 8192 with 25% utilization",
+    "research_gate": "PASS",
+    "protocol_receipt": "PROTOCOL_RECEIPT_VALID"
+  },
+  "publication_policy": {
+    "authoritative": false,
+    "diagnostic_only_until_complete_suite": true,
+    "no_metric_promotion": true
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false
+  }
+}

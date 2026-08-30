@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "INCONCLUSIVE_RUNTIME_LATENCY_BOUNDARY",
+  "status": "REVIEWED_TIMEOUT_POLICY_READY",
   "scope": {
     "affected_issue_range": [
       42,
@@ -180,7 +180,7 @@
   "final_disposition": {
     "status": "INCONCLUSIVE",
     "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Treat 8192 as a high-latency diagnostic boundary under the pinned timeout; do not promote metrics or rerun broadly without a reviewed policy decision."
+    "next_action": "Run the one reviewed complete suite with timeout 600; use 1200 only under the recorded fallback condition; stop and classify the first unexpected result."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -320,5 +320,12 @@
       "hypothesis_result": "standard workload completed only with extended timeout; runtime latency remains material",
       "evidence": "docs/issue41-qwen-coder-boundary-8192-timeout600.json"
     }
+  },
+  "reviewed_timeout_policy": {
+    "status": "APPROVED",
+    "primary_timeout_seconds": 600,
+    "fallback_timeout_seconds": 1200,
+    "fallback_condition": "only after a 600-second timeout without terminal result",
+    "evidence": "docs/issue41-qwen-coder-suite-timeout-policy.json"
   }
 }
