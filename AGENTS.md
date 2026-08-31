@@ -37,6 +37,29 @@ and mark it `in progress` when work starts. Do not expand an active Issue beyond
 its acceptance criteria. Add a sanitized completion comment and close it only
 after its criteria are verified.
 
+## Local pi-intercom peer coordination
+
+Use `pi-intercom` for coordination with explicitly identified peer Pi sessions.
+Operational peer-session identifiers may be documented in this agent-facing file
+when needed for local coordination. This allowance does not permit secrets,
+credentials, access tokens, private remote targets, or sensitive runtime payloads
+to be recorded in benchmark evidence or public reports.
+
+Current peer roles:
+
+- **pi-1** — send with:
+  ```javascript
+  intercom({ action: "send", to: "01a058cd-db54-7119-8c87-82adbf60e042", message: "..." })
+  ```
+- **pi-2** — send with:
+  ```javascript
+  intercom({ action: "send", to: "01a058cd-e15c-743e-95db-51ce08e02c0d", message: "..." })
+  ```
+
+Before relying on a peer identifier, use `intercom({ action: "list" })` to
+confirm that the session is still connected. Do not copy these coordination
+identifiers into benchmark result artifacts, published reports, or runtime logs.
+
 ## Mandatory per-model protocol
 
 Use both `autobench-model-run` and `autobench-pre-run-research` for every manual
