@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "issue": 63,
-  "status": "REVIEW_COMPLETE_PUBLICATION_HELD_FOR_OWNER_APPROVAL",
+  "status": "PUBLISHED",
   "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
   "adr_gate": {
     "adr": "docs/adr/ADR-001-qwen25-coder-timeout-policy.md",
@@ -17,14 +17,40 @@
       "device": "Vulkan0,Vulkan1",
       "split_mode": "layer",
       "tensor_split": "1,1",
-      "contexts": [1024, 2048, 4096, 8192],
+      "contexts": [
+        1024,
+        2048,
+        4096,
+        8192
+      ],
       "kv_baseline": "f16",
       "timeout_seconds": 600
     },
-    "boundary": {"status": "SUCCESS", "contexts_succeeded": [1024, 2048, 4096, 8192]},
-    "performance": {"status": "SUCCESS", "prompt_tokens_per_sec": 5.1, "generation_tokens_per_sec": 20.85},
-    "retrieval": {"status": "SUCCESS", "verified": 2, "missed": 7, "inconclusive": 0},
-    "quality": {"status": "SUCCESS", "passed": 2, "total": 2},
+    "boundary": {
+      "status": "SUCCESS",
+      "contexts_succeeded": [
+        1024,
+        2048,
+        4096,
+        8192
+      ]
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "prompt_tokens_per_sec": 5.1,
+      "generation_tokens_per_sec": 20.85
+    },
+    "retrieval": {
+      "status": "SUCCESS",
+      "verified": 2,
+      "missed": 7,
+      "inconclusive": 0
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "passed": 2,
+      "total": 2
+    },
     "provenance": "sanitized Issue 41 suite summary and validated model receipt"
   },
   "publication_decision": {
@@ -34,22 +60,28 @@
       "retrieval_rate": "2 VERIFIED / 7 MISSED / 0 INCONCLUSIVE",
       "quality_pass_rate": "2/2"
     },
-    "approved_for_public_write": false,
+    "approved_for_public_write": true,
     "excluded_from_public_write": [
       "historical rows with zero or missing speed metrics",
       "diagnostic metrics from other runs",
       "any inferred Retrieval rate that collapses MISSED or INCONCLUSIVE outcomes",
       "raw runtime manifests and raw prompts/responses"
     ],
-    "reason_held": "Issue safety constraints require explicit review before irreversible public artifact writes. The current owner request did not explicitly approve publishing these values.",
-    "public_targets_not_changed": [
-      "results/benchmarks.db",
-      "docs/benchmarks_data.json",
-      "docs/benchmarks_report.csv",
-      "docs/benchmarks_report.json",
-      "docs/benchmarks_report.md",
-      "docs/index.html"
-    ]
+    "reason_held": "Owner approved publication; only the reviewed suite rows were written.",
+    "public_targets_not_changed": [],
+    "approved_metrics": {
+      "prompt_tokens_per_sec": 5.1,
+      "eval_tokens_per_sec": 20.85,
+      "retrieval_rate": "2 VERIFIED / 7 MISSED / 0 INCONCLUSIVE",
+      "quality_pass_rate": "2/2"
+    },
+    "written_rows": [
+      1144,
+      1145,
+      1146,
+      1147
+    ],
+    "publication_provenance": "issue63:authoritative_timeout600"
   },
   "sanitization": {
     "raw_prompts_persisted": false,

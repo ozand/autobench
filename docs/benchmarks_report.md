@@ -1,49 +1,15 @@
 # AutoBench — полный отчёт результатов
 
-Сгенерировано: `2026-08-23T16:06:59.956642+00:00`
+Сгенерировано: `2026-09-01T02:26:17.155428+00:00`
 
 Отчёт содержит все строки из `results/benchmarks.db`, включая успешные, неоднозначные и неавторитетные тесты.
 Нулевые/отсутствующие метрики не трактуются как измеренные значения.
 
-
-> Текущий транспорт k7000 восстановлен и проверен bounded probes; это не является разрешением на широкое inference.
-
-> **Статус публикации:** отчёт содержит все сохранённые исторические и диагностические строки. Сравнительные выводы разрешены только для строк с классификацией `AUTHORITATIVE`. Reruns Issues #42–#61 не добавили новых authoritative rows; diagnostic и inconclusive values остаются non-authoritative. См. `docs/issue41-publication-receipt.json`.
-
-
-> Issue 41 follow-up: the reviewed Qwen2.5 Coder dual-GPU layer run remains diagnostic (`PARTIAL_FAILURE`); boundary became `INCONCLUSIVE` at context 2048. See `docs/issue41-qwen-coder-layer-followup.json`.
-
-> Issue 41 follow-up: a bounded dual-GPU layer probe at context 4096 completed successfully but remains diagnostic-only; complete boundary and repeated evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-4096.json`.
-
-> Issue 41 follow-up: a bounded dual-GPU layer probe at context 8192 completed successfully but remains diagnostic-only; repeated boundary, Retrieval, and quality evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-8192.json`.
-
-> Issue 41 follow-up: a bounded dual-GPU layer probe at context 16384 completed successfully but remains diagnostic-only; repeated boundary, Retrieval, and quality evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-16384.json`.
-
-> Issue 41 follow-up: a bounded dual-GPU layer probe at context 32768 completed successfully but remains diagnostic-only; repeated boundary, Retrieval, and quality evidence are unresolved. See `docs/issue41-qwen-coder-layer-diagnostic-32768.json`.
-
-> Issue 41 follow-up: three repeated dual-GPU layer probes at context 32768 succeeded, but all Retrieval attempts were `MISSED` and quality was not attempted; results remain diagnostic-only. See `docs/issue41-qwen-coder-layer-repeated-32768.json`.
-
-> Issue 41 follow-up: bounded dual-GPU quality stage completed with execution `SUCCESS` but deterministic pass rate `0/2`; output validation failures keep the result diagnostic-only. See `docs/issue41-qwen-coder-layer-quality.json`.
-
-> Issue 41 follow-up: bounded dual-GPU quality rerun with 64 output tokens passed `2/2`, but isolated evidence remains diagnostic-only and does not promote speed/Retrieval rows. See `docs/issue41-qwen-coder-layer-quality-64.json`.
-
-> Issue 41 follow-up: the complete bounded dual-GPU suite reached contexts 1024, 2048, and 4096, then stopped at an inconclusive `SSH_TIMEOUT` on 8192. Performance/Retrieval/quality remain non-authoritative. See `docs/issue41-qwen-coder-authoritative-suite.json`.
-
-> Issue 41 follow-up: an 8192-context dual-GPU probe at 25% utilization completed successfully, but remains diagnostic-only and does not establish an authoritative boundary. See `docs/issue41-qwen-coder-boundary-8192-diagnostic.json`.
-
-> Issue 41 follow-up: the second complete dual-GPU suite reproduced `BOUNDARY_SSH_TIMEOUT` at context 8192 after successful 1024–4096 probes. Metrics remain diagnostic-only. See `docs/issue41-qwen-coder-suite-rerun.json`.
-
-> Issue 41 follow-up: three repeated dual-GPU probes at context 8192 with 25% utilization completed successfully, while the standard 50% workload timed out. Both remain diagnostic-only and are not authoritative measurements. See `docs/issue41-qwen-coder-boundary-8192-repeated-u25.json`.
-
-> Issue 41 follow-up: the standard 8192 workload completed only with a 600-second timeout (597.36 s), confirming a high-latency boundary. The result remains diagnostic-only and is not authoritative. See `docs/issue41-qwen-coder-boundary-8192-timeout600.json`.
-
-> Issue 41 follow-up: the reviewed Qwen2.5 Coder suite uses a 600-second primary timeout and a 1200-second fallback only when no terminal result is produced. See `docs/issue41-qwen-coder-suite-timeout600-plan.json`.
-
 ## Сводка
 
 - Моделей: **20**
-- Тестов: **925**
-- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 122}`
+- Тестов: **929**
+- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 126}`
 
 ## Метрики по моделям
 
@@ -65,7 +31,7 @@
 | `qwen2.5-0.5b-instruct-q4_k_m.gguf` | 20 | 5 | 17.100/17.180/17.200 | 20.800/27.860/37.100 | 1.000/1.000/1.000 | 1.000/1.000/1.000 | FAILED: 10, PARTIAL_FAILURE: 2, SUCCESS: 6, TIMEOUT: 2 |
 | `qwen2.5-0.5b-instruct-q8_0.gguf` | 72 | 42 | 5.800/10.857/13.200 | 12.000/29.250/38.500 | 0.150/0.752/1.000 | 1.000/1.000/1.000 | FAILED: 27, PARTIAL_FAILURE: 3, SUCCESS: 42 |
 | `qwen2.5-3b-instruct-q4_k_m.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 2 |
-| `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | 108 | 0 | — | — | — | — | SUCCESS: 18, TIMEOUT: 90 |
+| `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | 112 | 4 | 5.100/5.100/5.100 | 20.850/20.850/20.850 | 0.222/0.222/0.222 | 1.000/1.000/1.000 | SUCCESS: 22, TIMEOUT: 90 |
 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | 108 | 0 | — | — | — | — | SUCCESS: 15, TIMEOUT: 93 |
 | `qwen2.5-coder-3b-instruct-q4_k_m.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 2 |
 | `smollm2-1.7b-instruct-q4_k_m.gguf` | 22 | 0 | — | — | — | — | OOM: 6, PARTIAL_FAILURE: 2, SUCCESS: 4, TIMEOUT: 10 |
@@ -779,6 +745,7 @@
 | 586 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 1024 | f16_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 592 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 1024 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 598 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 1024 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
+| 1144 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 1024 | f16 | 5.1 | 20.85 | 0.2222222222222222 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 497 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 2048 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 503 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 2048 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 509 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 2048 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
@@ -797,6 +764,7 @@
 | 587 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 2048 | f16_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 593 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 2048 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 599 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 2048 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
+| 1145 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 2048 | f16 | 5.1 | 20.85 | 0.2222222222222222 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 498 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 4096 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 504 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 4096 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 510 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 4096 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
@@ -815,6 +783,7 @@
 | 588 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 4096 | f16_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 594 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 4096 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 600 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 4096 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
+| 1146 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 4096 | f16 | 5.1 | 20.85 | 0.2222222222222222 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 499 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 8192 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 505 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 8192 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 511 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 8192 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
@@ -833,6 +802,7 @@
 | 589 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 8192 | f16_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 595 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 8192 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 601 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 8192 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
+| 1147 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0,Vulkan1` | 8192 | f16 | 5.1 | 20.85 | 0.2222222222222222 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 500 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 16384 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 506 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 16384 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 512 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | `Vulkan0` | 16384 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |

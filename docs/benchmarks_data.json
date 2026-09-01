@@ -12654,6 +12654,24 @@
     "provenance": "legacy_audit:success_without_complete_speed_metrics"
   },
   {
+    "id": 1144,
+    "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 1117320768,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 1024,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 5.1,
+    "eval_tokens_per_sec": 20.85,
+    "retrieval_rate": 0.2222222222222222,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-01 02:23:14",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "legacy_audit:measured_success_with_positive_speed"
+  },
+  {
     "id": 497,
     "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
     "size_bytes": 0,
@@ -12976,6 +12994,24 @@
     "created_at": "2026-08-23 02:32:03",
     "publication_class": "NON_AUTHORITATIVE",
     "provenance": "legacy_audit:execution_not_success"
+  },
+  {
+    "id": 1145,
+    "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 1117320768,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 2048,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 5.1,
+    "eval_tokens_per_sec": 20.85,
+    "retrieval_rate": 0.2222222222222222,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-01 02:23:14",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "legacy_audit:measured_success_with_positive_speed"
   },
   {
     "id": 498,
@@ -13302,6 +13338,24 @@
     "provenance": "legacy_audit:execution_not_success"
   },
   {
+    "id": 1146,
+    "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 1117320768,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 4096,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 5.1,
+    "eval_tokens_per_sec": 20.85,
+    "retrieval_rate": 0.2222222222222222,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-01 02:23:14",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "legacy_audit:measured_success_with_positive_speed"
+  },
+  {
     "id": 499,
     "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
     "size_bytes": 0,
@@ -13624,6 +13678,24 @@
     "created_at": "2026-08-23 02:32:04",
     "publication_class": "NON_AUTHORITATIVE",
     "provenance": "legacy_audit:execution_not_success"
+  },
+  {
+    "id": 1147,
+    "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 1117320768,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 8192,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 5.1,
+    "eval_tokens_per_sec": 20.85,
+    "retrieval_rate": 0.2222222222222222,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-01 02:23:14",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "legacy_audit:measured_success_with_positive_speed"
   },
   {
     "id": 500,

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-08-23T16:06:59.956642+00:00",
+  "generated_at": "2026-09-01T02:26:17.155428+00:00",
   "scope": "all rows in results/benchmarks.db",
   "metric_semantics": {
     "prompt_tokens_per_sec": "prompt processing speed in tokens per second",
@@ -11,11 +11,11 @@
   },
   "totals": {
     "models": 20,
-    "tests": 925,
+    "tests": 929,
     "classification_counts": {
       "NON_AUTHORITATIVE": 708,
       "AMBIGUOUS": 95,
-      "AUTHORITATIVE": 122
+      "AUTHORITATIVE": 126
     }
   },
   "models": [
@@ -738,46 +738,47 @@
     },
     {
       "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
-      "test_count": 108,
-      "authoritative_count": 0,
+      "test_count": 112,
+      "authoritative_count": 4,
       "classification_counts": {
         "AMBIGUOUS": 18,
+        "AUTHORITATIVE": 4,
         "NON_AUTHORITATIVE": 90
       },
       "status_counts": {
-        "SUCCESS": 18,
+        "SUCCESS": 22,
         "TIMEOUT": 90
       },
       "metric_counts": {
-        "prompt_tokens_per_sec": 108,
-        "eval_tokens_per_sec": 108,
-        "retrieval_rate": 108,
-        "quality_pass_rate": 108
+        "prompt_tokens_per_sec": 112,
+        "eval_tokens_per_sec": 112,
+        "retrieval_rate": 112,
+        "quality_pass_rate": 112
       },
       "authoritative_metric_summary": {
         "prompt_tokens_per_sec": {
-          "count": 0,
-          "min": null,
-          "max": null,
-          "average": null
+          "count": 4,
+          "min": 5.1,
+          "max": 5.1,
+          "average": 5.1
         },
         "eval_tokens_per_sec": {
-          "count": 0,
-          "min": null,
-          "max": null,
-          "average": null
+          "count": 4,
+          "min": 20.85,
+          "max": 20.85,
+          "average": 20.85
         },
         "retrieval_rate": {
-          "count": 0,
-          "min": null,
-          "max": null,
-          "average": null
+          "count": 4,
+          "min": 0.2222222222222222,
+          "max": 0.2222222222222222,
+          "average": 0.2222222222222222
         },
         "quality_pass_rate": {
-          "count": 0,
-          "min": null,
-          "max": null,
-          "average": null
+          "count": 4,
+          "min": 1.0,
+          "max": 1.0,
+          "average": 1.0
         }
       }
     },
@@ -14276,6 +14277,25 @@
       "metric_quality": "INCOMPLETE_SUCCESS"
     },
     {
+      "id": 1144,
+      "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 1117320768,
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 1024,
+      "kv_quant": "f16",
+      "kv_offload": 0,
+      "prompt_tokens_per_sec": 5.1,
+      "eval_tokens_per_sec": 20.85,
+      "retrieval_rate": 0.2222222222222222,
+      "quality_pass_rate": 1.0,
+      "status": "SUCCESS",
+      "publication_class": "AUTHORITATIVE",
+      "provenance": "legacy_audit:measured_success_with_positive_speed",
+      "created_at": "2026-09-01 02:23:14",
+      "metric_quality": "COMPLETE_AUTHORITATIVE"
+    },
+    {
       "id": 497,
       "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
       "size_bytes": 0,
@@ -14616,6 +14636,25 @@
       "provenance": "legacy_audit:execution_not_success",
       "created_at": "2026-08-23 02:32:03",
       "metric_quality": "NOT_PUBLISHED"
+    },
+    {
+      "id": 1145,
+      "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 1117320768,
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 2048,
+      "kv_quant": "f16",
+      "kv_offload": 0,
+      "prompt_tokens_per_sec": 5.1,
+      "eval_tokens_per_sec": 20.85,
+      "retrieval_rate": 0.2222222222222222,
+      "quality_pass_rate": 1.0,
+      "status": "SUCCESS",
+      "publication_class": "AUTHORITATIVE",
+      "provenance": "legacy_audit:measured_success_with_positive_speed",
+      "created_at": "2026-09-01 02:23:14",
+      "metric_quality": "COMPLETE_AUTHORITATIVE"
     },
     {
       "id": 498,
@@ -14960,6 +14999,25 @@
       "metric_quality": "NOT_PUBLISHED"
     },
     {
+      "id": 1146,
+      "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 1117320768,
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 4096,
+      "kv_quant": "f16",
+      "kv_offload": 0,
+      "prompt_tokens_per_sec": 5.1,
+      "eval_tokens_per_sec": 20.85,
+      "retrieval_rate": 0.2222222222222222,
+      "quality_pass_rate": 1.0,
+      "status": "SUCCESS",
+      "publication_class": "AUTHORITATIVE",
+      "provenance": "legacy_audit:measured_success_with_positive_speed",
+      "created_at": "2026-09-01 02:23:14",
+      "metric_quality": "COMPLETE_AUTHORITATIVE"
+    },
+    {
       "id": 499,
       "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
       "size_bytes": 0,
@@ -15300,6 +15358,25 @@
       "provenance": "legacy_audit:execution_not_success",
       "created_at": "2026-08-23 02:32:04",
       "metric_quality": "NOT_PUBLISHED"
+    },
+    {
+      "id": 1147,
+      "model_name": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 1117320768,
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 8192,
+      "kv_quant": "f16",
+      "kv_offload": 0,
+      "prompt_tokens_per_sec": 5.1,
+      "eval_tokens_per_sec": 20.85,
+      "retrieval_rate": 0.2222222222222222,
+      "quality_pass_rate": 1.0,
+      "status": "SUCCESS",
+      "publication_class": "AUTHORITATIVE",
+      "provenance": "legacy_audit:measured_success_with_positive_speed",
+      "created_at": "2026-09-01 02:23:14",
+      "metric_quality": "COMPLETE_AUTHORITATIVE"
     },
     {
       "id": 500,

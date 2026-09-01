@@ -6,9 +6,9 @@
     "deletion": "none; historical rows are retained"
   },
   "classification_counts": {
-    "AUTHORITATIVE": 122,
+    "AUTHORITATIVE": 126,
     "AMBIGUOUS": 95,
     "NON_AUTHORITATIVE": 708
   },
-  "exported_rows": 925
+  "exported_rows": 929
 }

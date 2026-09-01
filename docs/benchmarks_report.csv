@@ -702,6 +702,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 586,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,1024,f16,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:31:13,INCOMPLETE_SUCCESS
 592,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,1024,q8_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:31:32,INCOMPLETE_SUCCESS
 598,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,1024,q4_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:31:50,INCOMPLETE_SUCCESS
+1144,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,1117320768,"Vulkan0,Vulkan1","1,1",1024,f16,0,5.1,20.85,0.2222222222222222,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-09-01 02:23:14,COMPLETE_AUTHORITATIVE
 497,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:22,NOT_PUBLISHED
 503,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:43,NOT_PUBLISHED
 509,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:27:04,NOT_PUBLISHED
@@ -720,6 +721,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 587,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,2048,f16,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:26,NOT_PUBLISHED
 593,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,2048,q8_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:44,NOT_PUBLISHED
 599,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,2048,q4_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:32:03,NOT_PUBLISHED
+1145,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,1117320768,"Vulkan0,Vulkan1","1,1",2048,f16,0,5.1,20.85,0.2222222222222222,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-09-01 02:23:14,COMPLETE_AUTHORITATIVE
 498,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,4096,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:22,NOT_PUBLISHED
 504,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,4096,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:43,NOT_PUBLISHED
 510,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,4096,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:27:04,NOT_PUBLISHED
@@ -738,6 +740,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 588,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,4096,f16,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:26,NOT_PUBLISHED
 594,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,4096,q8_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:44,NOT_PUBLISHED
 600,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,4096,q4_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:32:03,NOT_PUBLISHED
+1146,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,1117320768,"Vulkan0,Vulkan1","1,1",4096,f16,0,5.1,20.85,0.2222222222222222,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-09-01 02:23:14,COMPLETE_AUTHORITATIVE
 499,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,8192,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:23,NOT_PUBLISHED
 505,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,8192,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:44,NOT_PUBLISHED
 511,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,8192,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:27:04,NOT_PUBLISHED
@@ -756,6 +759,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 589,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,8192,f16,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:27,NOT_PUBLISHED
 595,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,8192,q8_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:31:45,NOT_PUBLISHED
 601,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,"Vulkan0,Vulkan1",layer,8192,q4_0,1,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:32:04,NOT_PUBLISHED
+1147,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,1117320768,"Vulkan0,Vulkan1","1,1",8192,f16,0,5.1,20.85,0.2222222222222222,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-09-01 02:23:14,COMPLETE_AUTHORITATIVE
 500,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,16384,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:23,NOT_PUBLISHED
 506,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,16384,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:26:44,NOT_PUBLISHED
 512,qwen2.5-coder-1.5b-instruct-q4_k_m.gguf,0,Vulkan0,,16384,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:27:05,NOT_PUBLISHED
