@@ -1,52 +1,59 @@
 ---
 id: KB-QWEN25-05B-Q8_0
-title: "Qwen2.5-0.5B-Instruct-Q8_0 Validation and Multi-GPU Analysis"
+title: "Qwen2.5-0.5B-Instruct-Q8_0 Issue 41 Follow-up"
 category: research
-tags: [qwen2.5, gguf, q8_0, vulkan, gtx690, okf]
+tags: [qwen2.5, gguf, q8_0, vulkan, gtx690, okf, issue41]
 status: reviewed
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-09-01
 environment:
-  os: Linux remote GPU host (k7000)
+  os: Linux remote GPU host
   shell: POSIX shell
   tools: [Surf CLI, llama.cpp, AutoBench, QMD]
 error_signatures:
   - "device does not support split buffers"
-  - "SSH execution timed out after 190 seconds"
+  - "SSH execution timed out"
 ---
 
-# Qwen2.5-0.5B-Instruct-Q8_0 Validation & Multi-GPU Analysis
+# Qwen2.5-0.5B-Instruct-Q8_0 Issue 41 Follow-up
 
-## Model Overview
-- **Identifier**: `qwen2.5-0.5b-instruct-q8_0.gguf`
-- **Size**: ~644.4 MiB (675,710,816 bytes)
-- **Architecture**: Dense Transformer (24 layers, 14 attention heads, 2 KV heads, GQA, RoPE context 32,768)
+## Source-backed upstream facts
 
-## Verified Hardware Execution (k7000 GTX 690)
-1. **Single-GPU (Vulkan0)**:
-   - Fits entirely in VRAM: 33/33 layers offloaded (`-ngl 33`).
-   - Speed: ~18.4 t/s prompt eval, ~34.8 t/s generation.
-   - Quality deterministic pass rate: 100% (2/2).
-   - Allocation limit: 4096 tokens (8192 hits execution timeout during coarse boundary probe).
-   - Repeated needle retrieval @ 4096: 46.7% (7/15 correct) due to capacity limits of 0.49B parameter size.
-2. **Single-GPU (Vulkan1)**:
-   - Fits entirely in VRAM: 33/33 layers offloaded (`-ngl 33`).
-   - Speed: ~18.3 t/s prompt eval, ~34.3 t/s generation.
-   - Quality deterministic pass rate: 50% (1/2).
-   - Repeated needle retrieval @ 4096: 60.0% (9/15 correct).
-## Issue 56 execution evidence
-- Stage 1/2 receipt validation passed for the exact GGUF.
-- Dry-run planned two fitting single-GPU jobs, Vulkan0 and Vulkan1; dual-GPU layer remains separately planned because the current inventory path uses the fitting-model two-job envelope.
-- Vulkan0 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
-- Vulkan0 performance: prompt `18.1 t/s`, generation `35.15 t/s`.
-- Vulkan0 Retrieval: 5 `VERIFIED`, 4 `MISSED`; recorded rate `5/9`, not authoritative.
-- Vulkan0 quality: `2/2` tasks passed.
-- Vulkan1 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
-- Vulkan1 performance: prompt `18.35 t/s`, generation `35.35 t/s`.
-- Vulkan1 Retrieval: 5 `VERIFIED`, 4 `MISSED`; recorded rate `5/9`, not authoritative.
-- Vulkan1 quality: `2/2` tasks passed.
-- Overall Issue 56 disposition: `PARTIAL_FAILURE` / non-authoritative.
+See the exact-model source note [`kb/raw/qwen2.5-0.5b-instruct-q8_0.md`](../raw/qwen2.5-0.5b-instruct-q8_0.md).
 
-3. **Multi-GPU Behavior**:
-   - Tensor split (`-sm tensor`) is unsupported on Kepler Vulkan (`device does not support split buffers`).
-   - Layer split (`-sm layer`) with `-ts 1,1` is supported when needed for larger models, but unnecessary for this size class (<700 MiB).
+- The official checkpoint is Qwen2.5-0.5B-Instruct, approximately 0.49B parameters.
+- The official configuration identifies `Qwen2ForCausalLM` with 24 layers, 14 attention heads, 2 KV heads, and hidden size 896.
+- The declared checkpoint context limit is 32,768 tokens.
+- Official llama.cpp documentation describes `layer` as the default and most compatible multi-GPU split. `1,1` is a balanced tensor-split proportion for the ordered devices, but this project uses it with `-sm layer` only.
+- Default KV cache types are f16. This increment establishes the f16 baseline and does not perform a blind KV option sweep.
+
+## Exact artifact and target observations
+
+- Target basename: `qwen2.5-0.5b-instruct-q8_0.gguf`.
+- Fresh target byte size: `675710816`.
+- Fresh target SHA-256: `ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e`.
+- Target runtime lists Vulkan0 and Vulkan1, each with 2048 MiB reported memory.
+- These observations bind the follow-up artifact but do not prove benchmark success.
+
+## Local historical observations
+
+- Issue #56 classified the exact model as partial/non-authoritative: Vulkan0 and Vulkan1 completed through context 4096, while both 8192 probes ended in SSH timeout; the dual-GPU layer path was not executed.
+- Historical database rows include a conflicting legacy size value and remain retained as historical evidence. They are not silently promoted or used as the identity for this follow-up.
+- Prior tensor/row-split evidence is excluded from authoritative Vulkan coverage because the target testbed reports split-buffer incompatibility.
+
+## Reviewed follow-up scope
+
+- Governing issue: GitHub Issue #41.
+- Objective: resolve the outstanding 8192 boundary uncertainty and obtain the missing dual-GPU layer evidence for this exact Q8_0 artifact.
+- Configuration groups: matched Vulkan0 single-device baseline, matched Vulkan1 single-device baseline, and Vulkan0,Vulkan1 `-sm layer -ts 1,1`.
+- KV policy: f16 baseline only (`-ctk f16 -ctv f16` where explicit flags are recorded).
+- Context policy: baseline at 1024 on all three groups, then 2048, 4096, and 8192 only on the dual-layer path. Expected execution unit: 3 serial suite jobs; these contain 6 allocation probes (one Vulkan0, one Vulkan1, and four dual-layer probes), plus a separately counted preflight/tokenizer smoke.
+- Fixed workload policy: identical prompt/output budgets and logical workload across matched comparisons; output is isolated to sanitized summaries.
+- Timeout policy: 600 seconds primary for this increment. The 1200-second fallback is conditional and must be separately reviewed and recorded only after a primary run has no terminal result.
+- Stop rule: stop at the first unexpected boundary, transport, OOM, execution, artifact, or privacy result. Preserve the first class and do not blindly retry or continue later stages.
+
+## Unresolved assumptions
+
+- Upstream checkpoint metadata does not prove this converted GGUF's local runtime behavior.
+- Single-GPU fit and dual-layer usefulness must be established by the bounded target run; size alone does not exclude the dual-layer measurement.
+- Existing historical metrics are not evidence for this new Issue #41 scope. Publication requires fresh parsed metrics, complete execution evidence, explicit Retrieval outcomes, and a sanitized publication review.

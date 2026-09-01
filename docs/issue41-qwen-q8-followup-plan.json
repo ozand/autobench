@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "provenance": "Source: defect found while implementing #41",
+  "model": {
+    "basename": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "size_bytes": 675710816,
+    "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+    "quantization": "Q8_0",
+    "backend": "vulkan"
+  },
+  "objective": "Resolve the prior 8192 boundary uncertainty and execute the missing dual-GPU layer configuration without promoting Issue 56 diagnostics.",
+  "scope": {
+    "devices": [
+      {
+        "device": "Vulkan0",
+        "split_mode": "none",
+        "tensor_split": null,
+        "role": "matched single-GPU baseline"
+      },
+      {
+        "device": "Vulkan1",
+        "split_mode": "none",
+        "tensor_split": null,
+        "role": "matched single-GPU baseline"
+      },
+      {
+        "device": "Vulkan0,Vulkan1",
+        "split_mode": "layer",
+        "tensor_split": "1,1",
+        "role": "bounded dual-GPU layer comparison"
+      }
+    ],
+    "contexts": [1024, 2048, 4096, 8192],
+    "kv": {
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "no_kv_offload": false,
+      "alternatives_excluded": "No q8_0/q4_0 KV or host-resident comparison in this increment."
+    },
+    "split_exclusions": {
+      "tensor": "Excluded by k7000 Vulkan split-buffer incompatibility evidence.",
+      "row": "Excluded by authoritative project policy; deprecated/non-target path.",
+      "asymmetric_layer_ratio": "Not justified for a 675710816-byte model that fits the two single-device baselines; only 1,1 is selected."
+    }
+  },
+  "workload": {
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "boundary_output_tokens": 16,
+    "retrieval_positions": [0.1, 0.5, 0.9],
+    "retrieval_repetitions": 5,
+    "quality_tasks": 2,
+    "performance_warmups": 1,
+    "performance_repetitions": 3,
+    "reliability_threshold": 0.8,
+    "timeout_seconds": 600,
+    "fallback_timeout_seconds": 1200,
+    "fallback_condition": "Only after a primary 600-second run has no terminal result; record separately and never merge silently."
+  },
+  "execution_order": [
+    "sanitized target identity and tokenizer/load preflight",
+    "suite job 1: Vulkan0 at context 1024 with the fixed workload and f16 KV",
+    "suite job 2: Vulkan1 at context 1024 with the identical fixed workload and f16 KV",
+    "suite job 3: Vulkan0,Vulkan1 layer 1,1 with context progression 1024 -> 2048 -> 4096 -> 8192 and f16 KV",
+    "publication review after all planned configuration outcomes are classified"
+  ],
+  "stop_rules": [
+    "Stop the current model at the first unexpected boundary, SSH/transport timeout, OOM, execution error, artifact-write issue, or privacy risk.",
+    "Classify SSH timeout as INCONCLUSIVE unless a bounded investigation establishes a stronger terminal class.",
+    "Do not continue to a later configuration after an unexpected result until Stage 4 classifies it.",
+    "Do not retry, change timeout, change KV, change prompt budget, or change split ratio blindly.",
+    "Do not publish historical or diagnostic metrics as authoritative."
+  ],
+  "output": {
+    "directory": "results/issue41-qwen-q8-followup",
+    "persist": "Sanitized plan, status summaries, and publication receipt only; no prompts, responses, stdout/stderr, absolute paths, host identifiers, or raw manifests."
+  },
+  "expected_job_count": 3,
+  "expected_job_definition": "Three serial suite invocations: Vulkan0 baseline at 1024, Vulkan1 baseline at 1024, and one dual-layer suite owning the 1024 -> 2048 -> 4096 -> 8192 progression. The suite-job count is distinct from the six allocation probes (one + one + four).",
+  "allocation_probe_count": 6,
+  "dry_run": {
+    "status": "PLANNED_NOT_RUN",
+    "verification": "Exact artifact identity, three suite jobs, six allocation probes (one Vulkan0, one Vulkan1, four dual-layer), f16 KV baseline, 600-second primary timeout, isolated output directory, and expected job count must be checked before inference.",
+    "inference_authorized": false
+  },
+  "publication": {
+    "speed": "Only successfully parsed metrics with complete execution evidence.",
+    "retrieval": "Persist VERIFIED, MISSED, and INCONCLUSIVE separately; exclude INCONCLUSIVE from rates.",
+    "historical_rows": "Retain and do not silently promote.",
+    "authoritative_provenance": "issue41:qwen-q8-reviewed-followup"
+  }
+}
