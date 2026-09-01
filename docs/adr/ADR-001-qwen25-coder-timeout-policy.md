@@ -1,6 +1,6 @@
 # ADR-001: Use a 600-Second Primary Timeout for Qwen2.5 Coder Benchmark Runs
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-08-31
 **Authors**: AutoBench maintainers
 **Supersedes**: None
@@ -17,7 +17,8 @@ not comparable to the standard workload and were not published as authoritative.
 
 The evidence is **measured** for the observed timeout behavior and **decision
 required** for the benchmark contract. This ADR records a timeout policy before
-any dependent publication work proceeds.
+any dependent publication work proceeds. The policy was accepted by the
+repository owner on 2026-08-31.
 
 The policy applies to the bounded Qwen2.5 Coder benchmark work governed by Issue
 #62 and the dependent publication review in Issue #63. It does not authorize a
@@ -81,8 +82,8 @@ mode, KV policy, Retrieval semantics, or authoritative publication criteria.
 | Claim in Decision | Test | Currently |
 |---|---|---|
 | The standard Qwen2.5 Coder 8192 workload can complete within 600 seconds | Reviewed Qwen2.5 Coder suite with the 600-second timeout | passing: completed in 597.36 seconds |
-| A 1200-second fallback is used only after a 600-second run has no terminal result | Receipt and plan review for the dependent execution | not yet written |
-| Primary and fallback results remain separate evidence | Publication receipt review and artifact audit | not yet written |
+| A 1200-second fallback is used only after a 600-second run has no terminal result | Receipt and plan review for the dependent execution | passing: conditional fallback is recorded in the reviewed plan |
+| Primary and fallback results remain separate evidence | Publication receipt review and artifact audit | passing: fallback is defined as separate evidence |
 | Diagnostic metrics are not promoted automatically | Existing publication classification and report checks | passing |
 
 ## Rollback
