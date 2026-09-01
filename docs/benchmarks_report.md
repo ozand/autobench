@@ -1,9 +1,11 @@
 # AutoBench — полный отчёт результатов
 
-Сгенерировано: `2026-09-01T02:26:17.155428+00:00`
+Сгенерировано: `2026-09-01T02:30:16.482649+00:00`
 
 Отчёт содержит все строки из `results/benchmarks.db`, включая успешные, неоднозначные и неавторитетные тесты.
 Нулевые/отсутствующие метрики не трактуются как измеренные значения.
+
+> Publication status: Issue 63 selectively published 4 authoritative Qwen2.5 Coder rows under ADR-001. Other historical and diagnostic rows remain classified separately.
 
 ## Сводка
 
