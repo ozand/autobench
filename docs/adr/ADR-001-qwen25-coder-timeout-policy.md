@@ -1,6 +1,6 @@
 # ADR-001: Use a 600-Second Primary Timeout for Qwen2.5 Coder Benchmark Runs
 
-**Status**: Accepted
+**Status**: Accepted — Implemented
 **Date**: 2026-08-31
 **Authors**: AutoBench maintainers
 **Supersedes**: None
@@ -18,7 +18,7 @@ not comparable to the standard workload and were not published as authoritative.
 The evidence is **measured** for the observed timeout behavior and **decision
 required** for the benchmark contract. This ADR records a timeout policy before
 any dependent publication work proceeds. The policy was accepted by the
-repository owner on 2026-08-31.
+repository owner on 2026-08-31 and applied to the reviewed suite on 2026-08-30.
 
 The policy applies to the bounded Qwen2.5 Coder benchmark work governed by Issue
 #62 and the dependent publication review in Issue #63. It does not authorize a
