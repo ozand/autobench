@@ -1,6 +1,6 @@
 # ADR-002: Add an Explicit Issue-Scoped Runner for the Qwen Q8 Follow-up
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-09-01
 **Authors**: AutoBench maintainers
 **Supersedes**: None

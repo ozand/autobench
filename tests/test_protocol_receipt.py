@@ -149,6 +149,13 @@ def test_unverified_stages_fail_closed():
     assert any("stage_3_plan_review status" in err for err in res3["errors"])
 
 
+def test_issue_constraint_rejects_unrelated_receipt():
+    data = sample_receipt_dict(governing_issue=1)
+    result = validate_protocol_receipt(data, governing_issue=41)
+    assert result["status"] == PROTOCOL_RECEIPT_INVALID
+    assert "governing issue mismatch" in result["errors"][0]
+
+
 def test_find_and_load_receipt(tmp_path):
     receipt_dir = tmp_path / "receipts"
     receipt_dir.mkdir()
@@ -169,6 +176,26 @@ def test_find_and_load_receipt(tmp_path):
     corrupt_file.write_text("{not valid json", encoding="utf-8")
     corrupt = load_and_validate_receipt(corrupt_file, model_name="foo")
     assert corrupt["status"] == PROTOCOL_RECEIPT_CORRUPT
+
+
+def test_find_receipt_rejects_ambiguous_matching_candidates(tmp_path):
+    receipt_dir = tmp_path / "receipts"
+    receipt_dir.mkdir()
+    data = sample_receipt_dict(model_name="model.gguf", model_id="model")
+    for suffix in ("", ".issue41"):
+        (receipt_dir / f"model.gguf{suffix}.json").write_text(json.dumps(data), encoding="utf-8")
+    assert find_receipt_for_model("model.gguf", search_dirs=[receipt_dir]) is None
+
+
+def test_find_receipt_can_select_issue_constrained_candidate(tmp_path):
+    receipt_dir = tmp_path / "receipts"
+    receipt_dir.mkdir()
+    legacy = sample_receipt_dict(model_name="model.gguf", model_id="model", governing_issue=1)
+    issue = sample_receipt_dict(model_name="model.gguf", model_id="model", governing_issue=41)
+    (receipt_dir / "model.gguf.json").write_text(json.dumps(legacy), encoding="utf-8")
+    (receipt_dir / "model.gguf.issue41.json").write_text(json.dumps(issue), encoding="utf-8")
+    found = find_receipt_for_model("model.gguf", search_dirs=[receipt_dir], governing_issue=41)
+    assert found.name == "model.gguf.issue41.json"
 
 
 def test_verify_models_have_receipts_batch(tmp_path):

@@ -165,6 +165,7 @@ def discover_remote_models(timeout: int = 30) -> list[dict]:
 def configurations_for_model(
     size_bytes: int,
     include_tensor: bool = False,
+    include_layer: bool = False,
 ) -> list[dict]:
     """Plan the legacy matrix, optionally adding the tensor candidate."""
     single_mode = "full" if size_bytes <= SINGLE_GPU_FIT_BYTES else "load_only"
@@ -172,7 +173,7 @@ def configurations_for_model(
         {"device": "Vulkan0", "tensor_split": None, "mode": single_mode},
         {"device": "Vulkan1", "tensor_split": None, "mode": single_mode},
     ]
-    if size_bytes > SINGLE_GPU_FIT_BYTES:
+    if size_bytes > SINGLE_GPU_FIT_BYTES or include_layer:
         configurations.append(
             {
                 "device": "Vulkan0,Vulkan1",
@@ -261,6 +262,16 @@ def build_plan(models: list[dict], mode: str) -> dict:
                 "performance_repetitions": 1,
             }
         )
+    if mode == "issue41_qwen_q8":
+        policy.update(
+            {
+                "coarse_contexts": [1024, 2048, 4096, 8192],
+                "cache_mode": "f16",
+                "matched_prompt_tokens": 512,
+                "matched_output_tokens": 64,
+                "performance_repetitions": 3,
+            }
+        )
     return {
         "schema_version": 1,
         "mode": mode,
@@ -275,7 +286,9 @@ def build_plan(models: list[dict], mode: str) -> dict:
             {
                 **model,
                 "configurations": configurations_for_model(
-                    model["size_bytes"], include_tensor=mode == "matrix"
+                    model["size_bytes"],
+                    include_tensor=mode == "matrix",
+                    include_layer=mode == "issue41_qwen_q8",
                 ),
             }
             for model in models
@@ -301,6 +314,9 @@ def run_load_probe(model: dict, config: dict, timeout: int) -> dict:
         context_length=128,
         ts_split=config["tensor_split"],
         split_mode=config.get("split_mode"),
+        cache_type_k=config.get("cache_type_k", "f16"),
+        cache_type_v=config.get("cache_type_v", "f16"),
+        no_kv_offload=config.get("no_kv_offload", False),
     )
     return {
         "stage": "load_probe",
@@ -331,6 +347,12 @@ def execute_suite(
     """Run all validated stages for one explicit model/configuration."""
     model = plan["models"][0]
     config_template = model["configurations"][0]
+    for key, value in {
+        "cache_type_k": "f16",
+        "cache_type_v": "f16",
+        "no_kv_offload": False,
+    }.items():
+        config_template.setdefault(key, value)
 
     def stage_plan(mode: str) -> dict:
         child = build_plan(
@@ -551,6 +573,9 @@ def execute_performance(
             context_length=context_size,
             ts_split=config["tensor_split"],
             split_mode=config.get("split_mode"),
+            cache_type_k=config.get("cache_type_k", "f16"),
+            cache_type_v=config.get("cache_type_v", "f16"),
+            no_kv_offload=config.get("no_kv_offload", False),
         )
         runs.append(
             {
@@ -650,6 +675,9 @@ def execute_quality(
             context_length=context_size,
             ts_split=config["tensor_split"],
             split_mode=config.get("split_mode"),
+            cache_type_k=config.get("cache_type_k", "f16"),
+            cache_type_v=config.get("cache_type_v", "f16"),
+            no_kv_offload=config.get("no_kv_offload", False),
         )
         result = {
             "task_id": task.get("id"),
@@ -737,6 +765,9 @@ def execute_boundary(
                 device=config["device"],
                 ts_split=config["tensor_split"],
                 split_mode=config.get("split_mode"),
+                cache_type_k=config.get("cache_type_k", "f16"),
+                cache_type_v=config.get("cache_type_v", "f16"),
+                no_kv_offload=config.get("no_kv_offload", False),
                 needle_val=f"BOUNDARY-{model['id']}-{context_size}-8842",
                 timeout=timeout,
                 utilization=0.50,
@@ -856,6 +887,9 @@ def execute_retrieval(
                     device=config["device"],
                     ts_split=config["tensor_split"],
                     split_mode=config.get("split_mode"),
+                    cache_type_k=config.get("cache_type_k", "f16"),
+                    cache_type_v=config.get("cache_type_v", "f16"),
+                    no_kv_offload=config.get("no_kv_offload", False),
                     needle_val=(
                         f"RETRIEVAL-{model['id']}-{position:.2f}-{repeat}-8842"
                     ),
@@ -953,6 +987,9 @@ def execute_smoke(plan: dict, timeout: int = 180) -> dict:
                         device=config["device"],
                         ts_split=config["tensor_split"],
                         split_mode=config.get("split_mode"),
+                        cache_type_k=config.get("cache_type_k", "f16"),
+                        cache_type_v=config.get("cache_type_v", "f16"),
+                        no_kv_offload=config.get("no_kv_offload", False),
                         needle_val=f"SMOKE-{model['id']}-{config['device']}-8842",
                         timeout=timeout,
                         utilization=0.50,
@@ -1158,6 +1195,8 @@ def main() -> None:
     mode.add_argument("--performance", action="store_true", help="Run matched warm-up and measured performance")
     mode.add_argument("--suite", action="store_true", help="Run all validated stages for one configuration")
     mode.add_argument("--full", action="store_true", help="Write the full planned matrix contract; execution is not yet implemented")
+    mode.add_argument("--issue41-qwen-q8", action="store_true", help="Preview the bounded Issue #41 Qwen Q8 scope")
+    parser.add_argument("--dry-run", action="store_true", help="Preview the selected scope without inference")
     parser.add_argument("--models", help="Comma-separated exact GGUF basenames to include")
     parser.add_argument("--device", default="Vulkan0", help="Device for --retrieval")
     parser.add_argument("--ts-split", default=None, help="Tensor split for --retrieval")
@@ -1205,7 +1244,9 @@ def main() -> None:
         parser.error("--timeout must be at least 1 second")
 
     selected_mode = (
-        "full"
+        "issue41_qwen_q8"
+        if args.issue41_qwen_q8
+        else "full"
         if args.full
         else "retrieval"
         if args.retrieval
@@ -1232,12 +1273,22 @@ def main() -> None:
         models = select_smoke_models(models)
     if selected_mode == "smoke" and len(models) > 2:
         parser.error("--smoke accepts at most two models")
+    if selected_mode == "issue41_qwen_q8":
+        expected_model = "qwen2.5-0.5b-instruct-q8_0.gguf"
+        if len(models) != 1 or models[0]["name"] != expected_model:
+            parser.error("--issue41-qwen-q8 requires the exact Qwen Q8 GGUF")
+        models[0]["configurations"] = configurations_for_model(
+            models[0]["size_bytes"], include_layer=True
+        )
+        if not args.dry_run:
+            parser.error("--issue41-qwen-q8 currently permits only --dry-run")
 
     try:
         assert_all_models_have_valid_receipts(
             models,
             receipt_dir=args.receipt_dir,
             receipt_paths={models[0]["name"]: args.receipt} if args.receipt and len(models) == 1 else None,
+            governing_issue=41 if selected_mode == "issue41_qwen_q8" else None,
         )
     except ProtocolReceiptError as exc:
         parser.error(str(exc))
@@ -1286,7 +1337,23 @@ def main() -> None:
         ]
 
     plan = build_plan(models, selected_mode)
-    if selected_mode == "retrieval":
+    if selected_mode == "issue41_qwen_q8":
+        plan["issue"] = 41
+        plan["plan_note"] = "docs/issue41-qwen-q8-followup-plan.json"
+        plan["dry_run"] = True
+        plan["expected_job_count"] = 3
+        plan["allocation_probe_count"] = 6
+        plan["timeout_seconds"] = args.timeout
+        plan["execution_status"] = "dry_run_only"
+        for config in plan["models"][0]["configurations"]:
+            config.update(
+                {
+                    "cache_type_k": "f16",
+                    "cache_type_v": "f16",
+                    "no_kv_offload": False,
+                }
+            )
+    elif selected_mode == "retrieval":
         plan["models"][0]["configurations"] = models[0]["configurations"]
         plan = execute_retrieval(
             plan,

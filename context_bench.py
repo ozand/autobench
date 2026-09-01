@@ -244,6 +244,9 @@ def run_context_test(
     max_tokens: int = 128,
     needle_position: float = 0.50,
     calibration_steps: int = 16,
+    cache_type_k: str | None = None,
+    cache_type_v: str | None = None,
+    no_kv_offload: bool = False,
 ) -> dict:
     """
     Runs a single Needle-In-A-Haystack context evaluation case.
@@ -268,6 +271,9 @@ def run_context_test(
         context_length=context_size,
         ts_split=ts_split,
         split_mode=split_mode,
+        cache_type_k=cache_type_k,
+        cache_type_v=cache_type_v,
+        no_kv_offload=no_kv_offload,
     )
 
     if not res.get("success"):

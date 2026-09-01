@@ -100,6 +100,7 @@ def validate_protocol_receipt(
     backend: str | None = None,
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
+    governing_issue: int | str | None = None,
 ) -> dict[str, Any]:
     """Validate a protocol receipt object against the schema and model requirements.
 
@@ -171,6 +172,13 @@ def validate_protocol_receipt(
                 f"backend mismatch: expected '{backend}', receipt is for '{receipt_backend}'"
             )
             return result
+
+    if governing_issue is not None and receipt_governing_issue != governing_issue:
+        result["status"] = PROTOCOL_RECEIPT_INVALID
+        result["errors"].append(
+            f"governing issue mismatch: expected '{governing_issue}', receipt is for '{receipt_governing_issue}'"
+        )
+        return result
 
     # Validate stages
     stages = receipt.get("stages")
@@ -261,29 +269,37 @@ def find_receipt_for_model(
     model_name: str,
     search_dirs: Sequence[Path | str] | None = None,
     base_dir: Path | str | None = None,
+    governing_issue: int | str | None = None,
 ) -> Path | None:
-    """Find the receipt JSON file for a given model basename."""
+    """Find one unambiguous receipt, optionally constrained to an issue."""
     base_path = Path(base_dir).resolve() if base_dir else Path.cwd().resolve()
     dirs = [Path(d) for d in (search_dirs or DEFAULT_RECEIPT_DIRS)]
-
     clean_name = Path(model_name).name
     stem = Path(model_name).stem
-    candidates = [
-        f"{clean_name}.json",
-        f"{stem}.json",
-        f"{clean_name}.receipt.json",
-        f"{stem}.receipt.json",
-    ]
 
     for d in dirs:
         dir_path = (base_path / d) if not d.is_absolute() else d
         if not dir_path.exists():
             continue
-        for candidate in candidates:
-            cand_path = dir_path / candidate
-            if cand_path.is_file():
-                return cand_path
-
+        candidates = set(dir_path.glob(f"{clean_name}*.json"))
+        candidates.update(dir_path.glob(f"{stem}*.json"))
+        matches = []
+        for candidate in sorted(candidates):
+            try:
+                content = json.loads(candidate.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not isinstance(content, dict):
+                continue
+            if str(content.get("model_name", "")).lower() != clean_name.lower():
+                continue
+            if governing_issue is not None and content.get("governing_issue") != governing_issue:
+                continue
+            matches.append(candidate)
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            return None
     return None
 
 
@@ -294,6 +310,7 @@ def load_and_validate_receipt(
     backend: str | None = None,
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
+    governing_issue: int | str | None = None,
 ) -> dict[str, Any]:
     """Load a receipt from a file or dict and validate it."""
     if isinstance(receipt_source, dict):
@@ -303,6 +320,7 @@ def load_and_validate_receipt(
             backend=backend,
             check_files_exist=check_files_exist,
             base_dir=base_dir,
+            governing_issue=governing_issue,
         )
 
     path = Path(receipt_source)
@@ -330,6 +348,7 @@ def load_and_validate_receipt(
         backend=backend,
         check_files_exist=check_files_exist,
         base_dir=base_dir,
+        governing_issue=governing_issue,
     )
 
 
@@ -341,6 +360,7 @@ def verify_models_have_receipts(
     backend: str = "vulkan",
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
+    governing_issue: int | str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Verify receipts for all models in the sequence.
 
@@ -355,7 +375,12 @@ def verify_models_have_receipts(
         if explicit_path:
             target_path = Path(explicit_path)
         else:
-            target_path = find_receipt_for_model(m_name, search_dirs=search_dirs, base_dir=base_dir)
+            target_path = find_receipt_for_model(
+                m_name,
+                search_dirs=search_dirs,
+                base_dir=base_dir,
+                governing_issue=governing_issue,
+            )
 
         if target_path is None:
             results[m_name] = {
@@ -371,6 +396,7 @@ def verify_models_have_receipts(
                 backend=backend,
                 check_files_exist=check_files_exist,
                 base_dir=base_dir,
+                governing_issue=governing_issue,
             )
 
     return results
@@ -384,6 +410,7 @@ def assert_all_models_have_valid_receipts(
     backend: str = "vulkan",
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
+    governing_issue: int | str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Assert all models have valid protocol receipts, or raise ProtocolReceiptError."""
     results = verify_models_have_receipts(
@@ -393,6 +420,7 @@ def assert_all_models_have_valid_receipts(
         backend=backend,
         check_files_exist=check_files_exist,
         base_dir=base_dir,
+        governing_issue=governing_issue,
     )
     invalid_or_missing = [
         f"{name} ({res['status']}: {', '.join(res['errors'])})"
