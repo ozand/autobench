@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "REVIEWED_TIMEOUT_POLICY_READY",
+  "status": "PUBLISHED_SELECTED_QWEN_CODER_SUITE",
   "scope": {
     "affected_issue_range": [
       42,
@@ -144,7 +144,7 @@
     "non_authoritative_rows": 708
   },
   "after_publication": {
-    "new_authoritative_rows_from_issues_42_61": 0,
+    "new_authoritative_rows_from_issues_42_61": 4,
     "diagnostic_rows_promoted": 0,
     "historical_rows_retained": true,
     "dashboard_report_rebuilt_without_unverified_promotion": true,
@@ -178,9 +178,9 @@
     "docs/issue61-smollm2-evidence.json"
   ],
   "final_disposition": {
-    "status": "INCONCLUSIVE",
-    "reason": "Affected reruns produced terminal sanitized classifications, but no new affected configuration satisfied the complete authoritative boundary, performance, Retrieval, and quality publication gate.",
-    "next_action": "Run the one reviewed complete suite with timeout 600; use 1200 only under the recorded fallback condition; stop and classify the first unexpected result."
+    "status": "PARTIALLY_RESOLVED",
+    "reason": "Issue 63 approved suite was selectively published; other affected models remain non-authoritative or inconclusive.",
+    "next_action": "Keep Issue 41 open for remaining affected-model publication gaps and broad-matrix decisions."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -341,5 +341,37 @@
     "primary_timeout_seconds": 600,
     "fallback_timeout_seconds": 1200,
     "evidence": "docs/issue41-qwen-coder-suite-timeout600-plan.json"
+  },
+  "publication_summary": {
+    "issue": 63,
+    "status": "PUBLISHED",
+    "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
+    "rows_added": 4,
+    "row_ids": [
+      1144,
+      1145,
+      1146,
+      1147
+    ],
+    "provenance": "issue63:authoritative_timeout600",
+    "configuration": "Vulkan0,Vulkan1 layer split 1,1",
+    "contexts": [
+      1024,
+      2048,
+      4096,
+      8192
+    ],
+    "performance": "5.1 prompt t/s, 20.85 generation t/s",
+    "retrieval": "2 VERIFIED, 7 MISSED, 0 INCONCLUSIVE",
+    "quality": "2/2",
+    "targets": [
+      "results/benchmarks.db",
+      "docs/benchmarks_data.json",
+      "docs/benchmarks_report.csv",
+      "docs/benchmarks_report.json",
+      "docs/benchmarks_report.md",
+      "docs/benchmark-data-audit.json"
+    ],
+    "historical_rows_retained": true
   }
 }
