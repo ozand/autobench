@@ -8,6 +8,7 @@ Consequences → Alternatives Considered → Test Contract → Rollback → Refe
 | ADR | Title | Status |
 |-----|-------|--------|
 | [ADR-001](./ADR-001-qwen25-coder-timeout-policy.md) | Use a 600-Second Primary Timeout for Qwen2.5 Coder Benchmark Runs | Accepted — Implemented |
+| [ADR-002](./ADR-002-qwen-q8-bounded-runner-contract.md) | Add an Explicit Issue-Scoped Runner for the Qwen Q8 Follow-up | Proposed |
 
 ## How to amend
 
