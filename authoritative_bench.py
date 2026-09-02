@@ -408,6 +408,23 @@ def execute_suite(
     boundary = execute_boundary(
         stage_plan("boundary"), timeout, context_sizes, boundary_step
     )["models"][0]["configurations"][0]["result"]
+    if boundary["status"] != "SUCCESS":
+        diagnostic = boundary_summary(boundary)
+        config_template["result"] = {
+            "stage": "suite",
+            "status": diagnostic["cause_status"],
+            "source_status": diagnostic["source_status"],
+            "boundary_diagnostic": diagnostic,
+            "maximum_allocatable_context": boundary.get("maximum_allocatable_context", 0),
+            "first_failed_context": boundary.get("first_failed_context"),
+            "workload": None,
+            "stages": {"boundary": boundary, "preflight": preflight},
+        }
+        plan["execution_status"] = "completed_suite"
+        plan["authoritative"] = False
+        plan["completed_at"] = datetime.now(timezone.utc).isoformat()
+        return plan
+
     retrieval_context = boundary["maximum_allocatable_context"]
     if retrieval_context <= 0:
         operational_context = 0
