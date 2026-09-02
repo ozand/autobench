@@ -52,6 +52,13 @@ See the exact-model source note [`kb/raw/qwen2.5-0.5b-instruct-q8_0.md`](../raw/
 - Timeout policy: 600 seconds primary for this increment. The 1200-second fallback is conditional and must be separately reviewed and recorded only after a primary run has no terminal result.
 - Stop rule: stop at the first unexpected boundary, transport, OOM, execution, artifact, or privacy result. Preserve the first class and do not blindly retry or continue later stages.
 
+## Issue #41 execution outcome
+
+- The approved runner completed all 3 suite jobs and 6 allocation probes with the primary 600-second timeout; no fallback was used and no stop-rule surprise occurred.
+- Vulkan0 and Vulkan1 completed the 1024 baseline. The dual-GPU layer `1,1` path completed 1024, 2048, 4096, and 8192 allocation probes.
+- The runner measured performance and quality at the suite operational context (1024), while the dual-layer repeated Retrieval stage used the allocatable context (8192). This is a mixed-context result and is retained as diagnostic/non-authoritative rather than promoted to a report row.
+- Sanitized execution evidence: `docs/issue41-qwen-q8-followup-evidence.json`.
+
 ## Unresolved assumptions
 
 - Upstream checkpoint metadata does not prove this converted GGUF's local runtime behavior.

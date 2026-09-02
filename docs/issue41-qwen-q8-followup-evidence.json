@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "model_name": "qwen2.5-0.5b-instruct-q8_0.gguf",
+  "publication_class": "INCONCLUSIVE",
+  "authoritative": false,
+  "provenance": "issue41:qwen-q8-reviewed-followup",
+  "source_plan": "docs/issue41-qwen-q8-followup-plan.json",
+  "source_receipt": "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.json",
+  "execution": {
+    "status": "COMPLETE_EXECUTION",
+    "expected_suite_jobs": 3,
+    "completed_suite_jobs": 3,
+    "allocation_probes": 6,
+    "primary_timeout_seconds": 600,
+    "fallback_used": false,
+    "stop_rule_triggered": false,
+    "exact_artifact_size_bytes": 675710816
+  },
+  "configuration_results": [
+    {
+      "device": "Vulkan0",
+      "split_mode": "none",
+      "tensor_split": null,
+      "kv": "f16",
+      "boundary": {
+        "status": "SUCCESS",
+        "contexts_succeeded": [1024],
+        "capacity_interpretation": "lower_bound_at_1024"
+      },
+      "performance": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "prompt_tokens_per_sec": 18.2666666667,
+        "generation_tokens_per_sec": 34.4,
+        "warmups_discarded": 1,
+        "measured_repetitions": 3
+      },
+      "retrieval": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "verified": 4,
+        "missed": 11,
+        "inconclusive": 0
+      },
+      "quality": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "passed": 1,
+        "total": 2
+      },
+      "suite_status": "SUCCESS"
+    },
+    {
+      "device": "Vulkan1",
+      "split_mode": "none",
+      "tensor_split": null,
+      "kv": "f16",
+      "boundary": {
+        "status": "SUCCESS",
+        "contexts_succeeded": [1024],
+        "capacity_interpretation": "lower_bound_at_1024"
+      },
+      "performance": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "prompt_tokens_per_sec": 18.3333333333,
+        "generation_tokens_per_sec": 34.4666666667,
+        "warmups_discarded": 1,
+        "measured_repetitions": 3
+      },
+      "retrieval": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "verified": 8,
+        "missed": 7,
+        "inconclusive": 0
+      },
+      "quality": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "passed": 2,
+        "total": 2
+      },
+      "suite_status": "SUCCESS"
+    },
+    {
+      "device": "Vulkan0,Vulkan1",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "kv": "f16",
+      "boundary": {
+        "status": "SUCCESS",
+        "contexts_succeeded": [1024, 2048, 4096, 8192],
+        "capacity_interpretation": "lower_bound_at_8192"
+      },
+      "performance": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "prompt_tokens_per_sec": 18.1,
+        "generation_tokens_per_sec": 25.2666666667,
+        "warmups_discarded": 1,
+        "measured_repetitions": 3
+      },
+      "retrieval": {
+        "status": "SUCCESS",
+        "measured_context": 8192,
+        "verified": 7,
+        "missed": 8,
+        "inconclusive": 0
+      },
+      "quality": {
+        "status": "SUCCESS",
+        "measured_context": 1024,
+        "passed": 2,
+        "total": 2
+      },
+      "suite_status": "SUCCESS"
+    }
+  ],
+  "publication_review": {
+    "status": "HELD_NON_AUTHORITATIVE",
+    "reason": "The approved three-job runner measures dual-layer performance and quality at context 1024 but repeated Retrieval at context 8192. The existing row schema cannot publish these as one comparable complete row without mixing contexts.",
+    "rows_promoted": 0,
+    "historical_rows_changed": false,
+    "required_next_action": "Create a reviewed publication-shape decision or a new bounded plan that measures all publication metrics at one declared context; do not promote the mixed-context suite result."
+  },
+  "sanitization": {
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false,
+    "absolute_model_paths_persisted": false
+  }
+}
