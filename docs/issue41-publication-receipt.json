@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "PUBLISHED_SELECTED_QWEN_CODER_SUITE",
+  "status": "PUBLISHED_SELECTED_QWEN_CODER_AND_QWEN_Q8_SAME_CONTEXT",
   "scope": {
     "affected_issue_range": [
       42,
@@ -152,8 +152,12 @@
       "docs/benchmarks_report.csv",
       "docs/benchmarks_report.json",
       "docs/benchmarks_report.md",
-      "docs/benchmarks_data.json"
-    ]
+      "docs/benchmarks_data.json",
+      "docs/benchmark-data-audit.json"
+    ],
+    "new_authoritative_rows_from_issue41_same_context": 1,
+    "authoritative_rows_total": 127,
+    "report_rows_total": 930
   },
   "evidence_links": [
     "docs/issue42-deepseek-evidence.json",
@@ -175,12 +179,13 @@
     "docs/issue58-qwen25-coder-evidence.json",
     "docs/issue59-qwen25-coder-q8-evidence.json",
     "docs/issue60-qwen25-coder-3b-evidence.json",
-    "docs/issue61-smollm2-evidence.json"
+    "docs/issue61-smollm2-evidence.json",
+    "results/runs/issue41-qwen-q8-same-context/summary.json"
   ],
   "final_disposition": {
     "status": "PARTIALLY_RESOLVED",
-    "reason": "Issue 63 approved suite was selectively published; other affected models remain non-authoritative or inconclusive.",
-    "next_action": "Select one remaining affected model for a new governed bounded follow-up; do not start broad Issue #1 inventory."
+    "reason": "Issue 63 and the Qwen Q8 same-context result were selectively published after evidence review; other affected models remain non-authoritative or inconclusive.",
+    "next_action": "Continue with one governed remaining-model follow-up or explicit owner-directed closure; do not start broad Issue #1 inventory."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -475,5 +480,105 @@
     ],
     "issue63_published_model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
     "issue63_published_authoritative_rows": 4
+  },
+  "same_context_qwen_q8_publication": {
+    "schema_version": 1,
+    "issue": 41,
+    "status": "APPROVED_FOR_PUBLIC_WRITE",
+    "publication_class": "AUTHORITATIVE",
+    "model_name": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "source_plan": "docs/issue41-qwen-q8-same-context-plan.json",
+    "source_receipt": "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.same-context.json",
+    "source_result": "results/runs/issue41-qwen-q8-same-context/summary.json",
+    "source_result_sha256": "f8c0438aa0f459ae6a6866ca5ba09950008c3631e41fb738e0b02d98528ee1cc",
+    "source_receipt_sha256": "ed1232d2f29004111548a4449adfc861d80bb1b4ca84cd30952396fb7a2a96fa",
+    "artifact": {
+      "basename": "qwen2.5-0.5b-instruct-q8_0.gguf",
+      "size_bytes": 675710816,
+      "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e"
+    },
+    "configuration": {
+      "device": "Vulkan0,Vulkan1",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "kv_quant": "f16",
+      "no_kv_offload": false,
+      "declared_context": 1024
+    },
+    "stage_evidence": {
+      "boundary": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "capacity_claim": "lower_bound_at_1024",
+        "reliable_context": "NOT_ESTABLISHED"
+      },
+      "performance": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "prompt_tokens_per_sec": 18.1,
+        "generation_tokens_per_sec": 25.3666666667,
+        "warmups_discarded": 1,
+        "measured_repetitions": 3,
+        "successful_measurements": 3
+      },
+      "retrieval": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "verified": 9,
+        "missed": 6,
+        "inconclusive": 0,
+        "attempts": 15,
+        "retrieval_rate": 0.6
+      },
+      "quality": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "passed": 2,
+        "total": 2,
+        "pass_rate": 1.0
+      }
+    },
+    "selected_metrics": {
+      "prompt_tokens_per_sec": 18.1,
+      "eval_tokens_per_sec": 25.3666666667,
+      "retrieval_rate": 0.6,
+      "retrieval_outcomes": "9 VERIFIED / 6 MISSED / 0 INCONCLUSIVE",
+      "quality_pass_rate": 1.0
+    },
+    "exclusions": [
+      "maximum_reliable_context is not published because Retrieval rate is below the 0.8 reliability threshold",
+      "no mixed-context evidence is used",
+      "no historical row is replaced or deleted",
+      "no diagnostic row is promoted",
+      "no raw prompts, responses, stdout/stderr, private paths, or host identifiers are published"
+    ],
+    "decision": {
+      "new_authoritative_rows": 1,
+      "historical_rows_changed": false,
+      "row_configuration": {
+        "device": "Vulkan0,Vulkan1",
+        "tensor_split": "1,1",
+        "context_length": 1024,
+        "kv_quant": "f16",
+        "kv_offload": 0
+      },
+      "provenance": "issue41:qwen-q8-same-context",
+      "approved_targets": [
+        "results/benchmarks.db",
+        "docs/benchmarks_data.json",
+        "docs/benchmarks_report.csv",
+        "docs/benchmarks_report.json",
+        "docs/benchmarks_report.md",
+        "docs/benchmark-data-audit.json"
+      ]
+    },
+    "review": {
+      "independent_review_completed": true,
+      "review_findings_recorded": true,
+      "all_blockers_resolved_for_selected_publication": true,
+      "capacity_exclusion_recorded": true,
+      "same_context_verified": true
+    },
+    "row_id": 1148
   }
 }

@@ -59,6 +59,15 @@ See the exact-model source note [`kb/raw/qwen2.5-0.5b-instruct-q8_0.md`](../raw/
 - The runner measured performance and quality at the suite operational context (1024), while the dual-layer repeated Retrieval stage used the allocatable context (8192). This is a mixed-context result and is retained as diagnostic/non-authoritative rather than promoted to a report row.
 - Sanitized execution evidence: `docs/issue41-qwen-q8-followup-evidence.json`.
 
+## Same-context publication follow-up
+
+- A separate Issue #41 same-context run used the exact reviewed artifact, Vulkan0,Vulkan1 `-sm layer -ts 1,1`, f16 KV, and declared context 1024 for boundary, performance, Retrieval, and quality.
+- All four stages completed successfully at context 1024. Performance was 18.1 prompt tokens/s and 25.3667 generation tokens/s across three measured repetitions after one discarded warm-up.
+- Retrieval completed 15 attempts: 9 VERIFIED, 6 MISSED, and 0 INCONCLUSIVE (0.6 recorded rate). Quality passed 2/2.
+- One authoritative row was published after separate evidence review. Capacity is recorded only as a lower bound at 1024; a reliable context was not established because Retrieval rate was below the 0.8 threshold.
+- Sanitized publication review: `docs/issue41-qwen-q8-same-context-publication-review.json`.
+- Sanitized runtime evidence: `results/runs/issue41-qwen-q8-same-context/summary.json`.
+
 ## Unresolved assumptions
 
 - Upstream checkpoint metadata does not prove this converted GGUF's local runtime behavior.

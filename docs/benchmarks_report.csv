@@ -622,6 +622,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 203,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,"Vulkan0,Vulkan1","1,1",1024,q8_0,0,13.2,38.5,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
 204,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,"Vulkan0,Vulkan1","1,1",1024,q4_0,0,13.2,38.5,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
 205,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,"Vulkan0,Vulkan1","1,1",1024,q4_0,1,13.2,38.5,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
+1148,qwen2.5-0.5b-instruct-q8_0.gguf,675710816,"Vulkan0,Vulkan1","1,1",1024,f16,0,18.1,25.366666666666664,0.6,1.0,SUCCESS,AUTHORITATIVE,issue41:qwen-q8-same-context,2026-09-03 21:48:42,COMPLETE_AUTHORITATIVE
 161,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,Vulkan0,,2048,f16,0,12.8,36.0,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
 162,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,Vulkan0,,2048,q8_0,0,12.8,36.0,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
 163,qwen2.5-0.5b-instruct-q8_0.gguf,653377760,Vulkan0,,2048,q4_0,0,12.8,36.0,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-23 00:21:23,COMPLETE_AUTHORITATIVE
