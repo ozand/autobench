@@ -8,7 +8,6 @@
     "quantization": "Q8_0",
     "backend": "vulkan"
   },
-  "receipt": "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.same-context.json",
   "configuration": {
     "device": "Vulkan0,Vulkan1",
     "split_mode": "layer",
