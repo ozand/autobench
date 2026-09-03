@@ -85,6 +85,10 @@ publication promotion.
 | Ambiguous default receipt lookup fails closed | Protocol receipt ambiguity and governing-issue tests | not yet written |
 | The runner stops after the first unexpected result | Focused serial orchestration test | not yet written |
 
+## Rollback
+
+Revert the Issue #41 runner and receipt-contract commits that implement this ADR. The existing historical benchmark rows and the prior generic planner remain recoverable because this ADR does not delete or rewrite them.
+
 ## References
 
 - `docs/issue41-qwen-q8-followup-plan.json`
