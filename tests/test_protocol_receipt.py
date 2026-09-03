@@ -149,6 +149,13 @@ def test_unverified_stages_fail_closed():
     assert any("stage_3_plan_review status" in err for err in res3["errors"])
 
 
+def test_contract_constraints_reject_mismatched_plan():
+    data = sample_receipt_dict(governing_issue=41)
+    result = validate_protocol_receipt(data, governing_issue=41, expected_job_count=1)
+    assert result["status"] == PROTOCOL_RECEIPT_INVALID
+    assert "expected job count mismatch" in result["errors"][0]
+
+
 def test_issue_constraint_rejects_unrelated_receipt():
     data = sample_receipt_dict(governing_issue=1)
     result = validate_protocol_receipt(data, governing_issue=41)
