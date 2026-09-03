@@ -35,6 +35,20 @@ def test_configuration_includes_declared_context():
     assert configuration(model())["declared_context"] == DECLARED_CONTEXT
 
 
+def test_verify_artifact_rejects_checksum_mismatch(monkeypatch):
+    class Result:
+        returncode = 0
+        stdout = "wrong\n"
+
+    monkeypatch.setattr("scripts.run_issue41_qwen_q8_same_context.run_host_command", lambda *a, **k: Result())
+    try:
+        verify_artifact(model())
+    except ValueError as exc:
+        assert "checksum" in str(exc)
+    else:
+        raise AssertionError("checksum mismatch must fail closed")
+
+
 def test_verify_artifact_accepts_reviewed_checksum(monkeypatch):
     class Result:
         returncode = 0
@@ -42,6 +56,21 @@ def test_verify_artifact_accepts_reviewed_checksum(monkeypatch):
 
     monkeypatch.setattr("scripts.run_issue41_qwen_q8_same_context.run_host_command", lambda *a, **k: Result())
     verify_artifact(model())
+
+
+def test_plan_and_execute_reject_non_reviewed_timeout(tmp_path):
+    try:
+        plan(model(), tmp_path, 1200)
+    except ValueError as exc:
+        assert "600" in str(exc)
+    else:
+        raise AssertionError("plan must reject non-reviewed timeout")
+    try:
+        execute(model(), tmp_path, 1)
+    except ValueError as exc:
+        assert "600" in str(exc)
+    else:
+        raise AssertionError("execute must reject non-reviewed timeout")
 
 
 def test_execute_passes_only_declared_context(tmp_path):

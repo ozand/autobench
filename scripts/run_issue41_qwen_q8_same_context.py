@@ -52,6 +52,8 @@ def verify_artifact(model: dict) -> None:
 
 
 def plan(model: dict, output_dir: Path, timeout: int) -> dict:
+    if timeout != PRIMARY_TIMEOUT:
+        raise ValueError("timeout must remain the reviewed primary value of 600 seconds")
     return {
         "schema_version": 1,
         "issue": 41,
@@ -87,6 +89,8 @@ def plan(model: dict, output_dir: Path, timeout: int) -> dict:
 
 
 def execute(model: dict, output_dir: Path, timeout: int) -> dict:
+    if timeout != PRIMARY_TIMEOUT:
+        raise ValueError("timeout must remain the reviewed primary value of 600 seconds")
     config = configuration(model)
     output_dir.mkdir(parents=True, exist_ok=True)
     result = execute_suite(
@@ -161,6 +165,13 @@ def main() -> None:
             receipt_paths={MODEL_NAME: args.receipt},
             governing_issue=41,
             check_files_exist=True,
+            expected_artifact={
+                "basename": MODEL_NAME,
+                "size_bytes": EXPECTED_SIZE_BYTES,
+                "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e",
+            },
+            expected_job_count=1,
+            expected_configurations=[configuration(models[0])],
         )
         verify_artifact(models[0])
     except (ProtocolReceiptError, ValueError) as exc:
