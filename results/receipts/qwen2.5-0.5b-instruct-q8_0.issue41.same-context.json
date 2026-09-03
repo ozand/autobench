@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "model_name": "qwen2.5-0.5b-instruct-q8_0.gguf",
+  "model_id": "qwen2.5-0.5b-instruct-q8_0",
+  "quantization": "Q8_0",
+  "backend": "vulkan",
+  "governing_issue": 41,
+  "provenance": "Source: defect found while implementing #41",
+  "artifact": {
+    "basename": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "size_bytes": 675710816,
+    "sha256": "ca59ca7f13d0e15a8cfa77bd17e65d24f6844b554a7b6c12e07a5f89ff76844e"
+  },
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2.5-0.5b-instruct-q8_0.md",
+      "retrieval_date": "2026-09-01",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/raw/main/config.json",
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/raw/main/generation_config.json",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN25-05B-Q8_0.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true,
+      "qmd_lexical_hit": "KB-QWEN25-05B-Q8_0"
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue #41 same-context follow-up reviewed: one serial dual-layer suite job, one allocation probe, declared context 1024 for boundary/performance/Retrieval/quality, layer split 1,1, f16 KV baseline, 600-second primary timeout, and stop-first-surprise policy.",
+      "plan_note": "docs/issue41-qwen-q8-same-context-plan.json",
+      "expected_job_count": 1,
+      "planned_configurations": [
+        {
+          "device": "Vulkan0,Vulkan1",
+          "tensor_split": "1,1",
+          "split_mode": "layer",
+          "mode": "full",
+          "cache_type_k": "f16",
+          "cache_type_v": "f16",
+          "no_kv_offload": false,
+          "declared_context": 1024
+        }
+      ]
+    }
+  },
+  "status": "PROTOCOL_RECEIPT_VALID"
+}

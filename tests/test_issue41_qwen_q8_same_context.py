@@ -31,6 +31,10 @@ def test_plan_is_one_job_and_one_declared_context(tmp_path):
     assert p["configuration"]["cache_type_v"] == "f16"
 
 
+def test_configuration_includes_declared_context():
+    assert configuration(model())["declared_context"] == DECLARED_CONTEXT
+
+
 def test_verify_artifact_accepts_reviewed_checksum(monkeypatch):
     class Result:
         returncode = 0

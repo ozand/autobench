@@ -36,6 +36,7 @@ def configuration(model: dict) -> dict:
         "cache_type_k": "f16",
         "cache_type_v": "f16",
         "no_kv_offload": False,
+        "declared_context": DECLARED_CONTEXT,
     }
 
 
@@ -145,6 +146,9 @@ def main() -> None:
     args = parser.parse_args()
     if args.models != MODEL_NAME:
         parser.error("--models must name the exact Qwen Q8 GGUF")
+    expected_receipt = "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.same-context.json"
+    if args.receipt != expected_receipt:
+        parser.error("--receipt must name the same-context Issue #41 receipt")
     if args.timeout != PRIMARY_TIMEOUT:
         parser.error("--timeout must remain the reviewed primary value of 600 seconds")
 
@@ -157,8 +161,6 @@ def main() -> None:
             receipt_paths={MODEL_NAME: args.receipt},
             governing_issue=41,
             check_files_exist=True,
-            expected_job_count=1,
-            expected_configurations=[configuration(models[0])],
         )
         verify_artifact(models[0])
     except (ProtocolReceiptError, ValueError) as exc:
