@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "provenance": "Source: defect found while implementing #41",
+  "model": {
+    "basename": "qwen2.5-0.5b-instruct-q8_0.gguf",
+    "size_bytes": 675710816,
+    "quantization": "Q8_0",
+    "backend": "vulkan"
+  },
+  "receipt": "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.same-context.json",
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "cache_type_k": "f16",
+    "cache_type_v": "f16",
+    "no_kv_offload": false,
+    "declared_context": 1024
+  },
+  "workload": {
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "boundary_output_tokens": 16,
+    "retrieval_positions": [0.1, 0.5, 0.9],
+    "retrieval_repetitions": 5,
+    "quality_tasks": 2,
+    "performance_warmups": 1,
+    "performance_repetitions": 3,
+    "timeout_seconds": 600
+  },
+  "expected_job_count": 1,
+  "objective": "Measure boundary, performance, Retrieval, and quality at one declared context so the result can be evaluated for a comparable publication row.",
+  "stop_rule": "Stop at the first unexpected result; preserve the terminal classification and do not retry blindly.",
+  "publication": {
+    "authoritative": false,
+    "requirement": "All publication metrics must be measured at declared context 1024; no mixed-context evidence may be promoted.",
+    "historical_rows_retained": true
+  },
+  "dry_run": {
+    "inference_authorized": false
+  }
+}

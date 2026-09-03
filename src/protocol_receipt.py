@@ -101,6 +101,9 @@ def validate_protocol_receipt(
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
     governing_issue: int | str | None = None,
+    expected_job_count: int | None = None,
+    expected_configurations: list[dict[str, Any]] | None = None,
+    expected_artifact: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate a protocol receipt object against the schema and model requirements.
 
@@ -178,6 +181,23 @@ def validate_protocol_receipt(
         result["errors"].append(
             f"governing issue mismatch: expected '{governing_issue}', receipt is for '{receipt_governing_issue}'"
         )
+        return result
+
+    if expected_artifact is not None and receipt.get("artifact") != expected_artifact:
+        result["status"] = PROTOCOL_RECEIPT_INVALID
+        result["errors"].append("artifact identity does not match the requested execution contract")
+        return result
+
+    s3_contract = (receipt.get("stages") or {}).get("stage_3_plan_review") or {}
+    if expected_job_count is not None and s3_contract.get("expected_job_count") != expected_job_count:
+        result["status"] = PROTOCOL_RECEIPT_INVALID
+        result["errors"].append(
+            f"expected job count mismatch: expected '{expected_job_count}', receipt is for '{s3_contract.get('expected_job_count')}'"
+        )
+        return result
+    if expected_configurations is not None and s3_contract.get("planned_configurations") != expected_configurations:
+        result["status"] = PROTOCOL_RECEIPT_INVALID
+        result["errors"].append("planned configurations do not match the requested execution contract")
         return result
 
     # Validate stages
@@ -311,6 +331,9 @@ def load_and_validate_receipt(
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
     governing_issue: int | str | None = None,
+    expected_job_count: int | None = None,
+    expected_configurations: list[dict[str, Any]] | None = None,
+    expected_artifact: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Load a receipt from a file or dict and validate it."""
     if isinstance(receipt_source, dict):
@@ -321,6 +344,9 @@ def load_and_validate_receipt(
             check_files_exist=check_files_exist,
             base_dir=base_dir,
             governing_issue=governing_issue,
+            expected_job_count=expected_job_count,
+            expected_configurations=expected_configurations,
+            expected_artifact=expected_artifact,
         )
 
     path = Path(receipt_source)
@@ -349,6 +375,9 @@ def load_and_validate_receipt(
         check_files_exist=check_files_exist,
         base_dir=base_dir,
         governing_issue=governing_issue,
+        expected_job_count=expected_job_count,
+        expected_configurations=expected_configurations,
+        expected_artifact=expected_artifact,
     )
 
 
@@ -361,6 +390,9 @@ def verify_models_have_receipts(
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
     governing_issue: int | str | None = None,
+    expected_job_count: int | None = None,
+    expected_configurations: list[dict[str, Any]] | None = None,
+    expected_artifact: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Verify receipts for all models in the sequence.
 
@@ -397,6 +429,9 @@ def verify_models_have_receipts(
                 check_files_exist=check_files_exist,
                 base_dir=base_dir,
                 governing_issue=governing_issue,
+                expected_job_count=expected_job_count,
+                expected_configurations=expected_configurations,
+                expected_artifact=expected_artifact,
             )
 
     return results
@@ -411,6 +446,9 @@ def assert_all_models_have_valid_receipts(
     check_files_exist: bool = False,
     base_dir: Path | str | None = None,
     governing_issue: int | str | None = None,
+    expected_job_count: int | None = None,
+    expected_configurations: list[dict[str, Any]] | None = None,
+    expected_artifact: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Assert all models have valid protocol receipts, or raise ProtocolReceiptError."""
     results = verify_models_have_receipts(
@@ -421,6 +459,9 @@ def assert_all_models_have_valid_receipts(
         check_files_exist=check_files_exist,
         base_dir=base_dir,
         governing_issue=governing_issue,
+        expected_job_count=expected_job_count,
+        expected_configurations=expected_configurations,
+        expected_artifact=expected_artifact,
     )
     invalid_or_missing = [
         f"{name} ({res['status']}: {', '.join(res['errors'])})"
