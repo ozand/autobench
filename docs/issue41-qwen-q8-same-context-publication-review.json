@@ -91,6 +91,9 @@
   },
   "review": {
     "independent_review_completed": true,
+    "reviewer": "code-reviewer",
+    "review_timestamp": "2026-09-03T22:02:00Z",
+    "review_reference": "Independent read-only review of PR #72; findings: none; suspected metadata-auditability gap recorded and publication decision kept explicit.",
     "review_findings_recorded": true,
     "all_blockers_resolved_for_selected_publication": true,
     "capacity_exclusion_recorded": true,
