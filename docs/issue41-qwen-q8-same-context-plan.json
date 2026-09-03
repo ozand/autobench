@@ -18,6 +18,7 @@
     "no_kv_offload": false,
     "declared_context": 1024
   },
+  "receipt": "results/receipts/qwen2.5-0.5b-instruct-q8_0.issue41.same-context.json",
   "workload": {
     "prompt_tokens": 512,
     "output_tokens": 64,
