@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "provenance": "Source: rerun follow-up under #41",
+  "model": {
+    "basename": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 491400032,
+    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
+    "quantization": "Q4_K_M",
+    "backend": "vulkan"
+  },
+  "receipt": "results/receipts/qwen2.5-0.5b-instruct-q4_k_m.issue41.json",
+  "objective": "Resolve prior Issue 55 boundary timeouts and execute bounded Vulkan0, Vulkan1, and dual-GPU layer 1,1 baseline suites with declared context progression 1024 -> 2048 -> 4096.",
+  "scope": {
+    "devices": [
+      {
+        "device": "Vulkan0",
+        "split_mode": "none",
+        "tensor_split": null,
+        "role": "matched single-GPU baseline"
+      },
+      {
+        "device": "Vulkan1",
+        "split_mode": "none",
+        "tensor_split": null,
+        "role": "matched single-GPU baseline"
+      },
+      {
+        "device": "Vulkan0,Vulkan1",
+        "split_mode": "layer",
+        "tensor_split": "1,1",
+        "role": "bounded dual-GPU layer comparison"
+      }
+    ],
+    "contexts": [1024, 2048, 4096],
+    "kv": {
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "no_kv_offload": false,
+      "alternatives_excluded": "No q8_0/q4_0 KV or host-resident comparison in this increment."
+    },
+    "split_exclusions": {
+      "tensor": "Excluded by k7000 Vulkan split-buffer incompatibility evidence.",
+      "row": "Excluded by authoritative project policy; deprecated/non-target path.",
+      "asymmetric_layer_ratio": "Not justified for a 491400032-byte model that fits the two single-device baselines; only 1,1 is selected."
+    }
+  },
+  "workload": {
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "boundary_output_tokens": 16,
+    "retrieval_positions": [0.1, 0.5, 0.9],
+    "retrieval_repetitions": 5,
+    "quality_tasks": 2,
+    "performance_warmups": 1,
+    "performance_repetitions": 3,
+    "reliability_threshold": 0.8,
+    "timeout_seconds": 600,
+    "fallback_timeout_seconds": 1200,
+    "fallback_condition": "Only after a primary 600-second run has no terminal result; record separately and never merge silently."
+  },
+  "execution_order": [
+    "sanitized target identity and tokenizer/load preflight",
+    "suite job 1: Vulkan0 at context 1024 with the fixed workload and f16 KV",
+    "suite job 2: Vulkan1 at context 1024 with the identical fixed workload and f16 KV",
+    "suite job 3: Vulkan0,Vulkan1 layer 1,1 with context progression 1024 -> 2048 -> 4096 and f16 KV",
+    "publication review after all planned configuration outcomes are classified"
+  ],
+  "stop_rules": [
+    "Stop the current model at the first unexpected boundary, SSH/transport timeout, OOM, execution error, artifact-write issue, or privacy risk.",
+    "Classify SSH timeout as INCONCLUSIVE unless a bounded investigation establishes a stronger terminal class.",
+    "Do not continue to a later configuration after an unexpected result until Stage 4 classifies it.",
+    "Do not retry, change timeout, change KV, change prompt budget, or change split ratio blindly.",
+    "Do not publish historical or diagnostic metrics as authoritative."
+  ],
+  "output": {
+    "directory": "results/runs/issue41-qwen-q4km-followup",
+    "persist": "Sanitized plan, status summaries, and publication receipt only; no prompts, responses, stdout/stderr, absolute paths, host identifiers, or raw manifests."
+  },
+  "expected_job_count": 3,
+  "expected_job_definition": "Three serial suite invocations: Vulkan0 baseline at 1024, Vulkan1 baseline at 1024, and one dual-layer suite owning the 1024 -> 2048 -> 4096 progression.",
+  "dry_run": {
+    "status": "PLANNED_NOT_RUN",
+    "verification": "Exact artifact identity, three suite jobs, f16 KV baseline, 600-second primary timeout, isolated output directory, and expected job count must be checked before inference.",
+    "inference_authorized": false
+  },
+  "publication": {
+    "speed": "Only successfully parsed metrics with complete execution evidence.",
+    "retrieval": "Persist VERIFIED, MISSED, and INCONCLUSIVE separately; exclude INCONCLUSIVE from rates.",
+    "historical_rows": "Retain and do not silently promote.",
+    "authoritative_provenance": "issue41:qwen-q4km-reviewed-followup"
+  }
+}

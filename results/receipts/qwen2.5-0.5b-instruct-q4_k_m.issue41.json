@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+  "model_id": "qwen2.5-0.5b-instruct-q4_k_m",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 41,
+  "provenance": "Source: rerun follow-up under #41",
+  "artifact": {
+    "basename": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 491400032,
+    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+  },
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2.5-0.5b-instruct-q4_k_m.md",
+      "retrieval_date": "2026-09-03",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/raw/main/config.json",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN25-05B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true,
+      "qmd_lexical_hit": "KB-QWEN25-05B-Q4KM"
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue #41 bounded Qwen Q4_K_M follow-up plan reviewed: three serial suite jobs, bounded context progression 1024 -> 2048 -> 4096 (excluding 8192 timeout), layer split 1,1, f16 KV baseline, 600-second primary timeout, and stop-first-surprise policy.",
+      "plan_note": "docs/issue41-qwen-q4km-followup-plan.json",
+      "expected_job_count": 3
+    }
+  },
+  "status": "PROTOCOL_RECEIPT_VALID"
+}
