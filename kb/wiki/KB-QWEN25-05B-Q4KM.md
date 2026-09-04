@@ -5,7 +5,7 @@ category: research
 tags: [qwen2.5, gguf, q4_k_m, llama-cpp, vulkan, gtx690, dual-gpu]
 status: reviewed
 created: 2026-08-22
-updated: 2026-08-22
+updated: 2026-09-03
 environment:
   os: Linux remote GPU host (k7000)
   shell: POSIX shell
@@ -16,50 +16,41 @@ error_signatures:
   - "BOUNDARY_SSH_TIMEOUT"
 ---
 
-# Qwen2.5-0.5B-Instruct-Q4_K_M Runbook & Knowledge Base
+# Qwen2.5-0.5B-Instruct-Q4_K_M Execution and Multi-GPU Layer Split
 
-## Summary
-`qwen2.5-0.5b-instruct-q4_k_m.gguf` is an instruction-tuned 0.49B causal language model in Q4_K_M quantization (468.64 MiB).
+## Model Identity & Checkpoint
+- Model name: `qwen2.5-0.5b-instruct-q4_k_m.gguf`
+- Architecture: `qwen2` (24 layers, GQA 14 Q heads, 2 KV heads, dim 896)
+- File size: `491400032` bytes
+- Exact SHA-256: `74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db`
+- Quantization: `Q4_K_M`
+- Native context: up to 32768 tokens; bounded benchmark protocol uses `[1024, 2048, 4096]`.
 
-## Architectural Attributes
-- Total Layers: 24
-- Attention Heads: 14 Q heads, 2 KV heads (Grouped Query Attention)
-- Context Limit: 32,768 native tokens
-- Embedding Tie: Yes
+## Testbed Sizing & VRAM Analysis (GTX 690 / Vulkan)
+- GPU: NVIDIA GeForce GTX 690 (2x GK104 cores, Vulkan0 and Vulkan1)
+- VRAM per core: ~1980 MiB usable heap
+- Model weight in VRAM: ~468.6 MiB
+- KV cache per context (f16):
+  - 1024: ~24 MB
+  - 2048: ~48 MB
+  - 4096: ~96 MB
+  - 8192: ~192 MB (high risk of timeout during long compute)
+- Single-GPU fit: Model + KV comfortably fits within 1 core up to 4096 tokens.
 
-## Hardware Execution Matrix (GTX 690 / Vulkan)
-1. **Single-GPU (Vulkan0 / Vulkan1)**:
-   - Command flags: `-ngl 33 -dev Vulkan0` (or `Vulkan1`)
-   - VRAM footprint: ~491 MB weights + context
-   - Max offloaded layers: 24/24
-   - KV Cache offload: Enabled
-   - Allocation: Reaches 4096 context. Context 8192 hits boundary timeout (>190s).
-   - Retrieval Pass Rate: 66.7% (10/15 passes at context 4096).
-   - Prompt Speed: ~17.9 - 18.0 t/s
-   - Generation Speed: ~34.1 - 34.5 t/s
+## Multi-GPU & Execution Policies
+- **Split mode:**
+  - Row / tensor split (`-sm row` or `-ts` tensor) is strictly unsupported (`device does not support split buffers`).
+  - Layer split (`-sm layer`) is supported.
+- **Layer distribution (`-ts 1,1`):**
+  - 24 transformer layers split symmetrically: 12 layers on Vulkan0, 12 layers on Vulkan1.
+  - Weight VRAM per GPU in dual-layer mode: ~235 MiB.
+- **Context & Timeout Strategy:**
+  - Bounded context progression: `1024 -> 2048 -> 4096`.
+  - Primary timeout: 600 seconds per suite job (ADR-001/ADR-002 policy).
+  - Fallback 1200 seconds is only authorized conditionally after an initial non-terminal 600s timeout.
 
-2. **Dual-GPU Layer Split (-sm layer)**:
-   - Split ratio: `1,1` (12 layers on Vulkan0, 12 layers on Vulkan1)
-   - Command flags: `-ngl 33 -sm layer -ts 1,1`
-   - Expected behavior: Clean execution across both 2GB VRAM segments.
-
-3. **Unsupported Configurations**:
-   - `-sm tensor`: Strictly unsupported on Vulkan (`device does not support split buffers`). Classified as `UNSUPPORTED_BACKEND`.
-
-## Issue 55 execution evidence
-- Stage 1/2 receipt validation passed for the exact GGUF.
-- Dry-run planned two fitting single-GPU jobs, Vulkan0 and Vulkan1; dual-GPU layer remains separately planned because the current inventory path uses the fitting-model two-job envelope.
-- Vulkan0 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
-- Vulkan0 performance: prompt `17.8 t/s`, generation `34.85 t/s`.
-- Vulkan0 Retrieval: 4 `VERIFIED`, 5 `MISSED`; recorded rate `4/9`, not authoritative.
-- Vulkan0 quality: `2/2` tasks passed.
-- Vulkan1 boundary succeeded through `4096`; the `8192` probe ended `SSH_TIMEOUT`, so boundary is `INCONCLUSIVE`.
-- Vulkan1 performance: prompt `18.0 t/s`, generation `34.15 t/s`.
-- Vulkan1 Retrieval: 2 `VERIFIED`, 7 `MISSED`; recorded rate `2/9`, not authoritative.
-- Vulkan1 quality: `2/2` tasks passed.
-- Overall Issue 55 disposition: `PARTIAL_FAILURE` / non-authoritative.
-
-4. **Classification & Findings**:
-   - Model is fully functional on single-GPU Vulkan up to 4096 context with 100% task quality pass rate on standard validation tasks.
-   - Retrieval degradation observed at positions 0.5 and 0.9 under context 4096 due to model capacity limits (0.49B parameters).
-   - Multi-GPU tensor split is rejected by Vulkan runtime; dual-GPU layer split is the approved multi-GPU mode.
+## Governing Protocol & Receipts
+- Raw notes: `kb/raw/qwen2.5-0.5b-instruct-q4_k_m.md`
+- Dedicated receipt: `results/receipts/qwen2.5-0.5b-instruct-q4_k_m.issue41.json`
+- Follow-up plan: `docs/issue41-qwen-q4km-followup-plan.json`
+- Historical diagnostics: Issue #55 observed SSH_TIMEOUT on 8192 context boundary probe. The Issue #41 follow-up bounds contexts to 1024/2048/4096 to prevent hang while establishing authoritative dual-GPU layer baselines.
