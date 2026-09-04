@@ -269,7 +269,7 @@ def main() -> int:
 
     # Validate receipt fail-closed
     receipt_result = load_and_validate_receipt(
-        receipt_path=str(args.receipt),
+        str(args.receipt),
         model_name=model["name"],
         backend="vulkan",
         governing_issue=41,
