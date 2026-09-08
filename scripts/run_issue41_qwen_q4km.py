@@ -147,6 +147,12 @@ def _suite_plan(model: dict, configuration: dict) -> dict:
         "schema_version": 1,
         "mode": "suite",
         "authoritative": False,
+        "execution_status": "planned_not_run",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "host": "k7000",
+        "gpu_memory_bytes_per_device": 2 * 1024**3,
+        "single_gpu_fit_threshold_bytes": SINGLE_GPU_FIT_BYTES,
+        "policy": dict(FULL_POLICY),
         "models": [
             {
                 "id": model["id"],
