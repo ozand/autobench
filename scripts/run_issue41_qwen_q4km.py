@@ -166,21 +166,19 @@ def execute_job(
     is_dual = configuration["device"] == "Vulkan0,Vulkan1"
     contexts = [1024, 2048, 4096] if is_dual else [1024]
     suite_result = execute_suite(
-        plan=_suite_plan(model, configuration),
+        _suite_plan(model, configuration),
+        timeout=timeout,
         context_sizes=contexts,
-        timeout_seconds=timeout,
+        boundary_step=256,
+        retrieval_repetitions=5,
+        reliability_threshold=0.8,
+        performance_context=1024,
         prompt_tokens=512,
         output_tokens=64,
-        boundary_output_tokens=16,
-        retrieval_repetitions=5,
-        quality_tasks=2,
-        performance_warmups=1,
+        warmups=1,
         performance_repetitions=3,
-        performance_context=1024,
-        reliability_threshold=0.8,
-        cache_type_k="f16",
-        cache_type_v="f16",
-        no_kv_offload=False,
+        dataset_dir="datasets/validation",
+        max_tasks=2,
     )
     result = {
         "job_index": index,
