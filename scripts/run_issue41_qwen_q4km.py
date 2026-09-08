@@ -194,13 +194,15 @@ def execute_job(
         dataset_dir="datasets/validation",
         max_tasks=2,
     )
+    suite_result_data = suite_result["models"][0]["configurations"][0].get("result", {})
+    job_status = suite_result_data.get("status", "EXECUTION_ERROR")
     result = {
         "job_index": index,
         "total_jobs": total,
         "device": configuration["device"],
         "split_mode": configuration["split_mode"],
         "tensor_split": configuration["tensor_split"],
-        "status": suite_result.get("status"),
+        "status": job_status,
         "result": suite_result,
     }
     job_path = output_dir / f"job_{index:02d}.json"
