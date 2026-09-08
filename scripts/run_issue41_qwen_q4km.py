@@ -147,8 +147,15 @@ def _suite_plan(model: dict, configuration: dict) -> dict:
         "schema_version": 1,
         "mode": "suite",
         "authoritative": False,
-        "configurations": [configuration],
-        "models": [model],
+        "models": [
+            {
+                "id": model["id"],
+                "name": model["name"],
+                "path": model["path"],
+                "size_bytes": model["size_bytes"],
+                "configurations": [configuration],
+            }
+        ],
     }
 
 
