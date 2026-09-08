@@ -168,7 +168,6 @@ def execute_job(
     suite_result = execute_suite(
         plan=_suite_plan(model, configuration),
         context_sizes=contexts,
-        output_dir=output_dir,
         timeout_seconds=timeout,
         prompt_tokens=512,
         output_tokens=64,
