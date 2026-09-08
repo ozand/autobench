@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from authoritative_bench import (
     FULL_POLICY,
+    SINGLE_GPU_FIT_BYTES,
     discover_remote_models,
     execute_suite,
     render_matrix,
