@@ -61,4 +61,4 @@ error_signatures:
   - **Job 1 (Vulkan0 baseline)**: Context 1024, Prompt 17.77 t/s, Gen 34.53 t/s, Retrieval 7 VERIFIED / 8 MISSED / 0 INCONCLUSIVE (0.47), Quality 2/2, Status: SUCCESS
   - **Job 2 (Vulkan1 baseline)**: Context 1024, Prompt 18.00 t/s, Gen 34.57 t/s, Retrieval 12 VERIFIED / 3 MISSED / 0 INCONCLUSIVE (0.80), Quality 2/2, Status: SUCCESS
   - **Job 3 (Vulkan0,Vulkan1 layer 1,1)**: Context Boundary 4096 (Allocated: SUCCESS), Performance Context 1024 (Prompt 17.77 t/s, Gen 26.00 t/s), Retrieval Context 4096 (7 VERIFIED / 8 MISSED / 0 INCONCLUSIVE, 0.47), Quality Context 1024 (2/2), Status: SUCCESS
-- **Publication Status**: Held pending publication review / same-context alignment for Job 3.
+- **Publication Status**: Execution `SUCCESS`; Publication `HELD_NON_AUTHORITATIVE` (`authoritative: false`, `publication_class: NON_AUTHORITATIVE`) for Job 3 due to context mismatch (performance 1024 vs retrieval 4096). Requires single-context follow-up (context 1024) before authoritative promotion.

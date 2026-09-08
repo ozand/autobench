@@ -100,7 +100,9 @@
     }
   ],
   "classification_recommendation": {
-    "status": "EVIDENCE_GATHERED",
-    "note": "Job 3 (dual-GPU) has mixed contexts: performance at 1024, Retrieval/boundary at 4096. Under schema comparability rules established in ADR-002 and Qwen Q8 increment, mixed-context rows cannot be published directly into the flat schema without a dedicated same-context rerun at context 1024. Baselines Job 1 and Job 2 have consistent context 1024."
+    "status": "HELD_NON_AUTHORITATIVE",
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "note": "Job 3 (dual-GPU) has mixed contexts: performance at 1024, Retrieval/boundary at 4096. Under schema comparability rules established in ADR-002 and Qwen Q8 increment, mixed-context rows cannot be published directly into the flat schema without a dedicated same-context rerun at context 1024. Job 3 is explicitly marked HELD_NON_AUTHORITATIVE with publication_class=NON_AUTHORITATIVE. Baselines Job 1 and Job 2 have consistent context 1024."
   }
 }
