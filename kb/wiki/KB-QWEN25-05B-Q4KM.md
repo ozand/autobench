@@ -54,3 +54,11 @@ error_signatures:
 - Dedicated receipt: `results/receipts/qwen2.5-0.5b-instruct-q4_k_m.issue41.json`
 - Follow-up plan: `docs/issue41-qwen-q4km-followup-plan.json`
 - Historical diagnostics: Issue #55 observed SSH_TIMEOUT on 8192 context boundary probe. The Issue #41 follow-up bounds contexts to 1024/2048/4096 to prevent hang while establishing authoritative dual-GPU layer baselines.
+
+## Stage 4 Follow-up Measured Evidence (Issue #41 Rerun)
+- **Artifact SHA-256**: `74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db` (491,400,032 bytes)
+- **Execution**: 3/3 bounded jobs completed without timeout (Primary Timeout 600s, max context 4096)
+  - **Job 1 (Vulkan0 baseline)**: Context 1024, Prompt 17.77 t/s, Gen 34.53 t/s, Retrieval 7 VERIFIED / 8 MISSED / 0 INCONCLUSIVE (0.47), Quality 2/2, Status: SUCCESS
+  - **Job 2 (Vulkan1 baseline)**: Context 1024, Prompt 18.00 t/s, Gen 34.57 t/s, Retrieval 12 VERIFIED / 3 MISSED / 0 INCONCLUSIVE (0.80), Quality 2/2, Status: SUCCESS
+  - **Job 3 (Vulkan0,Vulkan1 layer 1,1)**: Context Boundary 4096 (Allocated: SUCCESS), Performance Context 1024 (Prompt 17.77 t/s, Gen 26.00 t/s), Retrieval Context 4096 (7 VERIFIED / 8 MISSED / 0 INCONCLUSIVE, 0.47), Quality Context 1024 (2/2), Status: SUCCESS
+- **Publication Status**: Execution `SUCCESS`; Publication `HELD_NON_AUTHORITATIVE` (`authoritative: false`, `publication_class: NON_AUTHORITATIVE`) for Job 3 due to context mismatch (performance 1024 vs retrieval 4096). Requires single-context follow-up (context 1024) before authoritative promotion.

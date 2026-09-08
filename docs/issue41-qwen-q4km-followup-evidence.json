@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "title": "Stage 4 Sanitized Evidence for qwen2.5-0.5b-instruct-q4_k_m.gguf",
+  "generated_at": "2026-09-03T23:45:00Z",
+  "artifact": {
+    "basename": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 491400032,
+    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+  },
+  "receipt": "results/receipts/qwen2.5-0.5b-instruct-q4_k_m.issue41.json",
+  "plan": "docs/issue41-qwen-q4km-followup-plan.json",
+  "execution": {
+    "status": "SUCCESS",
+    "jobs_completed": 3,
+    "jobs_planned": 3,
+    "timeout_seconds": 600
+  },
+  "measured_jobs": [
+    {
+      "job_index": 1,
+      "device": "Vulkan0",
+      "split_mode": "none",
+      "tensor_split": null,
+      "performance": {
+        "context_size": 1024,
+        "prompt_ts": 17.77,
+        "gen_ts": 34.53
+      },
+      "retrieval": {
+        "context_size": 1024,
+        "retrieval_rate": 0.47,
+        "verified": 7,
+        "missed": 8,
+        "inconclusive": 0,
+        "total": 15
+      },
+      "quality": {
+        "context_size": 1024,
+        "passed": 2,
+        "total": 2
+      },
+      "boundary": {
+        "max_allocatable": 1024
+      }
+    },
+    {
+      "job_index": 2,
+      "device": "Vulkan1",
+      "split_mode": "none",
+      "tensor_split": null,
+      "performance": {
+        "context_size": 1024,
+        "prompt_ts": 18.00,
+        "gen_ts": 34.57
+      },
+      "retrieval": {
+        "context_size": 1024,
+        "retrieval_rate": 0.80,
+        "verified": 12,
+        "missed": 3,
+        "inconclusive": 0,
+        "total": 15
+      },
+      "quality": {
+        "context_size": 1024,
+        "passed": 2,
+        "total": 2
+      },
+      "boundary": {
+        "max_allocatable": 1024
+      }
+    },
+    {
+      "job_index": 3,
+      "device": "Vulkan0,Vulkan1",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "performance": {
+        "context_size": 1024,
+        "prompt_ts": 17.77,
+        "gen_ts": 26.00
+      },
+      "retrieval": {
+        "context_size": 4096,
+        "retrieval_rate": 0.47,
+        "verified": 7,
+        "missed": 8,
+        "inconclusive": 0,
+        "total": 15
+      },
+      "quality": {
+        "context_size": 1024,
+        "passed": 2,
+        "total": 2
+      },
+      "boundary": {
+        "max_allocatable": 4096
+      }
+    }
+  ],
+  "classification_recommendation": {
+    "status": "HELD_NON_AUTHORITATIVE",
+    "publication_class": "NON_AUTHORITATIVE",
+    "authoritative": false,
+    "note": "Job 3 (dual-GPU) has mixed contexts: performance at 1024, Retrieval/boundary at 4096. Under schema comparability rules established in ADR-002 and Qwen Q8 increment, mixed-context rows cannot be published directly into the flat schema without a dedicated same-context rerun at context 1024. Job 3 is explicitly marked HELD_NON_AUTHORITATIVE with publication_class=NON_AUTHORITATIVE. Baselines Job 1 and Job 2 have consistent context 1024."
+  }
+}
