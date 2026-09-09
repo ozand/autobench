@@ -594,6 +594,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 55,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,1024,f16,0,17.2,37.1,1.0,1.0,SUCCESS,AUTHORITATIVE,legacy_audit:measured_success_with_positive_speed,2026-08-22 23:10:11,COMPLETE_AUTHORITATIVE
 66,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,1024,q4_0,0,0.0,0.0,0.0,0.0,FAILED,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-22 23:18:24,NOT_PUBLISHED
 86,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,1024,q8_0,0,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 00:09:22,INCOMPLETE_SUCCESS
+1149,qwen2.5-0.5b-instruct-q4_k_m.gguf,491400032,"Vulkan0,Vulkan1","1,1",1024,f16,0,17.633333333333336,25.8,0.4,1.0,SUCCESS,AUTHORITATIVE,issue41:qwen-q4km-same-context,2026-09-09 14:21:33,COMPLETE_AUTHORITATIVE
 67,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,q4_0,0,0.0,0.0,0.0,0.0,FAILED,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-22 23:18:27,NOT_PUBLISHED
 81,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 00:02:28,NOT_PUBLISHED
 87,qwen2.5-0.5b-instruct-q4_k_m.gguf,0,Vulkan0,,2048,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 00:10:37,NOT_PUBLISHED

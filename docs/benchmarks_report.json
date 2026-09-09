@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-03T21:48:43.633604+00:00",
+  "generated_at": "2026-09-09T14:21:34.852453+00:00",
   "scope": "all rows in results/benchmarks.db",
   "metric_semantics": {
     "prompt_tokens_per_sec": "prompt processing speed in tokens per second",
@@ -11,11 +11,11 @@
   },
   "totals": {
     "models": 20,
-    "tests": 930,
+    "tests": 931,
     "classification_counts": {
       "NON_AUTHORITATIVE": 708,
       "AMBIGUOUS": 95,
-      "AUTHORITATIVE": 127
+      "AUTHORITATIVE": 128
     }
   },
   "models": [
@@ -601,46 +601,46 @@
     },
     {
       "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
-      "test_count": 20,
-      "authoritative_count": 5,
+      "test_count": 21,
+      "authoritative_count": 6,
       "classification_counts": {
         "NON_AUTHORITATIVE": 14,
-        "AUTHORITATIVE": 5,
+        "AUTHORITATIVE": 6,
         "AMBIGUOUS": 1
       },
       "status_counts": {
         "PARTIAL_FAILURE": 2,
-        "SUCCESS": 6,
+        "SUCCESS": 7,
         "FAILED": 10,
         "TIMEOUT": 2
       },
       "metric_counts": {
-        "prompt_tokens_per_sec": 20,
-        "eval_tokens_per_sec": 20,
-        "retrieval_rate": 20,
-        "quality_pass_rate": 20
+        "prompt_tokens_per_sec": 21,
+        "eval_tokens_per_sec": 21,
+        "retrieval_rate": 21,
+        "quality_pass_rate": 21
       },
       "authoritative_metric_summary": {
         "prompt_tokens_per_sec": {
-          "count": 5,
+          "count": 6,
           "min": 17.1,
-          "max": 17.2,
-          "average": 17.18
+          "max": 17.633333333333336,
+          "average": 17.255555555555556
         },
         "eval_tokens_per_sec": {
-          "count": 5,
+          "count": 6,
           "min": 20.8,
           "max": 37.1,
-          "average": 27.860000000000003
+          "average": 27.516666666666666
         },
         "retrieval_rate": {
-          "count": 5,
-          "min": 1.0,
+          "count": 6,
+          "min": 0.4,
           "max": 1.0,
-          "average": 1.0
+          "average": 0.9
         },
         "quality_pass_rate": {
-          "count": 5,
+          "count": 6,
           "min": 1.0,
           "max": 1.0,
           "average": 1.0
@@ -12223,6 +12223,25 @@
       "provenance": "legacy_audit:success_without_complete_speed_metrics",
       "created_at": "2026-08-23 00:09:22",
       "metric_quality": "INCOMPLETE_SUCCESS"
+    },
+    {
+      "id": 1149,
+      "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "size_bytes": 491400032,
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 1024,
+      "kv_quant": "f16",
+      "kv_offload": 0,
+      "prompt_tokens_per_sec": 17.633333333333336,
+      "eval_tokens_per_sec": 25.8,
+      "retrieval_rate": 0.4,
+      "quality_pass_rate": 1.0,
+      "status": "SUCCESS",
+      "publication_class": "AUTHORITATIVE",
+      "provenance": "issue41:qwen-q4km-same-context",
+      "created_at": "2026-09-09 14:21:33",
+      "metric_quality": "COMPLETE_AUTHORITATIVE"
     },
     {
       "id": 67,
