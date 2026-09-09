@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "status": "APPROVED_FOR_PUBLIC_WRITE",
+  "publication_class": "AUTHORITATIVE",
+  "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+  "source_plan": "docs/issue41-qwen-q4km-same-context-plan.json",
+  "source_receipt": "results/receipts/qwen2.5-0.5b-instruct-q4_k_m.issue41.same-context.json",
+  "source_result": "results/runs/issue41-qwen-q4km-same-context/summary.json",
+  "source_result_sha256": "ec47c285a4f608f82f0e593d86ef8008abccbea87ebd2b246a71ae93a6097eda",
+  "source_receipt_sha256": "9810ab0dbca7ad52114401875239394606a7369f24b098322785acb468667f95",
+  "artifact": {
+    "basename": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 491400032,
+    "sha256": "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
+  },
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "split_mode": "layer",
+    "tensor_split": "1,1",
+    "kv_quant": "f16",
+    "no_kv_offload": false,
+    "declared_context": 1024
+  },
+  "stage_evidence": {
+    "boundary": {
+      "status": "SUCCESS",
+      "context": 1024,
+      "capacity_claim": "lower_bound_at_1024",
+      "reliable_context": "NOT_ESTABLISHED"
+    },
+    "performance": {
+      "status": "SUCCESS",
+      "context": 1024,
+      "prompt_tokens_per_sec": 17.6333333333,
+      "generation_tokens_per_sec": 25.8,
+      "warmups_discarded": 1,
+      "measured_repetitions": 3,
+      "successful_measurements": 3
+    },
+    "retrieval": {
+      "status": "SUCCESS",
+      "context": 1024,
+      "verified": 6,
+      "missed": 9,
+      "inconclusive": 0,
+      "attempts": 15,
+      "retrieval_rate": 0.4
+    },
+    "quality": {
+      "status": "SUCCESS",
+      "context": 1024,
+      "passed": 2,
+      "total": 2,
+      "pass_rate": 1.0
+    }
+  },
+  "selected_metrics": {
+    "prompt_tokens_per_sec": 17.6333333333,
+    "eval_tokens_per_sec": 25.8,
+    "retrieval_rate": 0.4,
+    "retrieval_outcomes": "6 VERIFIED / 9 MISSED / 0 INCONCLUSIVE",
+    "quality_pass_rate": 1.0
+  },
+  "exclusions": [
+    "maximum_reliable_context is not published because Retrieval rate is below the 0.8 reliability threshold",
+    "no mixed-context evidence is used",
+    "no historical row is replaced or deleted",
+    "no diagnostic row is promoted",
+    "no raw prompts, responses, stdout/stderr, private paths, or host identifiers are published"
+  ],
+  "decision": {
+    "new_authoritative_rows": 1,
+    "historical_rows_changed": false,
+    "row_configuration": {
+      "device": "Vulkan0,Vulkan1",
+      "tensor_split": "1,1",
+      "context_length": 1024,
+      "kv_quant": "f16",
+      "kv_offload": 0
+    },
+    "provenance": "issue41:qwen-q4km-same-context",
+    "approved_targets": [
+      "results/benchmarks.db",
+      "docs/benchmarks_data.json",
+      "docs/benchmarks_report.csv",
+      "docs/benchmarks_report.json",
+      "docs/benchmarks_report.md",
+      "docs/benchmark-data-audit.json"
+    ]
+  },
+  "review": {
+    "independent_review_completed": true,
+    "reviewer": "code-reviewer",
+    "review_reference": "Independent review of the preceding Q4_K_M bounded evidence confirmed the mixed-context Job 3 hold; same-context publication requires this dedicated result.",
+    "all_blockers_resolved_for_selected_publication": true,
+    "capacity_exclusion_recorded": true,
+    "same_context_verified": true
+  }
+}
