@@ -2,7 +2,7 @@
 id: KB-QWEN25-CODER-15B-Q80
 title: Qwen2.5-Coder-1.5B-Instruct-Q8_0 Vulkan Diagnostic
 category: model-testing
-status: verified
+status: reviewed
 created: 2026-08-23
 updated: 2026-09-09
 tags:
