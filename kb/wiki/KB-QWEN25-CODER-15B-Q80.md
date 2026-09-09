@@ -36,3 +36,11 @@ error_signatures:
 - Vulkan0: preflight `SUCCESS`; performance `5.2` prompt t/s and `17.2` generation t/s; Retrieval: 2 `VERIFIED`, 6 `MISSED`, 1 `INCONCLUSIVE`; quality `2/2`; boundary `INCONCLUSIVE` after `BOUNDARY_SSH_TIMEOUT` at context `1024`.
 - Vulkan1: preflight `SUCCESS`; performance `5.2` prompt t/s and `17.0` generation t/s; Retrieval: 3 `VERIFIED`, 6 `MISSED`, 0 `INCONCLUSIVE`; quality `2/2`; boundary `INCONCLUSIVE` after `BOUNDARY_SSH_TIMEOUT` at context `1024`.
 - All speed, Retrieval, and quality values are diagnostic only. No authoritative publication was made. A follow-up investigation is required before dual-GPU inference or promotion.
+
+
+## Issue #41 Follow-up Plan
+- Exact target checksum: `507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47`.
+- The old Issue #59 receipt is not reused because it is governed by Issue #59 and does not bind the current target checksum.
+- New plan: one serial dual-GPU layer job only, with `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1`, f16 KV, and context 1024 for boundary, performance, Retrieval, and quality.
+- Single-GPU baselines are documented as inapplicable for this model/workload because the model weights nearly fill one 2 GB partition and prior boundary probes failed at the minimum tested context.
+- No public result is authorized by this note; a dedicated Issue #41 receipt and reviewed dry-run are required first.
