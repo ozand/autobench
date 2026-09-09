@@ -28,6 +28,7 @@ error_signatures:
 - Architecture: `qwen2`
 - Multi-GPU Support: `-sm layer` only.
 - Hardware sizing hypothesis: 1.89 GB weights leave little headroom on a 2 GB partition. Fresh Issue #41 target preflight, not file size alone, will verify execution capability. Dual-GPU (1,1 layer split) provides the reviewed headroom path.
+- The prior Issue #59 `BOUNDARY_SSH_TIMEOUT` is transport/inconclusive evidence, not proof that single-GPU execution is impossible.
 
 ## Issue 59 execution evidence
 - Exact Q8_0 receipt was updated to the current fail-closed schema and validated for Issue 59.
@@ -42,5 +43,5 @@ error_signatures:
 - Exact target checksum: `507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47`.
 - The old Issue #59 receipt is not reused because it is governed by Issue #59 and does not bind the current target checksum.
 - New plan: one serial dual-GPU layer job only, with `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1`, f16 KV, and context 1024 for boundary, performance, Retrieval, and quality.
-- Single-GPU baselines are documented as inapplicable for this model/workload because the model weights nearly fill one 2 GB partition and prior boundary probes failed at the minimum tested context.
+- Single-GPU baselines are not selected for this model/workload because the model weights nearly fill one 2 GB partition and prior minimum-context probes were inconclusive. This is a planning constraint, not proof of OOM or impossibility; single-GPU capability remains unresolved/inconclusive.
 - No public result is authorized by this note; a dedicated Issue #41 receipt and reviewed dry-run are required first.

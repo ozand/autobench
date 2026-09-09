@@ -16,7 +16,7 @@
 - Target artifact SHA-256: `507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47`
 
 ## Hardware & Backend Limits
-- Vulkan backend: supported by the target llama.cpp build.
+- Vulkan capability: upstream llama.cpp documents the backend; support on this exact target build remains an unresolved local assumption until the Issue #41 preflight observes it.
 - Multi-GPU: only `-sm layer` is permitted by project policy; tensor/row split is excluded because Vulkan reports unsupported split buffers.
 - Single-GPU baseline decision: not selected for the reviewed full workload because the model weights nearly fill a 2 GB Vulkan partition and prior Issue #59 minimum-context boundary probes were inconclusive. This is a planning constraint, not proof of an OOM; single-GPU capability remains unresolved/inconclusive.
 - Dual-GPU: `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1` is the reviewed configuration.
