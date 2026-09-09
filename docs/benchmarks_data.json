@@ -10710,6 +10710,24 @@
     "provenance": "legacy_audit:success_without_complete_speed_metrics"
   },
   {
+    "id": 1149,
+    "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+    "size_bytes": 491400032,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 1024,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 17.633333333333336,
+    "eval_tokens_per_sec": 25.8,
+    "retrieval_rate": 0.4,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-09 14:21:33",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "issue41:qwen-q4km-same-context"
+  },
+  {
     "id": 67,
     "model_name": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
     "size_bytes": 0,
