@@ -24,7 +24,7 @@
 
 ## Prior Evidence
 - Issue #59 used a broader 3-job plan. Both single-GPU boundary probes became inconclusive at context 1024 (`BOUNDARY_SSH_TIMEOUT`), and its speed/Retrieval/quality values were diagnostic only.
-- The current Issue #41 follow-up therefore removes inapplicable single-GPU jobs and uses one same-context dual-GPU job at context 1024 for all publication stages.
+- The current Issue #41 follow-up does not select single-GPU jobs in this bounded plan and uses one same-context dual-GPU job at context 1024 for all publication stages; single-GPU capability remains unresolved/inconclusive.
 - Prior Issue #41 Qwen Coder Q4_K_M results demonstrate that mixed context values must not be written as one flat authoritative row; this follow-up avoids that mismatch.
 
 ## Sources

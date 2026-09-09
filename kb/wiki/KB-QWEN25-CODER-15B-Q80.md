@@ -43,5 +43,5 @@ error_signatures:
 - Exact target checksum: `507de59046601282ba768a9789900e6ccf60ed93ddf346730b7c68eb0715bc47`.
 - The old Issue #59 receipt is not reused because it is governed by Issue #59 and does not bind the current target checksum.
 - New plan: one serial dual-GPU layer job only, with `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1`, f16 KV, and context 1024 for boundary, performance, Retrieval, and quality.
-- Single-GPU baselines are not selected for this model/workload because the model weights nearly fill one 2 GB partition and prior minimum-context probes were inconclusive. This is a planning constraint, not proof of OOM or impossibility; single-GPU capability remains unresolved/inconclusive.
+- Single-GPU baselines are not selected in this bounded plan because the model weights nearly fill one 2 GB partition and prior minimum-context probes were inconclusive. This is a planning constraint, not an evidence-backed claim of inapplicability, OOM, or impossibility; single-GPU capability remains unresolved/inconclusive.
 - No public result is authorized by this note; a dedicated Issue #41 receipt and reviewed dry-run are required first.
