@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "issue": 41,
-  "status": "APPROVED_FOR_PUBLIC_WRITE",
-  "publication_class": "AUTHORITATIVE",
+  "status": "PUBLICATION_REVIEW_PENDING",
+  "publication_class": "AUTHORITATIVE_CANDIDATE",
   "model_name": "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
   "source_plan": "docs/issue41-qwen-coder-q8-same-context-plan.json",
   "source_receipt": "results/receipts/qwen2.5-coder-1.5b-instruct-q8_0.issue41.same-context.json",
@@ -70,7 +70,7 @@
     "no raw prompts, responses, stdout/stderr, private paths, or host identifiers are published"
   ],
   "decision": {
-    "new_authoritative_rows": 1,
+    "new_authoritative_rows": 0,
     "historical_rows_changed": false,
     "row_configuration": {
       "device": "Vulkan0,Vulkan1",
@@ -80,7 +80,7 @@
       "kv_offload": 0
     },
     "provenance": "issue41:qwen-coder-q8-same-context",
-    "approved_targets": [
+    "approved_targets_after_independent_review": [
       "results/benchmarks.db",
       "docs/benchmarks_data.json",
       "docs/benchmarks_report.csv",
@@ -91,8 +91,8 @@
   },
   "review": {
     "independent_review_completed": false,
-    "reviewer": "unavailable in current turn due local Pi runtime module-resolution failure",
-    "review_reference": "Maintainer cross-artifact checks required before public write; separate review must be dispatched before merge.",
+    "reviewer": "code-reviewer returned a publication-gate finding",
+    "review_reference": "Independent review of PR #87 found contradictory approval metadata; public write is blocked until this record is corrected and re-reviewed.",
     "all_blockers_resolved_for_selected_publication": false,
     "capacity_exclusion_recorded": true,
     "same_context_verified": true
