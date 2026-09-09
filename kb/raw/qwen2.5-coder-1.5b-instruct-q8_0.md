@@ -1,5 +1,10 @@
 # Qwen2.5-Coder-1.5B-Instruct-Q8_0 Research Notes (Issue #41)
 
+## Provenance
+- Retrieved/verified: 2026-09-09
+- Exact artifact identity and checksum were observed on the k7000 target; this note records the sanitized result only.
+- Local capability claims below remain subject to Stage 3 target execution; upstream sources are reported, not local proof.
+
 ## Model Identity
 - Model checkpoint: `Qwen/Qwen2.5-Coder-1.5B-Instruct`
 - GGUF file: `qwen2.5-coder-1.5b-instruct-q8_0.gguf`
@@ -13,7 +18,7 @@
 ## Hardware & Backend Limits
 - Vulkan backend: supported by the target llama.cpp build.
 - Multi-GPU: only `-sm layer` is permitted by project policy; tensor/row split is excluded because Vulkan reports unsupported split buffers.
-- Single-GPU fit: not applicable for the reviewed full workload. The 1.89 GB weights leave insufficient headroom on a 2 GB Vulkan device for the required context and scratch allocations.
+- Single-GPU baseline decision: not selected for the reviewed full workload because the model weights nearly fill a 2 GB Vulkan partition and prior Issue #59 minimum-context boundary probes were inconclusive. This is a planning constraint, not proof of an OOM; single-GPU capability remains unresolved/inconclusive.
 - Dual-GPU: `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1` is the reviewed configuration.
 - KV policy: f16 baseline only; no KV sweep is authorized.
 
@@ -25,4 +30,5 @@
 ## Sources
 - Reported upstream model source: https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct
 - Reported llama.cpp multi-GPU source: https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md
+- Source retrieval date: 2026-09-09
 - Local verification required: target artifact checksum, receipt validation, zero-inference dry-run, and one serial dual-GPU execution.

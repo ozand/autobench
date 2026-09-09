@@ -4,7 +4,7 @@ title: Qwen2.5-Coder-1.5B-Instruct-Q8_0 Vulkan Diagnostic
 category: model-testing
 status: verified
 created: 2026-08-23
-updated: 2026-08-23
+updated: 2026-09-09
 tags:
   - qwen25
   - coder
@@ -27,7 +27,7 @@ error_signatures:
 - File Size: 1,894,532,160 bytes (~1806.8 MiB)
 - Architecture: `qwen2`
 - Multi-GPU Support: `-sm layer` only.
-- Hardware Boundary: 1.81 GB weights exceed single GPU 2GB allocatable buffer limits. Dual-GPU (1,1 layer split) provides 4GB total headroom for execution.
+- Hardware sizing hypothesis: 1.89 GB weights leave little headroom on a 2 GB partition. Fresh Issue #41 target preflight, not file size alone, will verify execution capability. Dual-GPU (1,1 layer split) provides the reviewed headroom path.
 
 ## Issue 59 execution evidence
 - Exact Q8_0 receipt was updated to the current fail-closed schema and validated for Issue 59.
