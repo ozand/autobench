@@ -1,6 +1,6 @@
 # AutoBench — полный отчёт результатов
 
-Сгенерировано: `2026-09-10T08:05:56.577183+00:00`
+Сгенерировано: `2026-09-10T12:41:42.467004+00:00`
 
 Отчёт содержит все строки из `results/benchmarks.db`, включая успешные, неоднозначные и неавторитетные тесты.
 Нулевые/отсутствующие метрики не трактуются как измеренные значения.
@@ -8,15 +8,15 @@
 ## Сводка
 
 - Моделей: **20**
-- Тестов: **933**
-- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 130}`
+- Тестов: **934**
+- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 131}`
 
 ## Метрики по моделям
 
 | Модель | Тестов | Authoritative | Prompt min/avg/max | Gen min/avg/max | Retrieval min/avg/max | Quality min/avg/max | Статусы |
 |---|---:|---:|---:|---:|---:|---:|---|
 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | 109 | 1 | 4.800/4.800/4.800 | 19.000/19.000/19.000 | 0.067/0.067/0.067 | 0.000/0.000/0.000 | SUCCESS: 18, TIMEOUT: 91 |
-| `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | 72 | 33 | 2.100/5.191/6.800 | 8.500/25.497/35.400 | 0.000/0.394/1.000 | 0.500/0.500/0.500 | FAILED: 36, PARTIAL_FAILURE: 3, SUCCESS: 33 |
+| `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | 73 | 34 | 2.100/5.237/6.800 | 8.500/25.487/35.400 | 0.000/0.402/1.000 | 0.500/0.515/1.000 | FAILED: 36, PARTIAL_FAILURE: 3, SUCCESS: 34 |
 | `Ministral-3-3B-Instruct-2512-Q4_K_M.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 1, PREFLIGHT_OOM: 1 |
 | `NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf` | 2 | 0 | — | — | — | — | PREFLIGHT_MODEL_LOAD_ERROR: 1, PREFLIGHT_OOM: 1 |
 | `Phi-4-mini-instruct-Q4_K_M.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 2 |
@@ -163,6 +163,7 @@
 | 272 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | q8_0 | 6.8 | 35.4 | 1.0 | 0.5 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 273 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | q4_0 | 6.8 | 35.4 | 1.0 | 0.5 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 274 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | q4_0_no_offload | 6.8 | 35.4 | 1.0 | 0.5 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
+| 1152 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | f16 | 6.7666666667 | 25.1666666667 | 0.6666666667 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 11 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0` | 2048 | f16 | 6.8 | 35.4 | 0.2 | 0.5 | `PARTIAL_FAILURE` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 13 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan1` | 2048 | f16 | 6.8 | 35.06666666666667 | 0.3333333333333333 | 0.5 | `PARTIAL_FAILURE` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 230 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | `Vulkan0` | 2048 | q8_0 | 6.5 | 32.0 | 0.2 | 0.5 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
