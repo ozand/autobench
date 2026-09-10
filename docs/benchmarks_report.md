@@ -1,6 +1,6 @@
 # AutoBench — полный отчёт результатов
 
-Сгенерировано: `2026-09-09T14:21:34.852453+00:00`
+Сгенерировано: `2026-09-10T06:20:14.489805+00:00`
 
 Отчёт содержит все строки из `results/benchmarks.db`, включая успешные, неоднозначные и неавторитетные тесты.
 Нулевые/отсутствующие метрики не трактуются как измеренные значения.
@@ -8,8 +8,8 @@
 ## Сводка
 
 - Моделей: **20**
-- Тестов: **931**
-- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 128}`
+- Тестов: **932**
+- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 129}`
 
 ## Метрики по моделям
 
@@ -32,7 +32,7 @@
 | `qwen2.5-0.5b-instruct-q8_0.gguf` | 73 | 43 | 5.800/11.026/18.100 | 12.000/29.160/38.500 | 0.150/0.748/1.000 | 1.000/1.000/1.000 | FAILED: 27, PARTIAL_FAILURE: 3, SUCCESS: 43 |
 | `qwen2.5-3b-instruct-q4_k_m.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 2 |
 | `qwen2.5-coder-1.5b-instruct-q4_k_m.gguf` | 112 | 4 | 5.100/5.100/5.100 | 20.850/20.850/20.850 | 0.222/0.222/0.222 | 1.000/1.000/1.000 | SUCCESS: 22, TIMEOUT: 90 |
-| `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | 108 | 0 | — | — | — | — | SUCCESS: 15, TIMEOUT: 93 |
+| `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | 109 | 1 | 5.100/5.100/5.100 | 13.067/13.067/13.067 | 0.333/0.333/0.333 | 1.000/1.000/1.000 | SUCCESS: 16, TIMEOUT: 93 |
 | `qwen2.5-coder-3b-instruct-q4_k_m.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 2 |
 | `smollm2-1.7b-instruct-q4_k_m.gguf` | 22 | 0 | — | — | — | — | OOM: 6, PARTIAL_FAILURE: 2, SUCCESS: 4, TIMEOUT: 10 |
 
@@ -859,6 +859,7 @@
 | 1018 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0,Vulkan1` | 1024 | f16_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 1024 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0,Vulkan1` | 1024 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 1030 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0,Vulkan1` | 1024 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
+| 1150 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0,Vulkan1` | 1024 | f16 | 5.1 | 13.0666666667 | 0.3333333333 | 1.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 929 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0` | 2048 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 935 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0` | 2048 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 941 | `qwen2.5-coder-1.5b-instruct-q8_0.gguf` | `Vulkan0` | 2048 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |

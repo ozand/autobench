@@ -816,6 +816,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 1018,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,"Vulkan0,Vulkan1",layer,1024,f16,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 03:45:43,INCOMPLETE_SUCCESS
 1024,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,"Vulkan0,Vulkan1",layer,1024,q8_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 03:46:02,INCOMPLETE_SUCCESS
 1030,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,"Vulkan0,Vulkan1",layer,1024,q4_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 03:46:19,INCOMPLETE_SUCCESS
+1150,qwen2.5-coder-1.5b-instruct-q8_0.gguf,1894532160,"Vulkan0,Vulkan1","1,1",1024,f16,0,5.1,13.0666666667,0.3333333333,1.0,SUCCESS,AUTHORITATIVE,issue41:qwen-coder-q8-same-context,2026-09-10 06:20:13,COMPLETE_AUTHORITATIVE
 929,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,Vulkan0,,2048,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 03:41:03,NOT_PUBLISHED
 935,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,Vulkan0,,2048,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 03:41:16,NOT_PUBLISHED
 941,qwen2.5-coder-1.5b-instruct-q8_0.gguf,0,Vulkan0,,2048,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 03:41:30,NOT_PUBLISHED
