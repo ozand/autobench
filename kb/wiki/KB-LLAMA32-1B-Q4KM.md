@@ -1,53 +1,39 @@
 ---
 id: KB-LLAMA32-1B-Q4KM
-title: Llama-3.2-1B-Instruct-Q4_K_M Vulkan Diagnostics and Single-GPU Baseline
+title: Llama-3.2-1B-Instruct-Q4_K_M Issue #41 protocol and historical diagnostics
 category: models
-status: validated
+status: reviewed
 created: 2026-08-22
-updated: 2026-08-24
+updated: 2026-09-10
 tags:
   - llama
+  - q4_k_m
   - vulkan
   - k7000
-  - stage4
-environment:
-  host: k7000
-  gpu: GTX 690 (2x GK104)
-  backend: Vulkan
+  - issue41
+environment: dual-gtx690-vulkan
 error_signatures:
-  - 'SSH execution timed out after 190 seconds'
+  - SSH execution timed out
+source_urls:
+  - https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct
+  - https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md
 ---
 
-## Summary
-Llama-3.2-1B-Instruct-Q4_K_M (size ~770.3 MiB, 1.23B parameters) passed full Stage 1-4 validation under Issue #1. Single-GPU Vulkan0 and Vulkan1 execution was measured along with multi-GPU layer split constraints.
+# Llama-3.2-1B-Instruct-Q4_K_M
 
-## Verified Architecture and Limits
-- **Architecture**: LLaMA 3.2 (1.23B parameters, GQA 8 heads / 32 Q heads).
-- **Context Limit**: 131,072 tokens native, tested safely up to 2048/4096 on k7000.
-- **Backend**: Vulkan single-GPU (Vulkan0, Vulkan1) and dual-GPU layer split (-sm layer).
-- **Quantization**: Q4_K_M (~770.3 MiB).
+## Current Issue #41 research and execution gate
+- Current target artifact observation: 807694368 bytes, SHA-256 `3f5a22426976ab26cfe84dba63c1d08391717abb1af893e10f1b2968d862dcc1`.
+- Upstream model metadata identifies a 1.23B-parameter Llama 3.2 model with GQA; the upstream model repository is access-gated in the current browser session, so exact target-build support and local capacity remain unresolved until target preflight.
+- llama.cpp documents `-sm layer` as pipeline-parallel multi-GPU mode; project policy excludes tensor/row split on this Vulkan testbed.
+- Issue #41 plan: matched Vulkan0 and Vulkan1 baselines plus dual-GPU `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1`; default f16 K/V; bounded contexts 1024 for all publication stages in the same-context follow-up.
+- A new Issue #41 receipt must bind the current artifact exactly; the previous Issue #1 receipt is not authorization.
 
-## Issue 43 Evidence (Stage 4)
-- Stage 1/2 receipt validation passed for the exact GGUF.
-- The inventory dry-run planned two fitting single-GPU jobs; the reviewed dual-GPU layer configuration remains planned separately because the current inventory path uses the fitting-model two-job envelope.
-- Vulkan0 preflight and performance succeeded: prompt `6.8 t/s`, generation `35.25 t/s`.
-- Vulkan0 boundary reached `2048` and remained `INCONCLUSIVE` at the next boundary step.
-- Vulkan0 retrieval had 1 `VERIFIED`, 7 `MISSED`, and 1 `INCONCLUSIVE` attempt; the aggregate is not authoritative.
-- Vulkan0 quality completed with `0/2` tasks passed.
-- Vulkan1 preflight and performance succeeded: prompt `6.8 t/s`, generation `34.05 t/s`.
-- Vulkan1 boundary reached `2048` and remained `INCONCLUSIVE` at the next boundary step.
-- Vulkan1 retrieval completed with 9 `MISSED` and 0 `VERIFIED` attempts.
-- Vulkan1 quality completed with `1/2` tasks passed.
-- The model remains `PARTIAL_FAILURE` / non-authoritative until boundary and Retrieval evidence are reconciled and the dual-GPU layer configuration is executed under a reviewed follow-up.
+## Historical Issue #43 evidence (retained, non-authoritative)
+- Issue #43 was governed by Issue #1 and used two fitting single-GPU jobs; the dual-GPU layer configuration was not executed.
+- Vulkan0 and Vulkan1 boundary probes were inconclusive; prior speed, Retrieval, quality, and capacity observations remain diagnostic only.
+- No historical row is promoted or rewritten by the Issue #41 preparation.
 
-## Empirical Findings (Stage 4)
-- **Prompt Speed**: ~6.8 tokens/sec on Vulkan0 (GK104 memory bandwidth bound).
-- **Generation Speed**: ~35.4 tokens/sec on Vulkan0.
-- **Task Quality**: 50% pass rate on standard validation tasks due to compact 1.2B capacity.
-- **Retrieval Rate**: 20% needle retrieval success at context=2048.
-- **Boundary Limit**: Context allocation succeeds up to 2048. Context=4096 hits SSH_TIMEOUT on coarse allocation probe.
-- **Multi-GPU Behavior**: Explicit tensor split (-sm tensor) unsupported on Vulkan. Dual-GPU execution requires -sm layer.
-
-## References
-- `kb/raw/llama-3.2-1b-instruct-q4_k_m.md`
-- `results/receipts/Llama-3.2-1B-Instruct-Q4_K_M.gguf.json`
+## Unresolved assumptions
+- Exact target Vulkan preflight result.
+- Current single-GPU boundary and Retrieval behavior.
+- Current dual-GPU layer performance, Retrieval, quality, and capacity.
