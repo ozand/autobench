@@ -46,3 +46,9 @@ source_urls:
 - Vulkan1 at context 1024: performance 6.8 prompt t/s and 33.6333 generation t/s; Retrieval 10 `VERIFIED`, 5 `MISSED`, 0 `INCONCLUSIVE`; quality 1/2; boundary SUCCESS at 1024 (lower bound only).
 - Dual-GPU layer `1,1`: performance and quality at context 1024, but boundary and Retrieval at context 4096. This mixed-context result is `HELD_NON_AUTHORITATIVE`; a dedicated same-context context-1024 rerun is required before dual-GPU publication.
 - No historical Issue #43 row is promoted or rewritten, and no public database/report write is authorized by this evidence record.
+
+
+## Issue #41 same-context follow-up contract
+- The dual-GPU result from the three-job follow-up is held because performance/quality used context 1024 while boundary/Retrieval used 4096.
+- The next bounded action is one serial dual-GPU `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1` job with f16 K/V and context 1024 for boundary, performance, Retrieval, and quality.
+- This dedicated receipt and plan are required before the same-context execution; no historical diagnostic row is promoted by the contract.
