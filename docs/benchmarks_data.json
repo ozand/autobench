@@ -14706,6 +14706,24 @@
     "provenance": "legacy_audit:success_without_complete_speed_metrics"
   },
   {
+    "id": 1150,
+    "model_name": "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
+    "size_bytes": 1894532160,
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "context_length": 1024,
+    "kv_quant": "f16",
+    "kv_offload": 0,
+    "prompt_tokens_per_sec": 5.1,
+    "eval_tokens_per_sec": 13.0666666667,
+    "retrieval_rate": 0.3333333333,
+    "quality_pass_rate": 1.0,
+    "status": "SUCCESS",
+    "created_at": "2026-09-10 06:20:13",
+    "publication_class": "AUTHORITATIVE",
+    "provenance": "issue41:qwen-coder-q8-same-context"
+  },
+  {
     "id": 929,
     "model_name": "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
     "size_bytes": 0,
