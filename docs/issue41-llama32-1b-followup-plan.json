@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "provenance": "Source: governed remaining-model follow-up under #41",
+  "mode": "issue41_llama32_1b_followup",
+  "execution_status": "planned_not_run",
+  "model": {
+    "basename": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+    "size_bytes": 807694368,
+    "quantization": "Q4_K_M",
+    "backend": "vulkan"
+  },
+  "configurations": [
+    {"device":"Vulkan0","tensor_split":null,"split_mode":"none","mode":"full","cache_type_k":"f16","cache_type_v":"f16","no_kv_offload":false},
+    {"device":"Vulkan1","tensor_split":null,"split_mode":"none","mode":"full","cache_type_k":"f16","cache_type_v":"f16","no_kv_offload":false},
+    {"device":"Vulkan0,Vulkan1","tensor_split":"1,1","split_mode":"layer","mode":"full","cache_type_k":"f16","cache_type_v":"f16","no_kv_offload":false}
+  ],
+  "receipt": "results/receipts/Llama-3.2-1B-Instruct-Q4_K_M.issue41.json",
+  "workload": {
+    "single_gpu_contexts": [1024],
+    "dual_gpu_contexts": [1024,2048,4096],
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "boundary_output_tokens": 16,
+    "retrieval_positions": [0.1,0.5,0.9],
+    "retrieval_repetitions": 5,
+    "quality_tasks": 2,
+    "performance_warmups": 1,
+    "performance_repetitions": 3,
+    "timeout_seconds": 600
+  },
+  "expected_job_count": 3,
+  "coverage_decisions": {
+    "single_gpu": "Matched Vulkan0 and Vulkan1 full baselines are included; prior Issue #43 results are diagnostic and do not authorize reuse.",
+    "dual_gpu": "Dual Vulkan layer 1,1 is included; tensor/row split is excluded by target Vulkan policy.",
+    "context": "Use 1024 for single-GPU baselines and bounded 1024->2048->4096 progression for dual layer, stopping at the first unexpected result.",
+    "kv": "Default f16 K/V baseline only; no blind KV sweep."
+  },
+  "objective": "Produce terminal evidence classifications for matched single-GPU baselines and the applicable dual-GPU layer configuration without promoting historical diagnostics.",
+  "stop_rule": "Stop at the first unexpected result; preserve the terminal classification and do not continue later jobs blindly.",
+  "publication": {"authoritative": false,"historical_rows_retained": true,"requirement":"Only successfully parsed, context-consistent evidence may be considered for later publication review."},
+  "dry_run": {"inference_authorized": false}
+}
