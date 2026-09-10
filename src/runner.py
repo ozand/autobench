@@ -262,6 +262,22 @@ class Runner:
             match = pattern.search(combined)
             if match:
                 return float(match.group(1)), float(match.group(2))
+        # Newer llama.cpp builds may emit separate prompt/eval timing lines
+        # without the legacy combined summary.  Parse those lines only when
+        # both values are present in the same output, preserving fail-closed
+        # behavior for genuinely missing metrics.
+        prompt_match = re.search(
+            r"prompt eval time.*?(?:/|\()\s*([\d.]+)\s*tokens per second",
+            combined,
+            re.IGNORECASE | re.DOTALL,
+        )
+        eval_match = re.search(
+            r"(?<!prompt )eval time.*?(?:/|\()\s*([\d.]+)\s*tokens per second",
+            combined,
+            re.IGNORECASE | re.DOTALL,
+        )
+        if prompt_match and eval_match:
+            return float(prompt_match.group(1)), float(eval_match.group(1))
         return None, None
 
     @staticmethod
