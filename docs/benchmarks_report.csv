@@ -17,6 +17,7 @@ id,model_name,size_bytes,device,tensor_split,context_length,kv_quant,kv_offload,
 694,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,"Vulkan0,Vulkan1",layer,1024,f16,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:43:33,INCOMPLETE_SUCCESS
 700,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,"Vulkan0,Vulkan1",layer,1024,q8_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:43:53,INCOMPLETE_SUCCESS
 706,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,"Vulkan0,Vulkan1",layer,1024,q4_0,1,0.0,0.0,0.0,1.0,SUCCESS,AMBIGUOUS,legacy_audit:success_without_complete_speed_metrics,2026-08-23 02:44:12,INCOMPLETE_SUCCESS
+1151,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,1117321312,"Vulkan0,Vulkan1","1,1",1024,f16,0,4.8,19.0,0.0666666667,0.0,SUCCESS,AUTHORITATIVE,issue41:deepseek-same-context,2026-09-10 08:05:56,COMPLETE_AUTHORITATIVE
 605,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,Vulkan0,,2048,f16,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:38:43,NOT_PUBLISHED
 611,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,Vulkan0,,2048,q8_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:39:04,NOT_PUBLISHED
 617,DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf,0,Vulkan0,,2048,q4_0,0,0.0,0.0,0.0,0.0,TIMEOUT,NON_AUTHORITATIVE,legacy_audit:execution_not_success,2026-08-23 02:39:26,NOT_PUBLISHED

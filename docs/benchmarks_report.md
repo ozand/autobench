@@ -1,6 +1,6 @@
 # AutoBench — полный отчёт результатов
 
-Сгенерировано: `2026-09-10T06:20:14.489805+00:00`
+Сгенерировано: `2026-09-10T08:05:56.577183+00:00`
 
 Отчёт содержит все строки из `results/benchmarks.db`, включая успешные, неоднозначные и неавторитетные тесты.
 Нулевые/отсутствующие метрики не трактуются как измеренные значения.
@@ -8,14 +8,14 @@
 ## Сводка
 
 - Моделей: **20**
-- Тестов: **932**
-- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 129}`
+- Тестов: **933**
+- Классификация: `{'NON_AUTHORITATIVE': 708, 'AMBIGUOUS': 95, 'AUTHORITATIVE': 130}`
 
 ## Метрики по моделям
 
 | Модель | Тестов | Authoritative | Prompt min/avg/max | Gen min/avg/max | Retrieval min/avg/max | Quality min/avg/max | Статусы |
 |---|---:|---:|---:|---:|---:|---:|---|
-| `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | 108 | 0 | — | — | — | — | SUCCESS: 17, TIMEOUT: 91 |
+| `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | 109 | 1 | 4.800/4.800/4.800 | 19.000/19.000/19.000 | 0.067/0.067/0.067 | 0.000/0.000/0.000 | SUCCESS: 18, TIMEOUT: 91 |
 | `Llama-3.2-1B-Instruct-Q4_K_M.gguf` | 72 | 33 | 2.100/5.191/6.800 | 8.500/25.497/35.400 | 0.000/0.394/1.000 | 0.500/0.500/0.500 | FAILED: 36, PARTIAL_FAILURE: 3, SUCCESS: 33 |
 | `Ministral-3-3B-Instruct-2512-Q4_K_M.gguf` | 2 | 0 | — | — | — | — | PARTIAL_FAILURE: 1, PREFLIGHT_OOM: 1 |
 | `NVIDIA-Nemotron3-Nano-4B-Q4_K_M.gguf` | 2 | 0 | — | — | — | — | PREFLIGHT_MODEL_LOAD_ERROR: 1, PREFLIGHT_OOM: 1 |
@@ -60,6 +60,7 @@
 | 694 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | f16_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 700 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | q8_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
 | 706 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | q4_0_no_offload | 0.0 | 0.0 | 0.0 | 1.0 | `SUCCESS` | `AMBIGUOUS` | `INCOMPLETE_SUCCESS` |
+| 1151 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0,Vulkan1` | 1024 | f16 | 4.8 | 19.0 | 0.0666666667 | 0.0 | `SUCCESS` | `AUTHORITATIVE` | `COMPLETE_AUTHORITATIVE` |
 | 605 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0` | 2048 | f16 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 611 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0` | 2048 | q8_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |
 | 617 | `DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf` | `Vulkan0` | 2048 | q4_0 | 0.0 | 0.0 | 0.0 | 0.0 | `TIMEOUT` | `NON_AUTHORITATIVE` | `NOT_PUBLISHED` |

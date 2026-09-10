@@ -156,10 +156,11 @@
       "docs/benchmark-data-audit.json"
     ],
     "new_authoritative_rows_from_issue41_same_context": 1,
-    "authoritative_rows_total": 129,
-    "report_rows_total": 932,
+    "authoritative_rows_total": 130,
+    "report_rows_total": 933,
     "new_authoritative_rows_from_issue41_qwen_q4km_same_context": 1,
-    "new_authoritative_rows_from_issue41_qwen_coder_q8_same_context": 1
+    "new_authoritative_rows_from_issue41_qwen_coder_q8_same_context": 1,
+    "new_authoritative_rows_from_issue41_deepseek_same_context": 1
   },
   "evidence_links": [
     "docs/issue42-deepseek-evidence.json",
@@ -184,11 +185,13 @@
     "docs/issue61-smollm2-evidence.json",
     "results/runs/issue41-qwen-q8-same-context/summary.json",
     "results/runs/issue41-qwen-q4km-same-context/summary.json",
-    "results/runs/issue41-qwen-coder-q8-same-context/summary.json"
+    "results/runs/issue41-qwen-coder-q8-same-context/summary.json",
+    "docs/issue41-deepseek-same-context-evidence.json",
+    "results/runs/issue41-deepseek-same-context/summary.json"
   ],
   "final_disposition": {
     "status": "PARTIALLY_RESOLVED",
-    "reason": "Issue 63, Qwen Q8, Qwen Q4_K_M, and Qwen Coder Q8 same-context results were selectively published after evidence review; other affected models remain non-authoritative or inconclusive.",
+    "reason": "Issue 63, Qwen Q8, Qwen Q4_K_M, Qwen Coder Q8, and DeepSeek same-context results were selectively published after evidence review; other affected models remain non-authoritative or inconclusive.",
     "next_action": "Continue with one governed remaining-model follow-up or explicit owner-directed closure; do not start broad Issue #1 inventory."
   },
   "sanitization": {
@@ -711,6 +714,77 @@
       "reviewer": "peer code-reviewer (01a058cd-e15c)",
       "review_reference": "Independent read-only review confirmed hashes, artifact binding, one-job scope, context consistency, exclusion of capacity, and no public write before review.",
       "review_findings_recorded": true,
+      "all_blockers_resolved_for_selected_publication": true,
+      "capacity_exclusion_recorded": true,
+      "same_context_verified": true
+    }
+  },
+  "same_context_deepseek_publication": {
+    "status": "PUBLISHED",
+    "source_review": "docs/issue41-deepseek-same-context-publication-review.json",
+    "source_evidence": "docs/issue41-deepseek-same-context-evidence.json",
+    "source_plan": "docs/issue41-deepseek-same-context-plan.json",
+    "source_receipt": "results/receipts/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.issue41.same-context.json",
+    "source_result": "results/runs/issue41-deepseek-same-context/summary.json",
+    "row_id": 1151,
+    "model": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+    "configuration": {
+      "device": "Vulkan0,Vulkan1",
+      "split_mode": "layer",
+      "tensor_split": "1,1",
+      "kv_quant": "f16",
+      "no_kv_offload": false,
+      "declared_context": 1024
+    },
+    "stage_evidence": {
+      "boundary": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "capacity_claim": "lower_bound_at_1024",
+        "reliable_context": "NOT_ESTABLISHED"
+      },
+      "performance": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "prompt_tokens_per_sec": 4.8,
+        "generation_tokens_per_sec": 19.0,
+        "warmups_discarded": 1,
+        "measured_repetitions": 3,
+        "successful_measurements": 3
+      },
+      "retrieval": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "verified": 1,
+        "missed": 14,
+        "inconclusive": 0,
+        "attempts": 15,
+        "retrieval_rate": 0.0666666667
+      },
+      "quality": {
+        "status": "SUCCESS",
+        "context": 1024,
+        "passed": 0,
+        "total": 2,
+        "pass_rate": 0.0
+      }
+    },
+    "selected_metrics": {
+      "prompt_tokens_per_sec": 4.8,
+      "eval_tokens_per_sec": 19.0,
+      "retrieval_rate": 0.0666666667,
+      "retrieval_outcomes": "1 VERIFIED / 14 MISSED / 0 INCONCLUSIVE",
+      "quality_pass_rate": 0.0
+    },
+    "historical_rows_changed": false,
+    "diagnostic_rows_promoted": 0,
+    "capacity_exclusion": "maximum reliable context is not published because only context 1024 was tested and Retrieval reliability is below the 0.8 threshold",
+    "provenance": "issue41:deepseek-same-context",
+    "review": {
+      "independent_review_completed": true,
+      "reviewer": "peer code-reviewer (01a058cd-e15c)",
+      "review_reference": "Independent read-only review confirmed hashes, artifact binding, one-job scope, all-stage context consistency, classification, capacity exclusion, and absence of public writes.",
+      "review_findings_recorded": false,
       "all_blockers_resolved_for_selected_publication": true,
       "capacity_exclusion_recorded": true,
       "same_context_verified": true
