@@ -600,6 +600,7 @@ def execute_performance(
                 "index": index + 1,
                 "status": result.get("status", "EXECUTION_ERROR"),
                 "success": bool(result.get("success")),
+                "metric_parse_status": result.get("metric_parse_status", "NOT_REPORTED"),
                 "prompt_ts": result.get("prompt_speed_ts", 0.0),
                 "gen_ts": result.get("generation_speed_ts", 0.0),
                 "elapsed_seconds": result.get("elapsed_seconds", 0.0),
@@ -609,14 +610,20 @@ def execute_performance(
         )
 
     measured = [run for run in runs if run["phase"] == "measured"]
-    successful = [run for run in measured if run["success"]]
+    execution_successful = [run for run in measured if run["success"]]
+    successful = [
+        run for run in execution_successful
+        if run["prompt_ts"] > 0 and run["gen_ts"] > 0
+    ]
+    if len(successful) == repetitions:
+        stage_status = "SUCCESS"
+    elif execution_successful and not successful:
+        stage_status = "METRIC_PARSE_FAILED"
+    else:
+        stage_status = "PARTIAL_FAILURE"
     config["result"] = {
         "stage": "performance",
-        "status": (
-            "SUCCESS"
-            if len(successful) == repetitions
-            else "PARTIAL_FAILURE"
-        ),
+        "status": stage_status,
         "context_size": context_size,
         "retrieved": False,
         "actual_prompt_tokens": actual_tokens,
