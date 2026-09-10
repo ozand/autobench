@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "model_name": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+  "model_id": "Llama-3.2-1B-Instruct-Q4_K_M",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 41,
+  "provenance": "Source: governed same-context follow-up under #41",
+  "artifact": {
+    "basename": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+    "size_bytes": 807694368,
+    "sha256": "3f5a22426976ab26cfe84dba63c1d08391717abb1af893e10f1b2968d862dcc1"
+  },
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/llama-3.2-1b-instruct-q4_k_m.md",
+      "retrieval_date": "2026-09-10",
+      "source_urls": [
+        "https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-LLAMA32-1B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true,
+      "qmd_lexical_hit": "KB-LLAMA32-1B-Q4KM"
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue #41 same-context Llama follow-up reviewed: one serial dual-GPU layer job, context 1024 for boundary/performance/Retrieval/quality, layer split 1,1, f16 K/V baseline, 600-second primary timeout, and stop-first-surprise policy. The prior mixed-context dual-GPU evidence remains held and is not reused.",
+      "plan_note": "docs/issue41-llama32-1b-same-context-plan.json",
+      "expected_job_count": 1,
+      "planned_configurations": [
+        {
+          "device": "Vulkan0,Vulkan1",
+          "tensor_split": "1,1",
+          "split_mode": "layer",
+          "mode": "full",
+          "cache_type_k": "f16",
+          "cache_type_v": "f16",
+          "no_kv_offload": false,
+          "declared_context": 1024
+        }
+      ]
+    }
+  },
+  "status": "PROTOCOL_RECEIPT_VALID"
+}
