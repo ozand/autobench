@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "issue": 41,
-  "status": "PUBLICATION_REVIEW_PENDING",
-  "publication_class": "AUTHORITATIVE_CANDIDATE",
+  "status": "APPROVED_FOR_PUBLIC_WRITE",
+  "publication_class": "AUTHORITATIVE",
   "model_name": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
   "source_plan": "docs/issue41-deepseek-same-context-plan.json",
   "source_receipt": "results/receipts/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.issue41.same-context.json",
@@ -71,7 +71,7 @@
     "no raw prompts, responses, stdout/stderr, private paths, or host identifiers are published"
   ],
   "decision": {
-    "new_authoritative_rows": 0,
+    "new_authoritative_rows": 1,
     "historical_rows_changed": false,
     "row_configuration": {
       "device": "Vulkan0,Vulkan1",
@@ -81,7 +81,7 @@
       "kv_offload": 0
     },
     "provenance": "issue41:deepseek-same-context",
-    "approved_targets_after_independent_review": [
+    "approved_targets": [
       "results/benchmarks.db",
       "docs/benchmarks_data.json",
       "docs/benchmarks_report.csv",
@@ -91,10 +91,11 @@
     ]
   },
   "review": {
-    "independent_review_completed": false,
-    "reviewer": "pending independent publication review",
-    "review_reference": "Review must verify hashes, exact artifact binding, all-stage context consistency, classification, capacity exclusion, and absence of public writes before approval.",
-    "all_blockers_resolved_for_selected_publication": false,
+    "independent_review_completed": true,
+    "reviewer": "peer code-reviewer (01a058cd-e15c)",
+    "review_reference": "Independent read-only review confirmed hashes, artifact binding, one-job scope, all-stage context consistency, classification, capacity exclusion, and absence of public writes.",
+    "review_findings_recorded": false,
+    "all_blockers_resolved_for_selected_publication": true,
     "capacity_exclusion_recorded": true,
     "same_context_verified": true
   }
