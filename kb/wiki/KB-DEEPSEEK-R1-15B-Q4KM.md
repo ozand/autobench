@@ -42,3 +42,13 @@ The following observations were recorded in earlier local work and are retained 
 - Prior note classified single-GPU operation as short-context fit and larger-context pressure; exact current target capability remains to be established.
 - Prior note reported dual-GPU `-sm layer -ts 1,1` operation through context 32768; this is not a current Issue #41 capacity claim.
 - Prior note listed f16, q8_0, q4_0, and `--no-kv-offload` as possible KV modes; the current bounded plan selects only the default f16 baseline.
+
+
+## Issue #41 same-context execution evidence
+- The dedicated Issue #41 receipt validated the current target artifact and one reviewed job; remote dry-run passed before inference.
+- Configuration: `Vulkan0,Vulkan1`, `-sm layer`, `-ts 1,1`, f16 K/V, declared context 1024. Boundary, performance, Retrieval, and quality all used context 1024.
+- Boundary: `SUCCESS` at 1024; this establishes only a lower bound and not a reliable maximum.
+- Performance: 4.8 prompt t/s and 19.0 generation t/s across 3 measured repetitions.
+- Retrieval: 1 `VERIFIED`, 14 `MISSED`, 0 `INCONCLUSIVE` across 15 attempts; recorded rate 0.0667.
+- Quality: 0/2 deterministic tasks passed. This is an observed quality result, not a reason to alter speed or Retrieval classifications.
+- Execution status: `SUCCESS`; evidence is sanitized and held for independent publication review. No historical row or prior Issue #42 evidence is promoted.
