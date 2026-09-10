@@ -263,21 +263,27 @@ class Runner:
             if match:
                 return float(match.group(1)), float(match.group(2))
         # Newer llama.cpp builds may emit separate prompt/eval timing lines
-        # without the legacy combined summary.  Parse those lines only when
-        # both values are present in the same output, preserving fail-closed
-        # behavior for genuinely missing metrics.
-        prompt_match = re.search(
-            r"prompt eval time.*?(?:/|\()\s*([\d.]+)\s*tokens per second",
-            combined,
-            re.IGNORECASE | re.DOTALL,
+        # without the legacy combined summary.  Parse candidates line-by-line
+        # so unrelated output cannot be paired accidentally.  Duplicate or
+        # incomplete candidates remain fail-closed.
+        prompt_pattern = re.compile(
+            r"^\s*prompt eval time\b[^\\r\\n]*?(?:/|\()\s*([\d.]+)\s*tokens per second\b",
+            re.IGNORECASE,
         )
-        eval_match = re.search(
-            r"(?<!prompt )eval time.*?(?:/|\()\s*([\d.]+)\s*tokens per second",
-            combined,
-            re.IGNORECASE | re.DOTALL,
+        eval_pattern = re.compile(
+            r"^\s*eval time\b[^\\r\\n]*?(?:/|\()\s*([\d.]+)\s*tokens per second\b",
+            re.IGNORECASE,
         )
-        if prompt_match and eval_match:
-            return float(prompt_match.group(1)), float(eval_match.group(1))
+        prompt_matches = [
+            match for line in combined.splitlines()
+            if (match := prompt_pattern.search(line))
+        ]
+        eval_matches = [
+            match for line in combined.splitlines()
+            if (match := eval_pattern.search(line))
+        ]
+        if len(prompt_matches) == 1 and len(eval_matches) == 1:
+            return float(prompt_matches[0].group(1)), float(eval_matches[0].group(1))
         return None, None
 
     @staticmethod

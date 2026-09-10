@@ -228,6 +228,13 @@ def test_parse_separate_prompt_and_eval_timing_lines():
     assert Runner._parse_performance_metrics(stdout, "") == (2300.0, 11.8)
 
 
+def test_separate_timing_parser_rejects_unrelated_or_duplicate_candidates():
+    unrelated = "prompt eval time unavailable\nnoise / 2300 tokens per second\neval time = 500 ms / 11.8 tokens per second\n"
+    assert Runner._parse_performance_metrics(unrelated, "") == (None, None)
+    duplicate = "prompt eval time = 100 ms / 2300 tokens per second\nprompt eval time = 110 ms / 2200 tokens per second\neval time = 500 ms / 11.8 tokens per second\n"
+    assert Runner._parse_performance_metrics(duplicate, "") == (None, None)
+
+
 def test_runner_supports_kv_quantization_and_host_offload():
     with patch("runner.subprocess.run", return_value=completed(0, stdout="[ Prompt: 100.0 t/s | Generation: 20.0 t/s ]\nExiting...")) as mocked_run:
         res = Runner.run_local_vulkan(
