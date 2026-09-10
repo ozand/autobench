@@ -37,3 +37,12 @@ source_urls:
 - Exact target Vulkan preflight result.
 - Current single-GPU boundary and Retrieval behavior.
 - Current dual-GPU layer performance, Retrieval, quality, and capacity.
+
+
+## Issue #41 execution evidence
+- The dedicated Issue #41 receipt validated the current target artifact and the remote dry-run passed before inference.
+- The reviewed three-job execution completed with `SUCCESS` for all three jobs.
+- Vulkan0 at context 1024: performance 6.8 prompt t/s and 34.1333 generation t/s; Retrieval 13 `VERIFIED`, 2 `MISSED`, 0 `INCONCLUSIVE`; quality 0/2; boundary SUCCESS at 1024 (lower bound only).
+- Vulkan1 at context 1024: performance 6.8 prompt t/s and 33.6333 generation t/s; Retrieval 10 `VERIFIED`, 5 `MISSED`, 0 `INCONCLUSIVE`; quality 1/2; boundary SUCCESS at 1024 (lower bound only).
+- Dual-GPU layer `1,1`: performance and quality at context 1024, but boundary and Retrieval at context 4096. This mixed-context result is `HELD_NON_AUTHORITATIVE`; a dedicated same-context context-1024 rerun is required before dual-GPU publication.
+- No historical Issue #43 row is promoted or rewritten, and no public database/report write is authorized by this evidence record.
