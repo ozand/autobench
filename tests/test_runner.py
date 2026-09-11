@@ -224,8 +224,26 @@ Exiting...
 
 
 def test_parse_separate_prompt_and_eval_timing_lines():
-    stdout = "prompt eval time = 100 ms / 2300 tokens per second\neval time = 500 ms / 11.8 tokens per second\n"
-    assert Runner._parse_performance_metrics(stdout, "") == (2300.0, 11.8)
+    stdout = "prompt eval time = 100 ms / 100 tokens (100.0 tokens per second)\neval time = 500 ms / 11 tokens (11.8 tokens per second)\n"
+    assert Runner._parse_performance_metrics(stdout, "") == (100.0, 11.8)
+
+
+def test_runner_accepts_zero_timing_as_parsed_but_not_positive():
+    result = run_with_result(completed(
+        0,
+        stderr="prompt eval time = 1 ms / 0 tokens (0.0 tokens per second)\\neval time = 2 ms / 0 tokens (0.0 tokens per second)",
+    ))
+    assert result["success"] is True
+    assert result["metric_parse_status"] == "PARSED"
+    assert result["prompt_speed_ts"] == 0.0
+    assert result["generation_speed_ts"] == 0.0
+
+
+def test_runner_missing_speed_keys_fails_closed():
+    result = run_with_result(completed(0, stderr="prompt eval time unavailable\\neval time unavailable"))
+    assert result["success"] is False
+    assert result["status"] == "METRIC_PARSE_FAILED"
+    assert result["metric_parse_status"] == "MISSING_OR_AMBIGUOUS"
 
 
 def test_separate_timing_parser_rejects_unrelated_or_duplicate_candidates():
