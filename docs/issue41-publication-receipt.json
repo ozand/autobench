@@ -118,7 +118,10 @@
     {
       "issue": 58,
       "model": "qwen2.5-coder-1.5b-instruct-q4_k_m.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue63-publication-review.json",
+      "published_authoritative_rows": 4,
+      "provenance": "issue63:authoritative_timeout600"
     },
     {
       "issue": 59,
@@ -190,12 +193,13 @@
     "docs/issue41-deepseek-same-context-evidence.json",
     "results/runs/issue41-deepseek-same-context/summary.json",
     "docs/issue41-llama32-1b-followup-evidence.json",
-    "results/runs/issue41-llama32-1b-same-context/summary.json"
+    "results/runs/issue41-llama32-1b-same-context/summary.json",
+    "docs/issue63-publication-review.json"
   ],
   "final_disposition": {
     "status": "PARTIALLY_RESOLVED",
     "reason": "Issue 63, Qwen Q8, Qwen Q4_K_M, Qwen Coder Q8, DeepSeek, and Llama 3.2 1B same-context results were selectively published after evidence review; other affected models remain non-authoritative or inconclusive.",
-    "next_action": "Continue with one governed remaining-model follow-up or explicit owner-directed closure; do not start broad Issue #1 inventory."
+    "next_action": "Complete or explicitly classify the unresolved Ministral #44 investigation; then obtain owner direction on remaining non-authoritative models. Do not start broad Issue #1 inventory."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -861,6 +865,26 @@
       "all_blockers_resolved_for_selected_publication": true,
       "capacity_exclusion_recorded": true,
       "same_context_verified": true
+    }
+  },
+  "consolidated_status": {
+    "as_of": "2026-09-11",
+    "published_same_context_models": [
+      "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "qwen2.5-0.5b-instruct-q8_0.gguf",
+      "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
+      "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
+      "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+    ],
+    "issue41_authoritative_rows": 131,
+    "remaining_model_classes": {
+      "MINISTRAL_44": "PARTIAL_FAILURE / INCONCLUSIVE; aggregation investigation unresolved",
+      "OTHER_AFFECTED_MODELS": "NON_AUTHORITATIVE or INCONCLUSIVE; no new workload authorized"
+    },
+    "administrative_issues": {
+      "62": "completed; owner closure confirmation pending",
+      "63": "completed; owner closure confirmation pending",
+      "67": "completed; owner closure confirmation pending"
     }
   }
 }
