@@ -11,9 +11,9 @@
     "sha256": "fd46fc371ff0509bfa8657ac956b7de8534d7d9baaa4947975c0648c3aa397f4"
   },
   "execution": {
-    "status": "SUCCESS",
+    "status": "PARTIAL_FAILURE",
     "context": 1024,
-    "performance_stage": "SUCCESS with zero aggregated metrics across 3 measurements",
+    "performance_stage": "METRIC_PARSE_FAILED after aggregation fix: all 3 measured runs executed successfully but retained zero metrics",
     "retrieval": {
       "verified": 0,
       "missed": 15,
@@ -37,12 +37,29 @@
     },
     "hypothesis": "performance-stage invocation or aggregation is not retaining the parsed metrics for this model/workload",
     "status": "UNRESOLVED",
-    "next_action": "inspect and fix performance-stage aggregation, then rerun exactly one approved same-context job",
-    "additional_retries_authorized": false
+    "next_action": "inspect llama-cli command/input behavior for performance stage versus direct diagnostic; no further retries authorized",
+    "additional_retries_authorized": false,
+    "second_run": {
+      "status": "PARTIAL_FAILURE",
+      "summary_sha256": "946aba8373edd0333497bec55ccc3418eded2e0ed2ccb9eab7d25a5db9c01c29",
+      "performance_stage": "METRIC_PARSE_FAILED",
+      "execution_successful_measurements": 0,
+      "all_run_metric_parse_status": "PARSED",
+      "retrieval": {
+        "verified": 0,
+        "missed": 15,
+        "inconclusive": 0
+      },
+      "quality": {
+        "passed": 2,
+        "total": 2
+      },
+      "boundary": "SUCCESS at 1024 lower bound only"
+    }
   },
   "disposition": {
-    "status": "INCONCLUSIVE",
-    "reason": "stage-level aggregation inconsistency prevents trustworthy performance publication; controlled parser diagnostic succeeds",
+    "status": "PARTIAL_FAILURE / INCONCLUSIVE",
+    "reason": "second governed run correctly fails closed as METRIC_PARSE_FAILED: command executions report PARSED but zero speed fields; direct controlled diagnostic remains nonzero, so stage behavior is unresolved",
     "authoritative_publication": false,
     "historical_rows_preserved": true
   },
