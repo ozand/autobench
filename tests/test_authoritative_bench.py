@@ -124,6 +124,25 @@ def test_fine_boundary_contexts_add_non_power_of_two_steps():
     assert fine_boundary_contexts(1024, 2048, 256) == [1280, 1536, 1792]
 
 
+def test_execute_performance_propagates_positive_runner_metrics():
+    plan = build_plan(
+        [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
+        "performance",
+    )
+    plan["models"][0]["configurations"] = [
+        {"device": "Vulkan0", "tensor_split": None, "split_mode": "none", "mode": "full"}
+    ]
+    fake = {"success": True, "status": "SUCCESS", "prompt_speed_ts": 12.5, "generation_speed_ts": 34.2, "metric_parse_status": "PARSED", "elapsed_seconds": 1.0, "return_code": 0, "command_args": []}
+    with patch("authoritative_bench.build_context_prompt", return_value=("prompt", 10, 512, {})), patch("authoritative_bench.Runner.run_local_vulkan", return_value=fake):
+        executed = execute_performance(plan, 5, 1024, 512, 64, 1, 3)
+    result = executed["models"][0]["configurations"][0]["result"]
+    assert result["status"] == "SUCCESS"
+    assert result["prompt_ts"] == 12.5
+    assert result["gen_ts"] == 34.2
+    assert result["successful_measurements"] == 3
+    assert all(run["metric_parse_status"] == "PARSED" for run in result["runs"])
+
+
 def test_execute_performance_rejects_successful_zero_metrics():
     plan = build_plan(
         [{"id": "model", "name": "model.gguf", "path": "/model", "size_bytes": 1}],
