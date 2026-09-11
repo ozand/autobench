@@ -36,8 +36,8 @@
       "generation_tokens_per_sec": 11.8
     },
     "hypothesis": "performance-stage invocation or aggregation is not retaining the parsed metrics for this model/workload",
-    "status": "UNRESOLVED",
-    "next_action": "inspect llama-cli command/input behavior for performance stage versus direct diagnostic; no further retries authorized",
+    "status": "INCONCLUSIVE",
+    "next_action": "Do not run another workload. Create a separate issue-scoped code reproduction/test using mocked Runner return values and inspect the stage serialization seam; keep Ministral publication blocked.",
     "additional_retries_authorized": false,
     "second_run": {
       "status": "PARTIAL_FAILURE",
@@ -55,6 +55,11 @@
         "total": 2
       },
       "boundary": "SUCCESS at 1024 lower bound only"
+    },
+    "code_inspection": {
+      "performance_stage": "authoritative_bench.execute_performance builds a tokenizer-calibrated prompt and calls Runner.run_local_vulkan; per-run fields are copied from prompt_speed_ts/generation_speed_ts. The governed summaries retain status=SUCCESS and metric_parse_status=PARSED but prompt_ts/gen_ts=0.0, while an identical direct Runner call returns nonzero parsed fields.",
+      "runner_contract": "Runner returns prompt_speed_ts and generation_speed_ts after parsing stdout/stderr; no later writer is involved in the direct call.",
+      "remaining_gap": "The discrepancy is observed at the seam between the performance-stage call/returned object and its serialized stage result. Existing sanitized artifacts do not expose raw stdout/stderr, so they cannot identify the exact missing assignment without another controlled code-level reproduction."
     }
   },
   "disposition": {
