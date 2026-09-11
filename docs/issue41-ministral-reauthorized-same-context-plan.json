@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "issue": 41,
+  "provenance": "Source: owner-authorized re-authorization under #41",
+  "mode": "issue41_ministral_reauthorized_same_context",
+  "execution_status": "planned_not_run",
+  "model": {
+    "basename": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+    "size_bytes": 2146497824,
+    "quantization": "Q4_K_M",
+    "backend": "vulkan"
+  },
+  "configuration": {
+    "device": "Vulkan0,Vulkan1",
+    "tensor_split": "1,1",
+    "split_mode": "layer",
+    "mode": "full",
+    "cache_type_k": "f16",
+    "cache_type_v": "f16",
+    "no_kv_offload": false,
+    "declared_context": 1024
+  },
+  "receipt": "results/receipts/Ministral-3-3B-Instruct-2512-Q4_K_M.issue41.reauthorized.json",
+  "workload": {
+    "prompt_tokens": 512,
+    "output_tokens": 64,
+    "boundary_output_tokens": 16,
+    "retrieval_positions": [0.1, 0.5, 0.9],
+    "retrieval_repetitions": 5,
+    "quality_tasks": 2,
+    "performance_warmups": 1,
+    "performance_repetitions": 3,
+    "timeout_seconds": 600
+  },
+  "expected_job_count": 1,
+  "objective": "Execute exactly one fresh owner-authorized same-context Ministral job after the Issue #106 reproduction and fail-closed aggregation fixes, without changing the benchmark contract or publishing automatically.",
+  "coverage_decisions": {
+    "single_gpu": "Not selected; authorization is limited to one dual-GPU job and prior single-GPU OOM evidence remains historical.",
+    "dual_gpu": "Selected: Vulkan0,Vulkan1, -sm layer, -ts 1,1; tensor/row split remains excluded.",
+    "context": "Boundary, performance, Retrieval, and quality all use context 1024.",
+    "kv": "Default f16 K/V baseline only; no blind KV sweep."
+  },
+  "stop_rule": "Stop at the first unexpected result; preserve the terminal classification and do not retry.",
+  "publication": {
+    "authoritative": false,
+    "historical_rows_retained": true,
+    "requirement": "No publication without a separate evidence review; raw prompts, responses, stdout/stderr, and private runtime details remain excluded."
+  },
+  "dry_run": {
+    "inference_authorized": false
+  }
+}

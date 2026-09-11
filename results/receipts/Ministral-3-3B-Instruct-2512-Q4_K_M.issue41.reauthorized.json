@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "model_name": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+  "model_id": "Ministral-3-3B-Instruct-2512-Q4_K_M",
+  "quantization": "Q4_K_M",
+  "backend": "vulkan",
+  "governing_issue": 41,
+  "provenance": "Source: owner-authorized re-authorization under #41",
+  "artifact": {
+    "basename": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
+    "size_bytes": 2146497824,
+    "sha256": "fd46fc371ff0509bfa8657ac956b7de8534d7d9baaa4947975c0648c3aa397f4"
+  },
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/Ministral-3-3B-Instruct-2512-Q4_K_M.md",
+      "retrieval_date": "2026-09-10",
+      "source_urls": [
+        "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512",
+        "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512/raw/main/config.json",
+        "https://huggingface.co/mistralai/Ministral-3-3B-Instruct-2512/raw/main/generation_config.json",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multi-gpu.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-MINISTRAL-3B-Q4KM.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true,
+      "qmd_lexical_hit": "KB-MINISTRAL-3B-Q4KM"
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue #41 owner-authorized bounded re-authorization reviewed: exactly one serial dual-GPU layer job, context 1024 for boundary/performance/Retrieval/quality, f16 K/V baseline, 600-second primary timeout, and stop-first-surprise policy. No automatic retry, sweep, or publication is authorized.",
+      "plan_note": "docs/issue41-ministral-reauthorized-same-context-plan.json",
+      "expected_job_count": 1,
+      "planned_configurations": [
+        {
+          "device": "Vulkan0,Vulkan1",
+          "tensor_split": "1,1",
+          "split_mode": "layer",
+          "mode": "full",
+          "cache_type_k": "f16",
+          "cache_type_v": "f16",
+          "no_kv_offload": false,
+          "declared_context": 1024
+        }
+      ]
+    }
+  },
+  "status": "PROTOCOL_RECEIPT_VALID"
+}
