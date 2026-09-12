@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "receipt_type": "MULTIMODAL_OCR_PREFLIGHT",
+  "governing_issue": 122,
+  "provenance": "Source: accepted ADR-003 and owner-authorized Issue #122 exact-pair preflight",
+  "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj",
+  "model_artifact": {
+    "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
+    "size_bytes": 986046944,
+    "sha256": "5745685d2e607a82a0696c1118e56a2a1ae0901da450fd9cd4f161c6b62867d7",
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj"
+  },
+  "projector_artifact": {
+    "basename": "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+    "size_bytes": 709883360,
+    "sha256": "a0ad91f00a7a80dcf84d719a61b00ee2e07b71794f4ee2dfa81a254621a8c418",
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj"
+  },
+  "image_descriptor": {
+    "format": "png",
+    "width": 640,
+    "height": 480,
+    "byte_class": "small",
+    "validation_status": "VALID"
+  },
+  "preflight_status": "VALID",
+  "inference_invoked": false,
+  "stages": {
+    "stage_1_research": {
+      "status": "VERIFIED",
+      "raw_note": "kb/raw/qwen2-vl-2b-q4km-q8proj.md",
+      "retrieval_date": "2026-09-12",
+      "source_urls": [
+        "https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct",
+        "https://huggingface.co/ggml-org/Qwen2-VL-2B-Instruct-GGUF/tree/main",
+        "https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md"
+      ]
+    },
+    "stage_2_kb_validation": {
+      "status": "VERIFIED",
+      "wiki_note": "kb/wiki/KB-QWEN2VL-2B-Q4KM-Q8PROJ.md",
+      "pre_run_check_passed": true,
+      "qmd_indexed": true,
+      "qmd_lexical_hit": "KB-QWEN2VL-2B-Q4KM-Q8PROJ"
+    },
+    "stage_3_plan_review": {
+      "status": "APPROVED",
+      "plan_reviewed": true,
+      "review_evidence": "Issue #122 bounded target preflight: exact acquired model/projector pair, metadata-only descriptor, one zero-inference command, accepted ADR-003, and stop-first policy.",
+      "plan_note": "docs/issue122-qwen2vl-preflight-plan.json",
+      "expected_job_count": 1
+    }
+  },
+  "status": "MULTIMODAL_RECEIPT_VALID"
+}
