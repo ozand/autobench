@@ -20,6 +20,8 @@ environment:
 error_signatures: []
 source_urls:
   - https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct
+  - https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct/raw/main/config.json
+  - https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct/raw/main/README.md
   - https://huggingface.co/ggml-org/Qwen2-VL-2B-Instruct-GGUF/tree/main
   - https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md
 ---
@@ -39,16 +41,24 @@ Issue #122 acquired and verified one exact public multimodal pair for a future z
 - Public ggml-org LFS metadata and target-side file hashes match for both artifacts.
 - The combined static size is 1,695,930,304 bytes.
 
-## Compatibility boundary
-- The model is a Qwen2-VL multimodal model under Apache-2.0.
-- Official llama.cpp documentation describes model/projector multimodal input, but does not prove this exact pair works on the target Vulkan build.
-- Two separate 2GB Vulkan allocations constrain fit. The static pair total does not account for projector placement, image tokens, KV cache, graph buffers, or runtime overhead.
-- Accepted ADR-003 requires the separate multimodal preflight contract. The text runner and existing text receipts remain unchanged.
+## Upstream facts
+- The Apache-2.0 checkpoint is `Qwen2VLForConditionalGeneration` / `qwen2_vl`: 28 text layers, hidden size 1536, 12 attention heads, 2 KV heads, and a 32768-position configuration.
+- Its vision configuration reports depth 32, 16 heads, patch size 14, spatial merge size 2, and temporal patch size 2.
+- The upstream README describes dynamic image resolution and a default per-image visual-token range of 4–16384. Its 256–1280-token sample is an upstream Transformers budget example, not an approved target workload or Vulkan capacity claim.
+- Official llama.cpp documentation names this pre-quantized GGUF family and uses a text model plus `--mmproj` artifact contract. It says projector GPU offload is the default and `--no-mmproj-offload` disables it.
 
-## Explicitly not established
-- No real image was acquired, opened, processed, or inferred on.
-- No multimodal model load, target preflight, OCR result, performance, quality, context, or memory result exists.
-- A reviewed zero-inference dry-run/preflight remains required before any future OCR inference approval.
+## Local observations
+- Issue #122 acquired the exact pair and verified both target-side sizes and SHA-256 values.
+- Issue #122 executed one target-side metadata-only pair preflight. It was `VALID` with `inference_invoked=false` and terminal classification `PREFLIGHT_VALID / ZERO_INFERENCE`.
+- That preflight did not load the model/projector, open an image, or test Vulkan/multimodal execution.
+
+## Readiness boundary and unresolved assumptions
+- Official llama.cpp multimodal documentation does not prove this exact pair works on the target Vulkan build.
+- Two separate 2GB Vulkan partitions constrain fit. The static pair total is 1,695,930,304 bytes; this is not a per-device allocation measurement and excludes projector placement, image tokens, KV cache, graph buffers, and runtime overhead.
+- Default projector GPU offload makes it unsafe to assume that text-model `-sm layer` splitting also splits or relocates the projector.
+- The existing preflight contract is intentionally artifact/metadata-only. It cannot validate a non-persisted local image reference, load a model, emit OCR terminal classes, or establish inference eligibility.
+- Accepted ADR-003 requires a separate multimodal runner and receipt contract; the text runner and existing text receipts remain unchanged.
+- Issue #125 is zero-inference planning only. Future image/OCR inference requires a separately governed execution issue, a reviewed implementation/inference plan, a fresh approved pre-inference dry-run, and explicit owner approval.
 
 ## References
 - [Raw pair research](../raw/qwen2-vl-2b-q4km-q8proj.md)
