@@ -2,7 +2,7 @@
   "schema_version": 1,
   "issue": 41,
   "title": "Republish verified speed and Retrieval data for affected recent models",
-  "status": "PUBLISHED_SELECTED_QWEN_CODER_QWEN_Q8_QWEN_Q4KM_AND_QWEN_CODER_Q8_SAME_CONTEXT",
+  "status": "OWNER_DIRECTED_CLASSIFICATION_COMPLETE_PENDING_ISSUE_CLOSURE",
   "scope": {
     "affected_issue_range": [
       42,
@@ -38,17 +38,26 @@
     {
       "issue": 42,
       "model": "DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue41-deepseek-same-context-publication-review.json",
+      "published_authoritative_rows": 1,
+      "provenance": "issue41:deepseek-same-context"
     },
     {
       "issue": 43,
       "model": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue41-llama32-1b-same-context-publication-review.json",
+      "published_authoritative_rows": 1,
+      "provenance": "issue41:llama32-1b-same-context"
     },
     {
       "issue": 44,
       "model": "Ministral-3-3B-Instruct-2512-Q4_K_M.gguf",
-      "classification": "NON_AUTHORITATIVE"
+      "classification": "PARTIAL_FAILURE / INCONCLUSIVE",
+      "publication_authorized": false,
+      "additional_hardware_diagnostics_authorized": false,
+      "evidence": "docs/issue111-ministral-target-output-observation.json"
     },
     {
       "issue": 45,
@@ -103,12 +112,18 @@
     {
       "issue": 55,
       "model": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue41-qwen-q4km-same-context-publication-review.json",
+      "published_authoritative_rows": 1,
+      "provenance": "issue41:qwen-q4km-same-context"
     },
     {
       "issue": 56,
       "model": "qwen2.5-0.5b-instruct-q8_0.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue41-qwen-q8-same-context-publication-review.json",
+      "published_authoritative_rows": 1,
+      "provenance": "issue41:qwen-q8-same-context"
     },
     {
       "issue": 57,
@@ -126,7 +141,10 @@
     {
       "issue": 59,
       "model": "qwen2.5-coder-1.5b-instruct-q8_0.gguf",
-      "classification": "INCONCLUSIVE"
+      "classification": "PUBLISHED_AUTHORITATIVE",
+      "publication_review": "docs/issue41-qwen-coder-q8-same-context-publication-review.json",
+      "published_authoritative_rows": 1,
+      "provenance": "issue41:qwen-coder-q8-same-context"
     },
     {
       "issue": 60,
@@ -194,12 +212,18 @@
     "results/runs/issue41-deepseek-same-context/summary.json",
     "docs/issue41-llama32-1b-followup-evidence.json",
     "results/runs/issue41-llama32-1b-same-context/summary.json",
-    "docs/issue63-publication-review.json"
+    "docs/issue63-publication-review.json",
+    "docs/issue41-deepseek-same-context-publication-review.json",
+    "docs/issue41-llama32-1b-same-context-publication-review.json",
+    "docs/issue41-qwen-q4km-same-context-publication-review.json",
+    "docs/issue41-qwen-q8-same-context-publication-review.json",
+    "docs/issue41-qwen-coder-q8-same-context-publication-review.json",
+    "docs/issue111-ministral-target-output-observation.json"
   ],
   "final_disposition": {
-    "status": "PARTIALLY_RESOLVED",
-    "reason": "Issue 63, Qwen Q8, Qwen Q4_K_M, Qwen Coder Q8, DeepSeek, and Llama 3.2 1B same-context results were selectively published after evidence review; other affected models remain non-authoritative or inconclusive.",
-    "next_action": "Complete or explicitly classify the unresolved Ministral #44 investigation; then obtain owner direction on remaining non-authoritative models. Do not start broad Issue #1 inventory."
+    "status": "OWNER_DIRECTED_CLASSIFICATION_COMPLETE_PENDING_ISSUE_CLOSURE",
+    "reason": "The owner directed retention of Ministral as PARTIAL_FAILURE / INCONCLUSIVE and classification of the remaining affected set. Published results retain their authoritative provenance; all other classifications remain evidence-backed NON_AUTHORITATIVE or INCONCLUSIVE.",
+    "next_action": "No benchmark workload, retry, sweep, publication, or issue closure is authorized by this receipt. Await separate explicit owner closure direction for Issue #41 and related completed issues."
   },
   "sanitization": {
     "raw_prompts_persisted": false,
@@ -868,7 +892,7 @@
     }
   },
   "consolidated_status": {
-    "as_of": "2026-09-11",
+    "as_of": "2026-09-12",
     "published_same_context_models": [
       "qwen2.5-0.5b-instruct-q4_k_m.gguf",
       "qwen2.5-0.5b-instruct-q8_0.gguf",
@@ -878,13 +902,15 @@
     ],
     "issue41_authoritative_rows": 131,
     "remaining_model_classes": {
-      "MINISTRAL_44": "PARTIAL_FAILURE / INCONCLUSIVE; aggregation investigation unresolved",
-      "OTHER_AFFECTED_MODELS": "NON_AUTHORITATIVE or INCONCLUSIVE; no new workload authorized"
+      "MINISTRAL_44": "PARTIAL_FAILURE / INCONCLUSIVE; target diagnostic complete; unpublished; no further diagnostics authorized",
+      "OTHER_AFFECTED_MODELS": "Evidence-backed NON_AUTHORITATIVE or INCONCLUSIVE; owner-directed classification complete; no new workload authorized"
     },
     "administrative_issues": {
       "62": "completed; owner closure confirmation pending",
       "63": "completed; owner closure confirmation pending",
       "67": "completed; owner closure confirmation pending"
-    }
+    },
+    "owner_directed_classification_complete": true,
+    "issue_closure_authorized": false
   }
 }
