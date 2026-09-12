@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "issue": 122,
+  "mode": "qwen2vl_zero_inference_target_preflight",
+  "execution_status": "planned_not_run",
+  "provenance": "Source: accepted ADR-003 and owner-authorized Issue #122 exact-pair preflight",
+  "adr": "ADR-003",
+  "artifacts": {
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj",
+    "model": {
+      "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
+      "size_bytes": 986046944,
+      "sha256": "5745685d2e607a82a0696c1118e56a2a1ae0901da450fd9cd4f161c6b62867d7"
+    },
+    "projector": {
+      "basename": "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+      "size_bytes": 709883360,
+      "sha256": "a0ad91f00a7a80dcf84d719a61b00ee2e07b71794f4ee2dfa81a254621a8c418"
+    }
+  },
+  "image_descriptor": {
+    "format": "png",
+    "width": 640,
+    "height": 480,
+    "size_bytes": 4096
+  },
+  "expected_receipt": {
+    "receipt_type": "MULTIMODAL_OCR_PREFLIGHT",
+    "preflight_status": "VALID",
+    "inference_invoked": false
+  },
+  "expected_job_count": 1,
+  "target_command_boundary": {
+    "runner": "scripts/multimodal_ocr_preflight.py",
+    "location": "target artifact host",
+    "timeout_seconds": 600,
+    "subprocess_or_model_invocation": false,
+    "image_path_or_content": false,
+    "ocr_inference": false,
+    "benchmark_execution": false,
+    "database_or_report_write": false
+  },
+  "stop_rule": "Stop on any identity, checksum, pairing, descriptor, receipt, sanitization, artifact-write, or transport mismatch. Do not retry or invoke multimodal inference.",
+  "unresolved_after_success": [
+    "real image-reference validation",
+    "multimodal model loading",
+    "Vulkan/backend compatibility",
+    "projector placement and per-device memory fit",
+    "OCR quality, performance, capacity, and inference eligibility"
+  ]
+}
