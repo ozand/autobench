@@ -1,6 +1,6 @@
 # ADR-003: Isolate Multimodal OCR Runner and Receipt Contracts from Text Benchmarks
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-09-12
 **Authors**: AutoBench maintainers
 **Supersedes**: None
