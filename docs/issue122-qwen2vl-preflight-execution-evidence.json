@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "issue": 122,
+  "status": "PREFLIGHT_VALID_ZERO_INFERENCE",
+  "source_plan": "docs/issue122-qwen2vl-preflight-plan.json",
+  "source_pair_receipt": "results/receipts/Qwen2-VL-2B-Instruct-Q4_K_M.mmproj-Q8_0.issue122.json",
+  "source_execution_receipt": "results/runs/issue122-qwen2vl-preflight/receipt.json",
+  "source_execution_receipt_sha256": "0e5d836c826720e4c8e61499db983b904a9d3860c745b6693786495f636e3beb",
+  "artifacts": {
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj",
+    "model": {
+      "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
+      "size_bytes": 986046944,
+      "sha256": "5745685d2e607a82a0696c1118e56a2a1ae0901da450fd9cd4f161c6b62867d7"
+    },
+    "projector": {
+      "basename": "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+      "size_bytes": 709883360,
+      "sha256": "a0ad91f00a7a80dcf84d719a61b00ee2e07b71794f4ee2dfa81a254621a8c418"
+    }
+  },
+  "descriptor": {
+    "format": "png",
+    "width": 640,
+    "height": 480,
+    "byte_class": "small",
+    "validation_status": "VALID"
+  },
+  "execution_fact": {
+    "location": "target artifact host",
+    "command_family": "multimodal_ocr_preflight",
+    "exit_status": "SUCCESS",
+    "preflight_status": "VALID",
+    "inference_invoked": false,
+    "model_or_projector_loaded": false,
+    "image_opened_or_processed": false,
+    "ocr_or_benchmark_invoked": false,
+    "database_or_report_write": false
+  },
+  "classification": {
+    "terminal_class": "PREFLIGHT_VALID / ZERO_INFERENCE",
+    "ocr_success": false,
+    "target_backend_compatibility_established": false,
+    "model_load_established": false,
+    "memory_fit_established": false,
+    "inference_eligible": false,
+    "publication_authorized": false
+  },
+  "next_gate": "Any image/OCR inference requires a separate explicit owner approval, model-specific reviewed inference plan, and fresh approved pre-inference dry-run.",
+  "sanitization": {
+    "raw_images_persisted": false,
+    "raw_prompts_persisted": false,
+    "raw_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "private_host_identifiers_persisted": false,
+    "absolute_paths_persisted": false
+  }
+}
