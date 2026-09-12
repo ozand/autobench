@@ -155,12 +155,20 @@ this proposal.
 ## Addendum (2026-09-12)
 
 The owner explicitly accepted ADR-003 in Issue #116 on 2026-09-12; the
-lifecycle update was merged in PR #118. The present-tense `Proposed` wording in
-the Context and Owner Approval Gate records the decision boundary that applied
-before that acceptance. It is historical, not a current implementation block.
+lifecycle update was merged in PR #118. This addendum supersedes only the
+historical lifecycle wording in the Context, `## Owner Approval Gate`,
+`## Rollback`, and the Issue #116 reference label below: the statements that
+this record “remains Proposed,” requires future acceptance, or describes
+pre-acceptance rollback are no longer operative. The canonical status is
+`Accepted`.
 
 Acceptance authorizes a separate implementation issue under this contract. It
 does not waive any continuing gates: exact-artifact research and pairing,
 sanitized receipt validation, reviewed zero-inference dry-run, explicit
 pre-inference review, evidence-first classification, and separate publication
-review remain mandatory. The ADR's Decision and non-goals are unchanged.
+review remain mandatory. Accepted ADR lifecycle changes now require a
+follow-on superseding ADR; this record is not reverted in place. The ADR's
+Decision and non-goals are unchanged.
+
+The Issue #116 reference denotes the completed decision-phase and acceptance
+history, not a still-pending Proposed-ADR draft.
