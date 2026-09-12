@@ -151,3 +151,16 @@ this proposal.
 - `docs/model-testing-protocol.md`
 - `docs/adr/ADR-002-qwen-q8-bounded-runner-contract.md`
 - https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md
+
+## Addendum (2026-09-12)
+
+The owner explicitly accepted ADR-003 in Issue #116 on 2026-09-12; the
+lifecycle update was merged in PR #118. The present-tense `Proposed` wording in
+the Context and Owner Approval Gate records the decision boundary that applied
+before that acceptance. It is historical, not a current implementation block.
+
+Acceptance authorizes a separate implementation issue under this contract. It
+does not waive any continuing gates: exact-artifact research and pairing,
+sanitized receipt validation, reviewed zero-inference dry-run, explicit
+pre-inference review, evidence-first classification, and separate publication
+review remain mandatory. The ADR's Decision and non-goals are unchanged.
