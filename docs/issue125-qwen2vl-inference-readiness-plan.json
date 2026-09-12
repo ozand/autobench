@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "issue": 125,
+  "status": "REVIEW_ONLY_NOT_EXECUTABLE",
+  "provenance": "Source: Issue #122 PREFLIGHT_VALID / ZERO_INFERENCE → Issue #125 readiness review",
+  "adr": "ADR-003 Accepted",
+  "artifact_pair": {
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj",
+    "model": {
+      "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
+      "size_bytes": 986046944,
+      "sha256": "5745685d2e607a82a0696c1118e56a2a1ae0901da450fd9cd4f161c6b62867d7"
+    },
+    "projector": {
+      "basename": "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+      "size_bytes": 709883360,
+      "sha256": "a0ad91f00a7a80dcf84d719a61b00ee2e07b71794f4ee2dfa81a254621a8c418"
+    },
+    "verified_preflight": "docs/issue122-qwen2vl-preflight-execution-evidence.json"
+  },
+  "readiness_decision": {
+    "classification": "BLOCKED_PENDING_SEPARATE_IMPLEMENTATION_AND_EXECUTION_GATES",
+    "reason": [
+      "The accepted isolated preflight checks pair identity and metadata only; it intentionally does not load the model/projector or handle an image reference.",
+      "No separately governed multimodal OCR runner exists that can fail-closed validate a non-persisted local image reference and emit ADR-003 OCR terminal classes.",
+      "Vulkan/backend compatibility, default projector placement, per-device memory fit, image-token budget, OCR prompt contract, quality, and performance are not established."
+    ]
+  },
+  "candidate_future_measurement_design": {
+    "not_authorized_to_execute": true,
+    "logical_workload": {
+      "image_count": 1,
+      "image_input": "non-persisted local synthetic fixture governed by a separate execution issue",
+      "image_metadata_ceiling": {
+        "formats": ["png", "jpg", "jpeg"],
+        "max_width": 2048,
+        "max_height": 2048,
+        "max_bytes": 10485760
+      },
+      "image_token_policy": "Begin with one documented low visual-token budget selected by the future runner; do not use upstream maximum 16384 visual tokens as a target default.",
+      "generation_cap": "A future execution issue must select a small bounded cap and record it in a sanitized receipt; no prompt or generated text may be persisted."
+    },
+    "configuration_sequence": [
+      {
+        "id": "load-smoke-cpu-projector",
+        "purpose": "Separate runner/model-projector contract and non-persisted image-reference validation only",
+        "device": "CPU or future approved safe loader mode",
+        "split": "not applicable",
+        "context": 1024,
+        "kv": "f16 baseline",
+        "execution_gate": "Separate owner-authorized implementation and dry-run review required"
+      },
+      {
+        "id": "vulkan0-baseline",
+        "purpose": "First target backend load/boundary observation",
+        "device": "Vulkan0",
+        "split": "none",
+        "context": 1024,
+        "kv": "f16 baseline",
+        "execution_gate": "Only if future safe runner dry-run proves its exact one-job scope"
+      },
+      {
+        "id": "vulkan1-baseline",
+        "purpose": "Matched single-device comparison",
+        "device": "Vulkan1",
+        "split": "none",
+        "context": 1024,
+        "kv": "f16 baseline",
+        "execution_gate": "Run only after a successful and classified Vulkan0 result"
+      },
+      {
+        "id": "dual-layer-1-1",
+        "purpose": "First applicable dual-device text-layer configuration",
+        "device": "Vulkan0,Vulkan1",
+        "split": "layer 1,1",
+        "context": 1024,
+        "kv": "f16 baseline",
+        "execution_gate": "Run only after matched single-device results; projector placement must be observable or explicitly unresolved"
+      },
+      {
+        "id": "dual-layer-1-2",
+        "purpose": "One GPU1-biased follow-up only if 1,1 reveals GPU0 pressure and the first result is investigated",
+        "device": "Vulkan0,Vulkan1",
+        "split": "layer 1,2",
+        "context": 1024,
+        "kv": "f16 baseline",
+        "execution_gate": "Not a default sweep; requires a falsifiable memory-placement hypothesis and separate review"
+      },
+      {
+        "id": "context-2048-f16",
+        "purpose": "First bounded context step after a successful 1024 f16 configuration",
+        "device": "configuration selected by prior classified result",
+        "split": "same as selected baseline",
+        "context": 2048,
+        "kv": "f16",
+        "execution_gate": "Only after successful baseline; stop on first surprise"
+      },
+      {
+        "id": "context-2048-q8_0",
+        "purpose": "One justified KV comparison only if f16 capacity is the observed blocker",
+        "device": "same as selected baseline",
+        "split": "same as selected baseline",
+        "context": 2048,
+        "kv": "q8_0",
+        "execution_gate": "Requires a documented f16 capacity hypothesis; no q4_0 or no-kv-offload sweep"
+      }
+    ],
+    "explicit_exclusions": [
+      "No tensor or row split: Vulkan split buffers are unsupported on this testbed.",
+      "No 2,1, 2,3, 3,2, or full-ratio sweep without a later evidence-backed hypothesis.",
+      "No context above 2048 in the first execution increment; 4096/8192 require prior results and a separate bounded review.",
+      "No q4_0 or --no-kv-offload without a distinct observed capacity or latency hypothesis.",
+      "No multi-image, video, URL, base64, or persisted image-content workload."
+    ]
+  },
+  "required_pre_execution_deliverables": [
+    "A separate open implementation issue for a multimodal OCR runner that preserves ADR-003 isolation and validates a non-persisted local image reference before invocation.",
+    "Tests proving image-reference rejection, sanitization, paired binding, distinct OCR terminal receipt classes, and no regression of src/runner.py.",
+    "A reviewed model-specific execution plan and fresh dry-run with exact command family, one configuration/job, target backend, output isolation, and expected receipt fields.",
+    "Explicit owner authorization after the reviewed dry-run for the first bounded image/OCR execution only."
+  ],
+  "failure_classes": [
+    "IMAGE_INPUT_REJECTED",
+    "PROJECTOR_MISMATCH",
+    "UNSUPPORTED_BACKEND",
+    "OOM",
+    "CONTEXT_OVERFLOW",
+    "METRIC_PARSE_FAILED",
+    "OCR_MISSED",
+    "OCR_INCONCLUSIVE",
+    "SUCCESS"
+  ],
+  "receipt_policy": {
+    "may_persist": [
+      "paired artifact basenames, sizes, SHA-256, and pairing ID",
+      "bounded image descriptor only",
+      "device/split/context/KV configuration",
+      "command family",
+      "terminal class and sanitized aggregate metrics"
+    ],
+    "must_not_persist": [
+      "image bytes, original filename, path, URL, or base64",
+      "prompt, OCR text, generated response, stdout, stderr, command arguments, or exception payload",
+      "credentials, private host identifiers, or absolute paths"
+    ]
+  },
+  "stop_conditions": [
+    "artifact identity, checksum, or pairing mismatch",
+    "unsafe or ambiguous image reference/descriptor",
+    "missing separate runner/receipt contract or failing tests",
+    "dry-run scope, count, command family, or output-isolation mismatch",
+    "first unexpected load, backend, memory, tokenizer, image-validation, or artifact-write outcome",
+    "missing explicit owner authorization before image/OCR execution"
+  ],
+  "non_claims": [
+    "This plan is not approval to acquire or process an image.",
+    "This plan is not approval to run model loading, OCR inference, benchmark execution, or deployment.",
+    "This plan does not establish Qwen2-VL Vulkan compatibility, projector placement, per-device fit, OCR quality, speed, capacity, or publication eligibility."
+  ]
+}
