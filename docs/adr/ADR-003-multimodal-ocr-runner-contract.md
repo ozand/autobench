@@ -24,9 +24,9 @@ silently alter or weaken the verified text benchmark contract.
 
 Official llama.cpp documentation reports multimodal model/projector/image input
 support. This is reported upstream compatibility evidence only; it does not
-prove target-host support. Issue #116 is intentionally decision-only: it must
-draft this record but must not acquire artifacts, implement code, execute image
-workloads, or accept the decision.
+prove target-host support. Issue #116 was the decision phase that established
+this contract before implementation. Its acceptance did not acquire artifacts,
+implement code, execute image workloads, or waive any later execution gates.
 
 ## Decision
 
@@ -129,23 +129,24 @@ It remains a separate future conversion/runtime question.
 
 ## Owner Approval Gate
 
-This ADR remains **Proposed**. The owner must explicitly approve and accept
-ADR-003 before any follow-on implementation Issue, artifact acquisition,
-model/projector download, OCR/image inference, deployment, benchmark workload,
-or publication begins. Acceptance is a separate decision from approving this
-draft.
+The owner explicitly approved and accepted ADR-003 on 2026-09-12 in Issue #116.
+That acceptance authorizes a separate implementation issue under this contract;
+it does not authorize artifact acquisition, model/projector download, OCR/image
+inference, deployment, benchmark workload, or publication. Those actions remain
+subject to the exact-artifact, receipt, dry-run, pre-inference, and evidence
+gates in this ADR and the project protocol. Future changes to this contract
+require a superseding ADR.
 
 ## Rollback
 
-Before acceptance, revert this document and its index entry. After acceptance,
-reversal requires a follow-on ADR that supersedes ADR-003; it must not silently
-merge multimodal behavior into the text runner. No benchmark data is changed by
-this proposal.
+ADR-003 is accepted. Reversal or contract changes require a follow-on ADR that
+supersedes ADR-003; multimodal behavior must not be silently merged into the
+text runner. No benchmark data is changed by this accepted contract.
 
 ## References
 
 - Issue #114: OCR Stage 1 feasibility and candidate selection
-- Issue #116: multimodal runner contract and Proposed ADR draft
+- Issue #116: multimodal runner contract decision phase and ADR acceptance
 - `kb/raw/ocr-stage1-feasibility.md`
 - `kb/wiki/KB-OCR-STAGE1-FEASIBILITY.md`
 - `docs/model-testing-protocol.md`
@@ -155,12 +156,10 @@ this proposal.
 ## Addendum (2026-09-12)
 
 The owner explicitly accepted ADR-003 in Issue #116 on 2026-09-12; the
-lifecycle update was merged in PR #118. This addendum supersedes only the
-historical lifecycle wording in the Context, `## Owner Approval Gate`,
-`## Rollback`, and the Issue #116 reference label below: the statements that
-this record “remains Proposed,” requires future acceptance, or describes
-pre-acceptance rollback are no longer operative. The canonical status is
-`Accepted`.
+lifecycle update was merged in PR #118. This addendum records the owner acceptance and lifecycle update. The Context,
+Owner Approval Gate, Rollback, and Issue #116 reference have been normalized to
+that accepted status without changing the Decision, Alternatives, Consequences,
+or Test Contract.
 
 Acceptance authorizes a separate implementation issue under this contract. It
 does not waive any continuing gates: exact-artifact research and pairing,
