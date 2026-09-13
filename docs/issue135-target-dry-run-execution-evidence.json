@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "issue": 135,
+  "status": "TARGET_PLAN_VALID_ZERO_INFERENCE",
+  "source_plan_commit": "faf0fca8bd50220f09fdb306058420148c5c5c23",
+  "source_execution_receipt": "results/runs/issue135-target-dry-run.json",
+  "source_execution_receipt_sha256": "1401dfbfd5915a78e2c85c51b2804ced6ade591d5c1e5f75096a88f0b30dbabc",
+  "validation_scope": "ARTIFACT_IDENTITY_AND_PLAN",
+  "artifact_pair": {
+    "pairing_id": "qwen2-vl-2b-instruct-q4km-q8proj",
+    "model": {
+      "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
+      "size_bytes": 986046944,
+      "sha256": "5745685d2e607a82a0696c1118e56a2a1ae0901da450fd9cd4f161c6b62867d7"
+    },
+    "projector": {
+      "basename": "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+      "size_bytes": 709883360,
+      "sha256": "a0ad91f00a7a80dcf84d719a61b00ee2e07b71794f4ee2dfa81a254621a8c418"
+    }
+  },
+  "approved_plan": {
+    "command_family": "multimodal_ocr_runner",
+    "binary": "llama-mtmd-cli",
+    "argument_flags": ["-m", "--mmproj", "--image", "-ngl", "-dev", "-c", "-ctk", "-ctv", "-n"],
+    "planned_job_count": 1,
+    "dry_run": true,
+    "configuration": {
+      "device": "Vulkan0",
+      "split_mode": "none",
+      "split_ratio": null,
+      "context_length": 1024,
+      "cache_type_k": "f16",
+      "cache_type_v": "f16",
+      "max_tokens": 32
+    },
+    "image_descriptor": {
+      "format": "png",
+      "width": 28,
+      "height": 28,
+      "byte_class": "small",
+      "validation_status": "VALID"
+    }
+  },
+  "execution_fact": {
+    "location": "approved target artifact environment",
+    "command_family": "multimodal_target_dry_run",
+    "exit_status": "SUCCESS",
+    "inference_invoked": false,
+    "model_or_projector_loaded": false,
+    "image_created_opened_or_processed": false,
+    "llama_or_other_workload_invoked": false,
+    "benchmark_database_report_or_publication_write": false
+  },
+  "classification": {
+    "terminal_class": "TARGET_PLAN_VALID / ZERO_INFERENCE",
+    "model_load_established": false,
+    "target_backend_compatibility_established": false,
+    "memory_fit_established": false,
+    "image_runtime_validation_established": false,
+    "ocr_success": false,
+    "inference_eligible": false,
+    "publication_authorized": false
+  },
+  "next_gate": "Create and review one separate first-inference execution issue bound to this exact pair, first-baseline plan, temporary fixture lifecycle, receipt schema, stop rules, and standing owner authorization before any OCR/image inference.",
+  "sanitization": {
+    "raw_argv_persisted": false,
+    "raw_images_or_references_persisted": false,
+    "raw_prompts_or_responses_persisted": false,
+    "raw_runtime_output_persisted": false,
+    "host_identifiers_or_absolute_paths_persisted": false
+  }
+}
