@@ -56,7 +56,10 @@ def validate_image_descriptor(descriptor: Any) -> dict[str, Any]:
     """Validate metadata only; no image file is opened or decoded."""
     if not isinstance(descriptor, dict):
         raise MultimodalPreflightError("image descriptor must be an object")
-    if any(key.lower() in {"path", "image", "base64", "source_url"} for key in descriptor):
+    if any(
+        not isinstance(key, str) or key.lower() in {"path", "image", "base64", "source_url"}
+        for key in descriptor
+    ):
         raise MultimodalPreflightError("IMAGE_INPUT_REJECTED: unsafe descriptor field")
     required = {"format", "width", "height", "size_bytes"}
     if set(descriptor) != required:
@@ -67,7 +70,7 @@ def validate_image_descriptor(descriptor: Any) -> dict[str, Any]:
     size_bytes = descriptor["size_bytes"]
     if not isinstance(image_format, str) or image_format.lower() not in SUPPORTED_IMAGE_FORMATS:
         raise MultimodalPreflightError("IMAGE_INPUT_REJECTED: unsupported format")
-    if not all(isinstance(value, int) and value > 0 for value in (width, height, size_bytes)):
+    if not all(type(value) is int and value > 0 for value in (width, height, size_bytes)):
         raise MultimodalPreflightError("IMAGE_INPUT_REJECTED: invalid metadata")
     if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
         raise MultimodalPreflightError("IMAGE_INPUT_REJECTED: dimensions exceed contract")
