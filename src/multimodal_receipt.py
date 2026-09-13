@@ -9,6 +9,7 @@ from typing import Any
 MULTIMODAL_RECEIPT_SCHEMA_VERSION = 1
 MULTIMODAL_RECEIPT_TYPE = "MULTIMODAL_OCR_PREFLIGHT"
 MULTIMODAL_INVOCATION_RECEIPT_TYPE = "MULTIMODAL_OCR_INVOCATION_CONTRACT"
+MULTIMODAL_COMMAND_PLAN_RECEIPT_TYPE = "MULTIMODAL_OCR_COMMAND_PLAN"
 MULTIMODAL_EXECUTION_RECEIPT_TYPE = "MULTIMODAL_OCR_EXECUTION"
 SUPPORTED_IMAGE_FORMATS = {"png", "jpg", "jpeg"}
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
@@ -195,6 +196,11 @@ def validate_multimodal_receipt(receipt: Any) -> dict[str, Any]:
             "schema_version", "receipt_type", "model_artifact", "projector_artifact",
             "image_descriptor", "configuration", "command_family", "inference_invoked",
         },
+        MULTIMODAL_COMMAND_PLAN_RECEIPT_TYPE: {
+            "schema_version", "receipt_type", "model_artifact", "projector_artifact",
+            "image_descriptor", "configuration", "command_family", "binary",
+            "argument_flags", "planned_job_count", "dry_run", "inference_invoked",
+        },
         MULTIMODAL_EXECUTION_RECEIPT_TYPE: {
             "schema_version", "receipt_type", "model_artifact", "projector_artifact",
             "image_descriptor", "configuration", "command_family", "terminal_class",
@@ -222,6 +228,20 @@ def validate_multimodal_receipt(receipt: Any) -> dict[str, Any]:
         _validate_configuration(receipt.get("configuration"), errors, required=True)
         if receipt.get("command_family") != "multimodal_ocr_runner":
             errors.append("invalid command_family")
+        if receipt.get("inference_invoked") is not False:
+            errors.append("inference_invoked must be false")
+    elif receipt_type == MULTIMODAL_COMMAND_PLAN_RECEIPT_TYPE:
+        _validate_descriptor(receipt.get("image_descriptor"), errors, rejected=False)
+        _validate_configuration(receipt.get("configuration"), errors, required=True)
+        if receipt.get("command_family") != "multimodal_ocr_runner":
+            errors.append("invalid command_family")
+        if receipt.get("binary") != "llama-mtmd-cli":
+            errors.append("invalid binary")
+        expected_flags = ["-m", "--mmproj", "--image", "-ngl", "-dev", "-c", "-ctk", "-ctv", "-n"]
+        if receipt.get("argument_flags") != expected_flags:
+            errors.append("invalid argument_flags")
+        if type(receipt.get("planned_job_count")) is not int or receipt.get("planned_job_count") != 1 or receipt.get("dry_run") is not True:
+            errors.append("invalid dry-run job count")
         if receipt.get("inference_invoked") is not False:
             errors.append("inference_invoked must be false")
     elif receipt_type == MULTIMODAL_EXECUTION_RECEIPT_TYPE:
