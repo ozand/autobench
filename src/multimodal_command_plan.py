@@ -7,6 +7,7 @@ model-loading, image, network, or remote execution primitive.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Mapping
 
 from src.multimodal_receipt import (
@@ -20,6 +21,13 @@ COMMAND_BINARY = "llama-mtmd-cli"
 COMMAND_FAMILY = "multimodal_ocr_runner"
 EXPECTED_FLAGS = ("-m", "--mmproj", "--image", "-ngl", "-dev", "-c", "-ctk", "-ctv", "-n")
 APPROVED_PAIRING_ID = "qwen2-vl-2b-instruct-q4km-q8proj"
+APPROVED_IMAGE_DESCRIPTOR = {
+    "format": "png",
+    "width": 28,
+    "height": 28,
+    "byte_class": "small",
+    "validation_status": "VALID",
+}
 APPROVED_ARTIFACTS = {
     "model_artifact": {
         "basename": "Qwen2-VL-2B-Instruct-Q4_K_M.gguf",
@@ -68,6 +76,32 @@ def _validate_first_baseline(prepared: PreparedMultimodalInvocation) -> None:
         raise MultimodalCommandPlanError("command plan generation cap is outside first baseline")
 
 
+def validate_first_baseline_command_plan(plan: Any) -> dict[str, Any]:
+    """Fail closed unless a serialized plan is the one approved first baseline."""
+    validation = validate_multimodal_receipt(plan)
+    if (
+        validation["status"] != "MULTIMODAL_RECEIPT_VALID"
+        or not isinstance(plan, Mapping)
+        or plan.get("receipt_type") != MULTIMODAL_COMMAND_PLAN_RECEIPT_TYPE
+    ):
+        raise MultimodalCommandPlanError("command plan receipt is invalid")
+    if (
+        plan.get("model_artifact") != APPROVED_ARTIFACTS["model_artifact"]
+        or plan.get("projector_artifact") != APPROVED_ARTIFACTS["projector_artifact"]
+        or plan.get("image_descriptor") != APPROVED_IMAGE_DESCRIPTOR
+    ):
+        raise MultimodalCommandPlanError("command plan binding is not approved")
+    prepared = PreparedMultimodalInvocation(
+        image_reference=Path("C:/non-persisted-image-reference.png"),
+        model_artifact=plan["model_artifact"],
+        projector_artifact=plan["projector_artifact"],
+        image_descriptor=plan["image_descriptor"],
+        configuration=plan["configuration"],
+    )
+    _validate_first_baseline(prepared)
+    return validation["receipt"]
+
+
 def _plan_receipt(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
     return {
         "schema_version": 1,
@@ -88,11 +122,14 @@ def _plan_receipt(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
 def build_first_baseline_command_plan(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
     """Return one sanitized command-plan receipt without exposing raw argv values."""
     _validate_first_baseline(prepared)
+    if prepared.image_descriptor != APPROVED_IMAGE_DESCRIPTOR:
+        raise MultimodalCommandPlanError("command plan image descriptor is not approved")
     receipt = _plan_receipt(prepared)
-    validation = validate_multimodal_receipt(receipt)
-    if validation["status"] != "MULTIMODAL_RECEIPT_VALID":
-        raise MultimodalCommandPlanError("generated command plan failed validation")
-    return sanitize_multimodal_receipt(receipt)
+    try:
+        validated = validate_first_baseline_command_plan(receipt)
+    except MultimodalCommandPlanError as exc:
+        raise MultimodalCommandPlanError("generated command plan failed validation") from exc
+    return sanitize_multimodal_receipt(validated)
 
 
 def render_first_baseline_dry_run(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
