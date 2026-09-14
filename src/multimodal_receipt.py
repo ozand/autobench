@@ -12,6 +12,7 @@ MULTIMODAL_INVOCATION_RECEIPT_TYPE = "MULTIMODAL_OCR_INVOCATION_CONTRACT"
 MULTIMODAL_COMMAND_PLAN_RECEIPT_TYPE = "MULTIMODAL_OCR_COMMAND_PLAN"
 MULTIMODAL_TARGET_DRY_RUN_RECEIPT_TYPE = "MULTIMODAL_OCR_TARGET_DRY_RUN"
 MULTIMODAL_EXECUTION_RECEIPT_TYPE = "MULTIMODAL_OCR_EXECUTION"
+MULTIMODAL_SMOKE_SIMULATION_RECEIPT_TYPE = "MULTIMODAL_OCR_SMOKE_SIMULATION"
 SUPPORTED_IMAGE_FORMATS = {"png", "jpg", "jpeg"}
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 2048
@@ -208,6 +209,11 @@ def validate_multimodal_receipt(receipt: Any) -> dict[str, Any]:
             "argument_flags", "planned_job_count", "dry_run", "inference_invoked",
             "validation_scope",
         },
+        MULTIMODAL_SMOKE_SIMULATION_RECEIPT_TYPE: {
+            "schema_version", "receipt_type", "model_artifact", "projector_artifact",
+            "image_descriptor", "configuration", "command_family", "terminal_class",
+            "task_id", "task_version", "output_classification", "simulated", "inference_invoked",
+        },
         MULTIMODAL_EXECUTION_RECEIPT_TYPE: {
             "schema_version", "receipt_type", "model_artifact", "projector_artifact",
             "image_descriptor", "configuration", "command_family", "terminal_class",
@@ -267,6 +273,31 @@ def validate_multimodal_receipt(receipt: Any) -> dict[str, Any]:
             errors.append("inference_invoked must be false")
         if receipt.get("validation_scope") != "ARTIFACT_IDENTITY_AND_PLAN":
             errors.append("invalid validation_scope")
+    elif receipt_type == MULTIMODAL_SMOKE_SIMULATION_RECEIPT_TYPE:
+        terminal_class = receipt.get("terminal_class")
+        classifications = {
+            "SUCCESS": "OCR_SMOKE_OUTPUT_OBSERVED",
+            "OCR_INCONCLUSIVE": "OCR_SMOKE_NO_OUTPUT",
+            "METRIC_PARSE_FAILED": {"MALFORMED_STREAM", "OUTPUT_OVERSIZE"},
+            "OOM": "RUNTIME_OOM",
+            "CONTEXT_OVERFLOW": "RUNTIME_CONTEXT",
+            "UNSUPPORTED_BACKEND": "RUNTIME_BACKEND",
+            "EXECUTION_ERROR": "RUNTIME_NONZERO",
+        }
+        expected_classification = classifications.get(terminal_class)
+        if (
+            (isinstance(expected_classification, set) and receipt.get("output_classification") not in expected_classification)
+            or (not isinstance(expected_classification, set) and expected_classification != receipt.get("output_classification"))
+        ):
+            errors.append("invalid smoke terminal/output classification")
+        _validate_descriptor(receipt.get("image_descriptor"), errors, rejected=False)
+        _validate_configuration(receipt.get("configuration"), errors, required=True)
+        if receipt.get("command_family") != "multimodal_ocr_runner":
+            errors.append("invalid command_family")
+        if receipt.get("task_id") != "ocr_smoke_v1" or type(receipt.get("task_version")) is not int or receipt.get("task_version") != 1:
+            errors.append("invalid smoke task")
+        if receipt.get("simulated") is not True or receipt.get("inference_invoked") is not False:
+            errors.append("invalid smoke simulation state")
     elif receipt_type == MULTIMODAL_EXECUTION_RECEIPT_TYPE:
         terminal_class = receipt.get("terminal_class")
         is_pre_invocation_class = (
