@@ -116,7 +116,7 @@ def build_private_smoke_argv(
         "--image", str(temporary_image_path), "-f", str(prompt_path), "-ngl", "99",
         "-dev", config["device"], "-c", str(config["context_length"]),
         "-ctk", config["cache_type_k"], "-ctv", config["cache_type_v"],
-        "-n", str(config["max_tokens"]), "-st", "-no-cnv", "--no-display-prompt", "--simple-io",
+        "-n", str(config["max_tokens"]), "-no-cnv", "--no-display-prompt", "--simple-io",
     ]
 
 

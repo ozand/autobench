@@ -41,6 +41,7 @@ def test_private_argv_is_shell_free_and_exact_first_baseline(tmp_path):
     assert argv[argv.index("-dev") + 1] == "Vulkan0"
     assert argv[argv.index("-c") + 1] == "1024"
     assert argv[argv.index("-n") + 1] == "32"
+    assert "-st" not in argv
 
 
 @pytest.mark.parametrize("observation, expected", [
