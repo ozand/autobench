@@ -48,6 +48,21 @@ class MultimodalCommandPlanError(ValueError):
     """Raised when a planned OCR command is not the single approved shape."""
 
 
+def _approved_image_descriptor(descriptor: Any) -> bool:
+    """Allow either the historical test fixture or one validated staged-JPEG shape."""
+    if descriptor == APPROVED_IMAGE_DESCRIPTOR:
+        return True
+    return (
+        isinstance(descriptor, Mapping)
+        and set(descriptor) == {"format", "width", "height", "byte_class", "validation_status"}
+        and descriptor.get("format") == "jpg"
+        and type(descriptor.get("width")) is int and 1 <= descriptor["width"] <= 2048
+        and type(descriptor.get("height")) is int and 1 <= descriptor["height"] <= 2048
+        and descriptor.get("byte_class") in {"small", "medium"}
+        and descriptor.get("validation_status") == "VALID"
+    )
+
+
 def _validate_first_baseline(prepared: PreparedMultimodalInvocation) -> None:
     if not isinstance(prepared, PreparedMultimodalInvocation):
         raise MultimodalCommandPlanError("command plan requires a prepared invocation")
@@ -56,6 +71,8 @@ def _validate_first_baseline(prepared: PreparedMultimodalInvocation) -> None:
         or prepared.projector_artifact != APPROVED_ARTIFACTS["projector_artifact"]
     ):
         raise MultimodalCommandPlanError("command plan artifact pair is not approved")
+    if not _approved_image_descriptor(prepared.image_descriptor):
+        raise MultimodalCommandPlanError("command plan image descriptor is not approved")
     config = prepared.configuration
     expected = {
         "device": "Vulkan0",
@@ -88,7 +105,7 @@ def validate_first_baseline_command_plan(plan: Any) -> dict[str, Any]:
     if (
         plan.get("model_artifact") != APPROVED_ARTIFACTS["model_artifact"]
         or plan.get("projector_artifact") != APPROVED_ARTIFACTS["projector_artifact"]
-        or plan.get("image_descriptor") != APPROVED_IMAGE_DESCRIPTOR
+        or not _approved_image_descriptor(plan.get("image_descriptor"))
     ):
         raise MultimodalCommandPlanError("command plan binding is not approved")
     prepared = PreparedMultimodalInvocation(
@@ -122,8 +139,6 @@ def _plan_receipt(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
 def build_first_baseline_command_plan(prepared: PreparedMultimodalInvocation) -> dict[str, Any]:
     """Return one sanitized command-plan receipt without exposing raw argv values."""
     _validate_first_baseline(prepared)
-    if prepared.image_descriptor != APPROVED_IMAGE_DESCRIPTOR:
-        raise MultimodalCommandPlanError("command plan image descriptor is not approved")
     receipt = _plan_receipt(prepared)
     try:
         validated = validate_first_baseline_command_plan(receipt)

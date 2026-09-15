@@ -87,6 +87,8 @@ def run_one_target_smoke(
             binary_path, model_path, projector_path
         )
         with temporary_document_and_prompt(temporary_root, source_image) as (document, prompt):
+            if safe_plan["image_descriptor"] != document.descriptor:
+                raise MultimodalTargetWrapperError("approved plan does not bind staged JPEG descriptor")
             argv = build_target_argv(binary_path, model_path, projector_path, document.path, prompt, safe_plan)
             invocation_attempted = False
             try:

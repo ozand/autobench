@@ -154,14 +154,21 @@ def _load_cli_module():
     return module
 
 
+def _cli_jpeg(tmp_path):
+    image = tmp_path / "document.jpg"
+    image.write_bytes(b"\xff\xd8\xff\xc0\x00\x11\x08\x00\x1c\x00\x1c\x03" + b"\x00" * 10 + b"\xff\xd9")
+    return image
+
+
 def test_cli_delegates_arguments_without_launching_process(monkeypatch, tmp_path, capsys):
     cli = _load_cli_module()
+    image = _cli_jpeg(tmp_path)
     captured = {}
     def fake_launch(**kwargs):
         captured.update(kwargs)
         return {"terminal_class": "INCONCLUSIVE", "inference_invoked": False}
     monkeypatch.setattr(cli, "launch_one_target_smoke", fake_launch)
-    monkeypatch.setattr(sys, "argv", ["run_ocr_target_smoke.py", "--binary", "binary", "--model", "model", "--projector", "projector", "--image", "image", "--temporary-root", str(tmp_path), "--output", str(tmp_path / "receipt.json")])
+    monkeypatch.setattr(sys, "argv", ["run_ocr_target_smoke.py", "--binary", "binary", "--model", "model", "--projector", "projector", "--image", str(image), "--temporary-root", str(tmp_path), "--output", str(tmp_path / "receipt.json")])
     assert cli.main() == 0
     assert captured["binary_path"] == Path("binary")
     assert json.loads(capsys.readouterr().out)["terminal_class"] == "INCONCLUSIVE"
@@ -169,9 +176,10 @@ def test_cli_delegates_arguments_without_launching_process(monkeypatch, tmp_path
 
 def test_cli_maps_wrapper_error_to_sanitized_parser_error(monkeypatch, tmp_path):
     cli = _load_cli_module()
+    image = _cli_jpeg(tmp_path)
     from src.multimodal_target_wrapper import MultimodalTargetWrapperError
     monkeypatch.setattr(cli, "launch_one_target_smoke", lambda **kwargs: (_ for _ in ()).throw(MultimodalTargetWrapperError("bad input")))
-    monkeypatch.setattr(sys, "argv", ["run_ocr_target_smoke.py", "--binary", "binary", "--model", "model", "--projector", "projector", "--image", "image", "--temporary-root", str(tmp_path), "--output", str(tmp_path / "receipt.json")])
+    monkeypatch.setattr(sys, "argv", ["run_ocr_target_smoke.py", "--binary", "binary", "--model", "model", "--projector", "projector", "--image", str(image), "--temporary-root", str(tmp_path), "--output", str(tmp_path / "receipt.json")])
     with pytest.raises(SystemExit) as exit_info:
         cli.main()
     assert exit_info.value.code == 2
