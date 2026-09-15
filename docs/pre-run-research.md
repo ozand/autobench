@@ -7,6 +7,25 @@ provenance; it does not prove local device capability or authorize an unbounded
 workload. A successful checker or later `--dry-run` is necessary evidence, not
 permission to bypass review or launch inference.
 
+## Owner-approved non-sensitive smoke fixtures
+
+For an owner-approved **non-sensitive** OCR/image fixture, the research
+requirements still bind the exact model/backend, but fixture handling is simple:
+use ordinary reviewed transport and retain ordinary reproducibility evidence.
+The approved fixture's path, filename, metadata, reviewed command, test logs,
+prompt, OCR output, and content may be retained in the active Issue/PR and
+ordinary test artifacts. Existing strict multimodal receipts remain unchanged;
+do not force ordinary evidence into their schema. Do not create privacy-only
+path hiding or transport/handoff machinery for this fixture class.
+
+Keep one reviewed run, one configuration, one process, one timeout, and
+stop-first classification. This does not permit retries, sweeps, or benchmark
+expansion. Credentials, private keys, tokens, personal/confidential documents,
+and undesignated inputs remain excluded from this fast path. Credentials,
+secrets, private keys, private target/model locations, and unrelated runtime/
+environment data remain excluded. Do not copy fast-path reproducibility evidence
+into `kb/raw/` or `kb/wiki/`.
+
 ## Required sequence
 
 1. Confirm the active GitHub Issue and the exact model/configuration scope.

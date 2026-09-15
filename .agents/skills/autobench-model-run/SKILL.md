@@ -11,6 +11,28 @@ Execute one exact GGUF at a time through the canonical protocol in
 commands, but it must not turn the work into an unreviewed batch, completion
 counter exercise, or blind retry loop.
 
+## Owner-approved non-sensitive smoke fixtures
+
+For an owner-approved **non-sensitive** OCR/image smoke fixture, use the
+simplest reviewed path to a user-testable result. It may be staged with the
+ordinary reviewed transport. The approved fixture's path, filename, metadata,
+command, test logs, prompt, OCR output, and content may be retained in the
+active Issue/PR and ordinary test artifacts. Existing strict multimodal receipts
+remain unchanged; do not force ordinary evidence into their schema.
+
+Do not create privacy-only handoff layers, redacted path indirection, bespoke
+transport adapters, or receipt complexity for this fixture class. The execution
+constraints remain strict: one exact approved configuration, one process, one
+bounded timeout, first terminal classification, and no retry/sweep/second image
+without a new Issue.
+
+This exception never covers credentials, private keys, tokens, personal or
+confidential documents, fixtures not explicitly designated non-sensitive by the
+owner, private target/model locations, or unrelated runtime/environment data.
+For the exact approved fixture, the fast path overrides generic content/path
+redaction. It does not override protection of secrets, sensitive inputs, or
+unrelated operational data.
+
 ## When to use
 
 Use before every new model workload, filtered inventory invocation, context
@@ -177,8 +199,10 @@ Keep these distinct and never collapse them into generic failure or blocked:
 
 - Never run a full inventory as a substitute for per-model review.
 - Never treat a web claim as proof of target-host support.
-- Never persist raw Surf/runtime output, prompts, responses, manifests,
-  credentials, private paths, host identifiers, or unsanitized commands/errors.
+- For sensitive inputs, never persist raw Surf/runtime output, prompts,
+  responses, manifests, credentials, private paths, host identifiers, or
+  unsanitized commands/errors. Owner-approved non-sensitive smoke fixtures use
+  the documented fast path above.
 - Invoke `autobench-pre-run-research` before Stage 1 work and `kb-lookup` after
   any command failure or unexpected behavior.
 

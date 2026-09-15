@@ -12,6 +12,23 @@ measurement plan and Stage 4 evidence-first classification. It is a per-model
 gate, not a one-time project setup. Upstream research establishes safe
 assumptions; it does not prove local capability or authorize inference.
 
+## Owner-approved non-sensitive smoke fixtures
+
+The research gate remains required for the exact model and backend, but an
+owner-approved **non-sensitive** OCR/image smoke fixture may use ordinary
+reviewed staging and ordinary active-Issue/PR reproducibility evidence. The
+approved fixture's path, filename, metadata, reviewed command, test logs,
+prompt, OCR output, and content may be recorded in the Issue/PR or ordinary
+test artifacts. Existing strict multimodal receipts remain unchanged.
+
+Do not add privacy-only handoff mechanisms or extra staging abstractions for
+this fixture class. Retain the one-run, no-retry/no-sweep guard. Credentials,
+private keys, tokens, personal/confidential documents, and undesignated inputs
+remain sensitive and must not follow this fast path. Never put secrets,
+credentials, private keys, tokens, private target/model locations, or unrelated
+runtime/environment data in fast-path evidence. Do not copy fast-path
+reproducibility evidence into `kb/raw/` or `kb/wiki/`.
+
 ## When to use
 
 Use immediately before every new GGUF model workload, inventory-selected run,
