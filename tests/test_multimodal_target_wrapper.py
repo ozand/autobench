@@ -70,6 +70,18 @@ def test_wrapper_rejects_bad_baseline_before_identity_or_runner(tmp_path):
     identity.assert_not_called()
 
 
+def test_wrapper_forwards_one_observation_or_timeout_unavailable(tmp_path):
+    source, observations = _source(tmp_path), []
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=_identity()):
+        receipt = run_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", source_image=source, plan=_plan(_jpeg_descriptor()), temporary_root=tmp_path, process_runner=lambda *_: ProcessObservation(7, b"out", b"err"), diagnostic_observer=observations.append)
+    assert receipt["terminal_class"] == "EXECUTION_ERROR"
+    assert observations == [ProcessObservation(7, b"out", b"err")]
+    observations.clear()
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=_identity()):
+        receipt = run_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", source_image=source, plan=_plan(_jpeg_descriptor()), temporary_root=tmp_path, process_runner=lambda *_: (_ for _ in ()).throw(TimeoutError()), diagnostic_observer=observations.append)
+    assert receipt["terminal_class"] == "INCONCLUSIVE" and observations == [None]
+
+
 def test_wrapper_timeout_and_descriptor_mismatch_do_not_expand_execution(tmp_path):
     source, called = _source(tmp_path), []
     def timeout_runner(*args):

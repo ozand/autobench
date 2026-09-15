@@ -33,6 +33,7 @@ class MultimodalTargetWrapperError(ValueError):
 
 
 ProcessRunner = Callable[[Sequence[str], int], ProcessObservation]
+DiagnosticObserver = Callable[[ProcessObservation | None], None]
 
 
 def _receipt(
@@ -76,6 +77,7 @@ def run_one_target_smoke(
     plan: Mapping[str, Any],
     temporary_root: Path,
     process_runner: ProcessRunner,
+    diagnostic_observer: DiagnosticObserver | None = None,
 ) -> dict[str, Any]:
     """Prepare and invoke exactly one injected shell-free process, then stop."""
     if not callable(process_runner):
@@ -95,17 +97,23 @@ def run_one_target_smoke(
                 invocation_attempted = True
                 observation = process_runner(argv, TIMEOUT_SECONDS)
             except TimeoutError:
+                if diagnostic_observer is not None:
+                    diagnostic_observer(None)
                 return _receipt(
                     plan=safe_plan, model_artifact=model_artifact, projector_artifact=projector_artifact,
                     document=document, terminal_class="INCONCLUSIVE", output_classification="RUNTIME_TIMEOUT",
                     invocation_attempted=invocation_attempted, inference_invoked=False,
                 )
             except Exception:
+                if diagnostic_observer is not None:
+                    diagnostic_observer(None)
                 return _receipt(
                     plan=safe_plan, model_artifact=model_artifact, projector_artifact=projector_artifact,
                     document=document, terminal_class="EXECUTION_ERROR", output_classification="RUNTIME_DRIVER_ERROR",
                     invocation_attempted=invocation_attempted, inference_invoked=False,
                 )
+            if diagnostic_observer is not None:
+                diagnostic_observer(observation)
             terminal_class, output_classification = classify_mock_observation(observation)
             return _receipt(
                 plan=safe_plan, model_artifact=model_artifact, projector_artifact=projector_artifact,

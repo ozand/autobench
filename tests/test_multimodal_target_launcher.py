@@ -8,21 +8,25 @@ from unittest.mock import patch
 import pytest
 
 from src.multimodal_command_plan import APPROVED_ARTIFACTS, APPROVED_IMAGE_DESCRIPTOR, build_first_baseline_command_plan
+from src.multimodal_execution_driver import ProcessObservation
 from src.multimodal_runner import PreparedMultimodalInvocation
 from src.multimodal_target_launcher import (
+    DIAGNOSTIC_ARTIFACT_TYPE,
     MultimodalTargetLauncherError,
+    _diagnostic_payload,
+    _write_new_json,
     launch_one_target_smoke,
     one_shot_process_runner,
     write_sanitized_receipt,
 )
 
 
-def _plan() -> dict:
+def _plan(image_descriptor: dict | None = None) -> dict:
     return build_first_baseline_command_plan(PreparedMultimodalInvocation(
         image_reference=Path("C:/placeholder.png"),
         model_artifact=dict(APPROVED_ARTIFACTS["model_artifact"]),
         projector_artifact=dict(APPROVED_ARTIFACTS["projector_artifact"]),
-        image_descriptor=dict(APPROVED_IMAGE_DESCRIPTOR),
+        image_descriptor=dict(image_descriptor or APPROVED_IMAGE_DESCRIPTOR),
         configuration={"device": "Vulkan0", "split_mode": "none", "split_ratio": None, "context_length": 1024, "cache_type_k": "f16", "cache_type_v": "f16", "max_tokens": 32},
     ))
 
@@ -92,6 +96,47 @@ def _strict_receipt() -> dict:
     }
 
 
+def test_diagnostic_payload_is_bounded_observation_or_unavailable():
+    assert _diagnostic_payload(None) == {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "observation": "UNAVAILABLE"}
+    payload = _diagnostic_payload(ProcessObservation(7, b"stdout", b"stderr"))
+    assert payload == {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "returncode": 7, "stdout": "stdout", "stderr": "stderr", "stdout_truncated": False, "stderr_truncated": False}
+    capped = _diagnostic_payload(ProcessObservation(7, b"x" * 9000, b"y" * 9000))
+    assert len(capped["stdout"]) == len(capped["stderr"]) == 8192
+    assert capped["stdout_truncated"] is capped["stderr_truncated"] is True
+
+
+def test_diagnostic_writer_is_new_only_and_cleans_failed_temporary(tmp_path, monkeypatch):
+    output = tmp_path / "diagnostic.json"
+    payload = {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "observation": "UNAVAILABLE"}
+    _write_new_json(output, payload, (), ".autobench-diagnostic-")
+    assert json.loads(output.read_text()) == payload
+    with pytest.raises(MultimodalTargetLauncherError):
+        _write_new_json(output, payload, (), ".autobench-diagnostic-")
+    failed = tmp_path / "failed.json"
+    monkeypatch.setattr("src.multimodal_target_launcher.os.link", lambda *args: (_ for _ in ()).throw(OSError("write failed")))
+    with pytest.raises(MultimodalTargetLauncherError, match="write failed"):
+        _write_new_json(failed, payload, (), ".autobench-diagnostic-")
+    assert not failed.exists() and not list(tmp_path.glob(".autobench-diagnostic-*"))
+
+
+def test_diagnostic_writer_sanitizes_temporary_creation_failure(tmp_path, monkeypatch):
+    payload = {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "observation": "UNAVAILABLE"}
+    monkeypatch.setattr("src.multimodal_target_launcher.tempfile.mkstemp", lambda **kwargs: (_ for _ in ()).throw(OSError("creation failed")))
+    with pytest.raises(MultimodalTargetLauncherError, match="diagnostic output write failed"):
+        _write_new_json(tmp_path / "diagnostic.json", payload, (), ".autobench-diagnostic-")
+
+
+def test_diagnostic_writer_sanitizes_cleanup_failure(tmp_path, monkeypatch):
+    output = tmp_path / "diagnostic.json"
+    payload = {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "observation": "UNAVAILABLE"}
+    original_unlink = Path.unlink
+    monkeypatch.setattr("src.multimodal_target_launcher.os.link", lambda *args: (_ for _ in ()).throw(OSError("publication failed")))
+    monkeypatch.setattr(Path, "unlink", lambda self, *args, **kwargs: (_ for _ in ()).throw(OSError("cleanup failed")) if self.name.startswith(".autobench-diagnostic-") else original_unlink(self, *args, **kwargs))
+    with pytest.raises(MultimodalTargetLauncherError, match="diagnostic output write failed"):
+        _write_new_json(output, payload, (), ".autobench-diagnostic-")
+    assert not output.exists()
+
+
 def test_safe_writer_validates_receipt_and_refuses_collision_or_existing_output(tmp_path):
     receipt = _strict_receipt()
     output = tmp_path / "receipt.json"
@@ -131,6 +176,105 @@ def test_launch_integrates_wrapper_with_actual_strict_receipt_persistence(tmp_pa
         )
     wrapper.assert_called_once()
     assert result["terminal_class"] == json.loads(output.read_text())["terminal_class"] == "SUCCESS"
+
+
+def test_real_wrapper_and_runner_write_nonzero_diagnostic(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    image = _cli_jpeg(tmp_path)
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    process = FakeProcess(out=b"runtime-out", err=b"runtime-err", code=7)
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=(dict(APPROVED_ARTIFACTS["model_artifact"]), dict(APPROVED_ARTIFACTS["projector_artifact"]))):
+        receipt = launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=image, plan=_plan({"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID"}), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic, popen_factory=lambda *args, **kwargs: process)
+    assert receipt["terminal_class"] == "EXECUTION_ERROR"
+    assert receipt["output_classification"] == "RUNTIME_NONZERO"
+    payload = json.loads(diagnostic.read_text())
+    assert payload == {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "returncode": 7, "stdout": "runtime-out", "stderr": "runtime-err", "stdout_truncated": False, "stderr_truncated": False}
+    assert process.stdout.closed and process.stderr.closed
+
+
+def test_real_wrapper_and_runner_write_overflow_diagnostic(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    image = _cli_jpeg(tmp_path)
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    process = FakeProcess(out=b"x" * 9000, code=7)
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=(dict(APPROVED_ARTIFACTS["model_artifact"]), dict(APPROVED_ARTIFACTS["projector_artifact"]))):
+        receipt = launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=image, plan=_plan({"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID"}), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic, popen_factory=lambda *args, **kwargs: process)
+    payload = json.loads(diagnostic.read_text())
+    assert receipt["output_classification"] == "OUTPUT_OVERSIZE"
+    assert payload["returncode"] == 7 and payload["stdout_truncated"] is True and len(payload["stdout"]) == 8192
+    assert process.killed is True
+
+
+def test_real_wrapper_and_runner_timeout_writes_unavailable_diagnostic(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    image = _cli_jpeg(tmp_path)
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    process = FakeProcess(timeout=True)
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=(dict(APPROVED_ARTIFACTS["model_artifact"]), dict(APPROVED_ARTIFACTS["projector_artifact"]))), patch("src.multimodal_target_launcher.time.monotonic", side_effect=(0, 121)):
+        receipt = launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=image, plan=_plan({"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID"}), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic, popen_factory=lambda *args, **kwargs: process)
+    assert receipt["output_classification"] == "RUNTIME_TIMEOUT"
+    assert json.loads(diagnostic.read_text())["observation"] == "UNAVAILABLE"
+    assert process.killed is True
+
+
+def test_diagnostic_writer_failure_propagates_after_strict_receipt(tmp_path, monkeypatch):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    image = _cli_jpeg(tmp_path)
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    process = FakeProcess(code=7)
+    monkeypatch.setattr("src.multimodal_target_launcher._write_new_json", lambda *args: (_ for _ in ()).throw(MultimodalTargetLauncherError("diagnostic output write failed")))
+    with patch("src.multimodal_target_wrapper.validate_target_identity", return_value=(dict(APPROVED_ARTIFACTS["model_artifact"]), dict(APPROVED_ARTIFACTS["projector_artifact"]))):
+        with pytest.raises(MultimodalTargetLauncherError, match="diagnostic output write failed"):
+            launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=image, plan=_plan({"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID"}), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic, popen_factory=lambda *args, **kwargs: process)
+    assert output.exists() and not diagnostic.exists()
+
+
+def test_launch_rejects_diagnostic_output_under_transient_root_before_wrapper(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    with patch("src.multimodal_target_launcher.run_one_target_smoke") as wrapper:
+        with pytest.raises(MultimodalTargetLauncherError, match="diagnostic output must be outside the temporary root"):
+            launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "model.gguf", projector_path=tmp_path / "projector.gguf", target_image_path=tmp_path / "document.jpg", plan=_plan(), temporary_root=temporary_root, output=tmp_path / "receipt.json", diagnostic_output=temporary_root / "diagnostic.json")
+    wrapper.assert_not_called()
+
+
+def test_launch_timeout_writes_unavailable_diagnostic(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    def wrapper(**kwargs):
+        kwargs["diagnostic_observer"](None)
+        receipt = _strict_receipt(); receipt.update({"terminal_class": "INCONCLUSIVE", "output_classification": "RUNTIME_TIMEOUT", "inference_invoked": False})
+        return receipt
+    with patch("src.multimodal_target_launcher.run_one_target_smoke", side_effect=wrapper):
+        launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=tmp_path / "document.jpg", plan=_plan(), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic)
+    assert json.loads(diagnostic.read_text())["observation"] == "UNAVAILABLE"
+
+
+def test_launch_writes_bounded_overflow_diagnostic(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    def wrapper(**kwargs):
+        kwargs["diagnostic_observer"](ProcessObservation(7, b"x" * 9000, b""))
+        receipt = _strict_receipt(); receipt.update({"terminal_class": "METRIC_PARSE_FAILED", "output_classification": "OUTPUT_OVERSIZE", "inference_invoked": False})
+        return receipt
+    with patch("src.multimodal_target_launcher.run_one_target_smoke", side_effect=wrapper):
+        launch_one_target_smoke(binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf", target_image_path=tmp_path / "document.jpg", plan=_plan(), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic)
+    payload = json.loads(diagnostic.read_text())
+    assert payload["stdout_truncated"] is True and len(payload["stdout"]) == 8192
+
+
+def test_launch_writes_one_diagnostic_bound_to_wrapper_observation(tmp_path):
+    temporary_root = tmp_path / "temporary"; temporary_root.mkdir()
+    output, diagnostic = tmp_path / "receipt.json", tmp_path / "diagnostic.json"
+    def wrapper(**kwargs):
+        kwargs["diagnostic_observer"](ProcessObservation(7, b"bounded-out", b"bounded-err"))
+        return _strict_receipt()
+    with patch("src.multimodal_target_launcher.run_one_target_smoke", side_effect=wrapper):
+        launch_one_target_smoke(
+            binary_path=tmp_path / "llama-mtmd-cli", model_path=tmp_path / "Qwen2-VL-2B-Instruct-Q4_K_M.gguf", projector_path=tmp_path / "mmproj-Qwen2-VL-2B-Instruct-Q8_0.gguf",
+            target_image_path=tmp_path / "document.jpg", plan=_plan(), temporary_root=temporary_root, output=output, diagnostic_output=diagnostic,
+        )
+    assert json.loads(diagnostic.read_text())["returncode"] == 7
+    assert json.loads(diagnostic.read_text())["stderr"] == "bounded-err"
 
 
 def test_launch_integrates_one_mock_wrapper_call_and_one_safe_receipt(tmp_path):

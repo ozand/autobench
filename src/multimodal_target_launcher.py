@@ -21,6 +21,7 @@ from src.multimodal_receipt import sanitize_multimodal_receipt, validate_multimo
 from src.multimodal_target_wrapper import run_one_target_smoke
 
 TIMEOUT_SECONDS = 120
+DIAGNOSTIC_ARTIFACT_TYPE = "MULTIMODAL_OCR_NON_SENSITIVE_DIAGNOSTIC"
 
 
 class MultimodalTargetLauncherError(ValueError):
@@ -141,6 +142,44 @@ def _safe_output_parent(parent: Path) -> Path:
     return resolved
 
 
+def _write_new_json(output: Path, payload: dict, protected: tuple[Path, ...], prefix: str) -> None:
+    path = Path(output)
+    parent = _safe_output_parent(path.parent)
+    resolved = parent / path.name
+    if path.exists() or path.is_symlink() or any(resolved == item.resolve(strict=False) for item in protected):
+        raise MultimodalTargetLauncherError("diagnostic output is unsafe")
+    try:
+        descriptor, temporary_name = tempfile.mkstemp(prefix=prefix, dir=parent)
+    except OSError as exc:
+        raise MultimodalTargetLauncherError("diagnostic output write failed") from exc
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            descriptor = -1
+            handle.write(json.dumps(payload, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(temporary, resolved)
+    except FileExistsError as exc:
+        raise MultimodalTargetLauncherError("diagnostic output is unsafe") from exc
+    except OSError as exc:
+        raise MultimodalTargetLauncherError("diagnostic output write failed") from exc
+    finally:
+        cleanup_failed = False
+        if descriptor != -1:
+            try:
+                os.close(descriptor)
+            except OSError:
+                cleanup_failed = True
+        if temporary.exists() and not temporary.is_symlink():
+            try:
+                temporary.unlink()
+            except OSError:
+                cleanup_failed = True
+    if cleanup_failed:
+        raise MultimodalTargetLauncherError("diagnostic temporary cleanup failed")
+
+
 def write_sanitized_receipt(output: Path, receipt: dict, protected: tuple[Path, ...]) -> None:
     """Atomically create exactly one validated receipt; never overwrite or follow links."""
     validation = validate_multimodal_receipt(receipt)
@@ -180,18 +219,46 @@ def write_sanitized_receipt(output: Path, receipt: dict, protected: tuple[Path, 
             pass
 
 
+def _diagnostic_payload(observation: ProcessObservation | None) -> dict:
+    """Serialize no more than the runner's bounded bytes from each stream."""
+    if observation is None:
+        return {"artifact_type": DIAGNOSTIC_ARTIFACT_TYPE, "observation": "UNAVAILABLE"}
+    stdout = observation.stdout[:OUTPUT_LIMIT_BYTES]
+    stderr = observation.stderr[:OUTPUT_LIMIT_BYTES]
+    return {
+        "artifact_type": DIAGNOSTIC_ARTIFACT_TYPE,
+        "returncode": observation.returncode,
+        "stdout": stdout.decode("utf-8", errors="replace"),
+        "stderr": stderr.decode("utf-8", errors="replace"),
+        "stdout_truncated": len(observation.stdout) > OUTPUT_LIMIT_BYTES,
+        "stderr_truncated": len(observation.stderr) > OUTPUT_LIMIT_BYTES,
+    }
+
+
 def launch_one_target_smoke(*, binary_path: Path, model_path: Path, projector_path: Path,
                             target_image_path: Path, plan: dict, temporary_root: Path,
-                            output: Path, popen_factory: PopenFactory = subprocess.Popen) -> dict:
+                            output: Path, diagnostic_output: Path | None = None,
+                            popen_factory: PopenFactory = subprocess.Popen) -> dict:
     """Prepare at most one process, write one sanitized receipt, then return."""
     safe_temporary_root = Path(temporary_root).resolve(strict=True)
     safe_output = Path(output).resolve(strict=False)
     if safe_output == safe_temporary_root or safe_temporary_root in safe_output.parents:
         raise MultimodalTargetLauncherError("receipt output must be outside the temporary root")
+    safe_diagnostic_output = None if diagnostic_output is None else Path(diagnostic_output).resolve(strict=False)
+    if safe_diagnostic_output is not None and (safe_diagnostic_output == safe_temporary_root or safe_temporary_root in safe_diagnostic_output.parents):
+        raise MultimodalTargetLauncherError("diagnostic output must be outside the temporary root")
+    protected = (binary_path, model_path, projector_path, target_image_path)
+    observed: list[ProcessObservation | None] = []
+    def capture(observation: ProcessObservation | None) -> None:
+        observed.append(observation)
     receipt = run_one_target_smoke(
         binary_path=binary_path, model_path=model_path, projector_path=projector_path,
         source_image=target_image_path, plan=plan, temporary_root=temporary_root,
-        process_runner=one_shot_process_runner(popen_factory),
+        process_runner=one_shot_process_runner(popen_factory), diagnostic_observer=capture,
     )
-    write_sanitized_receipt(safe_output, receipt, (binary_path, model_path, projector_path, target_image_path))
+    write_sanitized_receipt(safe_output, receipt, protected)
+    if diagnostic_output is not None:
+        if len(observed) != 1:
+            raise MultimodalTargetLauncherError("diagnostic observation is unavailable")
+        _write_new_json(safe_diagnostic_output, _diagnostic_payload(observed[0]), protected, ".autobench-diagnostic-")
     return receipt
