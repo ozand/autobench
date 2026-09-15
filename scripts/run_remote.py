@@ -18,11 +18,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import re
 import shlex
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.model_route import CANONICAL_LUNA_ROUTE, route_is_valid, validate_model_route
@@ -31,6 +32,10 @@ DEFAULT_HOST = os.environ.get("AUTOBENCH_REMOTE_HOST", "opencode@100.67.171.58")
 DEFAULT_REMOTE_DIR = os.environ.get(
     "AUTOBENCH_REMOTE_DIR", "/home/opencode/code/autobench"
 )
+MAX_STAGED_IMAGE_BYTES = 10 * 1024 * 1024
+_REMOTE_STAGING_ROOT = re.compile(r"/[A-Za-z0-9._/-]+")
+_REMOTE_STAGED_BASENAME = re.compile(r"\.autobench-ocr-[A-Za-z0-9]{6}\.jpg")
+
 SSH_OPTIONS = (
     "-o",
     "BatchMode=yes",
@@ -252,6 +257,99 @@ def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None
     remote_shell(host, normalize_remote_command(arguments, remote_dir))
 
 
+def _validated_staging_source(source: Path) -> Path:
+    """Accept one regular bounded JPEG after header-only shape validation."""
+    candidate = Path(source)
+    if (
+        candidate.suffix.lower() != ".jpg" or candidate.is_symlink()
+        or not candidate.is_file() or candidate.stat().st_size < 1
+        or candidate.stat().st_size > MAX_STAGED_IMAGE_BYTES
+    ):
+        raise WorkflowError("Designated image is not eligible for staging.")
+    try:
+        from src.multimodal_target_harness import _jpeg_descriptor
+        _jpeg_descriptor(candidate)
+    except Exception as exc:
+        raise WorkflowError("Designated image is not an eligible JPEG.") from exc
+    return candidate
+
+
+def _validated_remote_staging_root(root: str, remote_dir: str) -> str:
+    """Reject ambiguous roots and any lexical location inside the checkout."""
+    if not isinstance(root, str) or not _REMOTE_STAGING_ROOT.fullmatch(root):
+        raise WorkflowError("Remote staging root is unsafe.")
+    staging = PurePosixPath(root)
+    checkout = PurePosixPath(remote_dir)
+    if "." in staging.parts or ".." in staging.parts:
+        raise WorkflowError("Remote staging root is unsafe.")
+    if staging == checkout or checkout in staging.parents:
+        raise WorkflowError("Remote staging root must be outside the checkout.")
+    return root
+
+
+def _remote_staging_root_check(root: str, remote_dir: str) -> str:
+    """Return a fail-closed target-side root verification script without output."""
+    quoted_root = shlex.quote(root)
+    quoted_checkout = shlex.quote(remote_dir)
+    return (
+        "set -eu; "
+        f"test -d {quoted_root}; test ! -L {quoted_root}; "
+        f"test \"$(stat -c %a -- {quoted_root})\" = 700; "
+        f"root=$(realpath -e -- {quoted_root}); checkout=$(realpath -e -- {quoted_checkout}); "
+        "test \"$root\" = " + quoted_root + "; "
+        "case \"$root\" in \"$checkout\"|\"$checkout\"/*) exit 1;; esac"
+    )
+
+
+def stage_designated_jpeg(
+    host: str,
+    source: Path,
+    remote_root: str,
+    remote_dir: str,
+    *,
+    remote_runner: Callable[[str, str], str] | None = None,
+    copy_runner: Callable[[Sequence[str]], None] | None = None,
+) -> str:
+    """Stage one image without logging operational paths or image data.
+
+    The target location is private runtime state. This function emits no path,
+    image, transport output, or readiness receipt; its caller records status only.
+    """
+    source = _validated_staging_source(source)
+    remote_root = _validated_remote_staging_root(remote_root, remote_dir)
+    remote_runner = remote_runner or (lambda target, script: remote_shell(target, script, capture_output=True))
+
+    def default_copy(command: Sequence[str]) -> None:
+        result = subprocess.run(list(command), text=True, capture_output=True)
+        if result.returncode:
+            raise WorkflowError("Designated image staging transport failed.")
+
+    copy_runner = copy_runner or default_copy
+    destination: str | None = None
+    try:
+        remote_runner(host, _remote_staging_root_check(remote_root, remote_dir))
+        # mktemp is the target OS's exclusive-create primitive. The protected,
+        # canonical 0700 root makes this returned private name ownership-safe.
+        claimed_destination = remote_runner(host, f"set -eu; umask 077; created=$(mktemp -- {shlex.quote(remote_root)}/.autobench-ocr-XXXXXX.jpg); test -f \"$created\"; test ! -L \"$created\"; printf %s \"$created\"")
+        if not isinstance(claimed_destination, str):
+            raise WorkflowError("Designated image staging failed.")
+        remote_path = PurePosixPath(claimed_destination)
+        if remote_path.parent != PurePosixPath(remote_root) or not _REMOTE_STAGED_BASENAME.fullmatch(remote_path.name):
+            raise WorkflowError("Designated image staging failed.")
+        destination = claimed_destination
+        remote_runner(host, f"set -eu; test \"$(realpath -e -- {shlex.quote(destination)})\" = {shlex.quote(destination)}; test -f {shlex.quote(destination)}; test ! -L {shlex.quote(destination)}")
+        copy_runner(("scp", *SSH_OPTIONS, str(source), f"{host}:{destination}"))
+        remote_runner(host, f"set -eu; test -f {shlex.quote(destination)}; test ! -L {shlex.quote(destination)}; chmod 600 {shlex.quote(destination)}")
+        return destination
+    except Exception as exc:
+        if destination is not None:
+            try:
+                remote_runner(host, f"test -f {shlex.quote(destination)} && test ! -L {shlex.quote(destination)} && rm -f -- {shlex.quote(destination)}")
+            except Exception:
+                pass
+        raise WorkflowError("Designated image staging failed.") from exc
+
+
 def sync_results(host: str, remote_dir: str, repo: Path) -> None:
     """Copy only ignored benchmark artifacts into the local results directory."""
     destination = repo / "results"
@@ -311,6 +409,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--sync-results", action="store_true", help="Copy results back after execution"
     )
+    parser.add_argument("--stage-image", type=Path, default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--stage-root", default=None, help=argparse.SUPPRESS)
     parser.add_argument(
         "--require-model-route",
         action="store_true",
@@ -351,6 +451,12 @@ def parse_arguments() -> argparse.Namespace:
     args = parser.parse_args()
     if args.command and args.command[0] == "--":
         args.command = args.command[1:]
+    if (args.stage_image is None) != (args.stage_root is None):
+        parser.error("--stage-image and --stage-root must be provided together")
+    if args.stage_image is not None and not args.deploy_only:
+        parser.error("image staging requires --deploy-only")
+    if args.stage_image is not None and (args.sync_results or args.command):
+        parser.error("image staging cannot combine with result sync or a remote command")
     return args
 
 
@@ -366,6 +472,8 @@ def main() -> int:
             run_local_tests(repo)
         expected_sha = ensure_local_main_is_current(repo)
         deploy_commit(args.host, args.remote_dir, expected_sha)
+        if args.stage_image is not None:
+            stage_designated_jpeg(args.host, args.stage_image, args.stage_root, args.remote_dir)
 
         if not args.deploy_only:
             execute_remote(args.host, args.remote_dir, args.command)
