@@ -9,7 +9,8 @@ Consequences → Alternatives Considered → Test Contract → Rollback → Refe
 |-----|-------|--------|
 | [ADR-001](./ADR-001-qwen25-coder-timeout-policy.md) | Use a 600-Second Primary Timeout for Qwen2.5 Coder Benchmark Runs | Accepted — Implemented |
 | [ADR-002](./ADR-002-qwen-q8-bounded-runner-contract.md) | Add an Explicit Issue-Scoped Runner for the Qwen Q8 Follow-up | Accepted |
-| [ADR-003](./ADR-003-multimodal-ocr-runner-contract.md) | Isolate Multimodal OCR Runner and Receipt Contracts from Text Benchmarks | Accepted |
+| [ADR-003](./ADR-003-multimodal-ocr-runner-contract.md) | Isolate Multimodal OCR Runner and Receipt Contracts from Text Benchmarks | Superseded by ADR-004 |
+| [ADR-004](./ADR-004-non-sensitive-ocr-smoke-evidence.md) | Use ordinary evidence for owner-approved non-sensitive OCR smoke fixtures | Accepted |
 
 ## How to amend
 
