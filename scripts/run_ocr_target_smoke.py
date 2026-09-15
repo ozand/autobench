@@ -15,18 +15,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.multimodal_command_plan import APPROVED_ARTIFACTS, APPROVED_IMAGE_DESCRIPTOR, build_first_baseline_command_plan
+from src.multimodal_command_plan import APPROVED_ARTIFACTS, build_first_baseline_command_plan
 from src.multimodal_runner import PreparedMultimodalInvocation
+from src.multimodal_target_harness import _jpeg_descriptor
 from src.multimodal_target_launcher import MultimodalTargetLauncherError, launch_one_target_smoke
 from src.multimodal_target_wrapper import MultimodalTargetWrapperError
 
 
-def _plan() -> dict:
+def _plan(image_descriptor: dict) -> dict:
     return build_first_baseline_command_plan(PreparedMultimodalInvocation(
         image_reference=Path("/non-persisted-image-reference.jpg"),
         model_artifact=dict(APPROVED_ARTIFACTS["model_artifact"]),
         projector_artifact=dict(APPROVED_ARTIFACTS["projector_artifact"]),
-        image_descriptor=dict(APPROVED_IMAGE_DESCRIPTOR),
+        image_descriptor=dict(image_descriptor),
         configuration={
             "device": "Vulkan0", "split_mode": "none", "split_ratio": None,
             "context_length": 1024, "cache_type_k": "f16", "cache_type_v": "f16", "max_tokens": 32,
@@ -49,7 +50,7 @@ def main() -> int:
             model_path=args.model,
             projector_path=args.projector,
             target_image_path=args.image,
-            plan=_plan(),
+            plan=_plan(_jpeg_descriptor(args.image)),
             temporary_root=args.temporary_root,
             output=args.output,
         )

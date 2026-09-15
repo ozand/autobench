@@ -103,6 +103,14 @@ def test_command_plan_rejects_non_prepared_wrong_pair_or_unsafe_contract_data():
         build_first_baseline_command_plan(prepared)
 
 
+def test_command_plan_accepts_sanitized_jpeg_descriptor_but_rejects_unsafe_shape():
+    prepared = replace(_prepared(), image_descriptor={"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID"})
+    assert build_first_baseline_command_plan(prepared)["image_descriptor"]["format"] == "jpg"
+    unsafe = replace(prepared, image_descriptor={"format": "jpg", "width": 28, "height": 28, "byte_class": "small", "validation_status": "VALID", "path": "private"})
+    with pytest.raises(MultimodalCommandPlanError):
+        build_first_baseline_command_plan(unsafe)
+
+
 def test_command_plan_receipt_rejects_boolean_job_count():
     receipt = build_first_baseline_command_plan(_prepared())
     receipt["planned_job_count"] = True
