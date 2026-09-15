@@ -20,6 +20,27 @@ its stop conditions are clear. Complete Stage 4 before selecting another model.
 A full or filtered `inventory_bench.py` invocation is an execution mechanism,
 not an alternative workflow and not evidence that these gates were satisfied.
 
+## Owner-approved non-sensitive smoke fixtures
+
+When the owner explicitly labels an OCR/image fixture non-sensitive, use a
+simple, reproducible one-run smoke workflow. The fixture may be transferred and
+referenced through ordinary reviewed paths. The approved fixture's path,
+filename, metadata, reviewed command, test logs, prompt, OCR output, and content
+may be recorded in the active Issue/PR and ordinary test artifacts. Existing
+strict multimodal receipts remain unchanged; do not force ordinary evidence into
+their schema. Do not build privacy-only staging, handoff, logging, or receipt
+mechanisms for this fixture class.
+
+The following guardrails remain mandatory: exact approved model/configuration,
+one process, bounded timeout, first-result classification, no retry, no sweep,
+no second image, and the GitHub Issue/review gate. This exception never applies
+to credentials, secrets, private keys, tokens, personal/confidential documents,
+or undesignated fixtures. Credentials, secrets, tokens, private keys, private
+target/model locations, and unrelated runtime/environment data remain
+prohibited. For the exact approved fixture, the fast path overrides generic
+content/path redaction. It does not override protection of secrets, sensitive
+inputs, or unrelated operational data.
+
 ## Stage 1 — Deep Research with Surf CLI
 
 ### Prerequisite
@@ -165,9 +186,13 @@ evidence, or recorded as `INCONCLUSIVE` with one bounded next action. Do not
 start another model before this condition is met unless the user explicitly
 changes scope.
 
-Never persist or publish raw prompts, responses, stdout/stderr, browser output,
-manifests, credentials, private host details, absolute model paths, or
-unsanitized exception/command text.
+For sensitive workloads, never persist or publish raw prompts, responses,
+stdout/stderr, browser output, manifests, credentials, private host details,
+absolute model paths, or unsanitized exception/command text. Only handling of
+an owner-approved non-sensitive smoke fixture follows the fast path above; all
+credentials, sensitive documents, and unrelated sensitive runtime payloads
+remain subject to the standard restrictions. See ADR-004 for this receipt and
+evidence-contract change.
 
 ## Required agent entry points
 

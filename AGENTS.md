@@ -60,6 +60,34 @@ Before relying on a peer identifier, use `intercom({ action: "list" })` to
 confirm that the session is still connected. Do not copy these coordination
 identifiers into benchmark result artifacts, published reports, or runtime logs.
 
+## Non-sensitive OCR smoke fast path
+
+When the owner explicitly designates a document/image as **non-sensitive** for a
+bounded OCR runtime smoke, optimize for a fast, user-testable result rather than
+for a privacy mechanism that the fixture does not need.
+
+- The fixture may be copied to the reviewed target and referenced through normal
+  local/remote paths.
+- The approved fixture's path, filename, metadata, command, test logs, prompt,
+  OCR output, and content may be retained in the active Issue/PR and ordinary
+  test artifacts. Existing strict multimodal receipts stay unchanged; do not
+  force ordinary evidence into their schema.
+- Use the reviewed one-run launcher and record the observed terminal result. Do
+  not add privacy-only path handoffs, redacted receipts, or extra transport
+  abstractions solely for an owner-approved non-sensitive fixture.
+- Keep the engineering boundary simple: exactly one reviewed configuration, one
+  process, one timeout, one terminal classification, and no retry, sweep, second
+  image, or benchmark expansion unless a new Issue explicitly authorizes it.
+
+This fast path does **not** apply to credentials, private keys, tokens, personal
+or confidential documents, or a fixture the owner has not explicitly designated
+non-sensitive. Secrets, credentials, tokens, private keys, private target/model
+locations, and unrelated runtime or environment data remain prohibited.
+
+For the exact approved fixture, the fast path overrides generic content/path
+redaction. It does not override protection of secrets, sensitive inputs, or
+unrelated operational data.
+
 ## Mandatory per-model protocol
 
 Use both `autobench-model-run` and `autobench-pre-run-research` for every manual
