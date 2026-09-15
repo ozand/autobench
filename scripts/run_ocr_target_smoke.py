@@ -43,6 +43,7 @@ def main() -> int:
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--temporary-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--diagnostic-output", type=Path, default=None)
     args = parser.parse_args()
     try:
         receipt = launch_one_target_smoke(
@@ -53,6 +54,7 @@ def main() -> int:
             plan=_plan(_jpeg_descriptor(args.image)),
             temporary_root=args.temporary_root,
             output=args.output,
+            diagnostic_output=args.diagnostic_output,
         )
     except (MultimodalTargetLauncherError, MultimodalTargetWrapperError) as exc:
         parser.error(str(exc))
