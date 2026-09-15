@@ -187,7 +187,7 @@ def build_target_argv(binary_path: Path, model_path: Path, projector_path: Path,
         "--image", str(image_path), "-f", str(prompt_path), "-ngl", "99",
         "-dev", config["device"], "-c", str(config["context_length"]),
         "-ctk", config["cache_type_k"], "-ctv", config["cache_type_v"],
-        "-n", str(config["max_tokens"]), "-st", "-no-cnv", "--no-display-prompt", "--simple-io",
+        "-n", str(config["max_tokens"]), "-no-cnv", "--no-display-prompt", "--simple-io",
     ]
 
 
