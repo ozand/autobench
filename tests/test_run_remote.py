@@ -18,6 +18,11 @@ from run_remote import (  # noqa: E402
     stage_designated_jpeg,
     run_staged_ocr_smoke,
     _cleanup_staged_jpeg,
+    OCR_RUNTIME_ROOTS,
+    OCR_STAGING_ROOT,
+    OCR_WORK_ROOT,
+    OCR_OUTPUT_ROOT,
+    provision_ocr_runtime_roots,
     ensure_origin_is_expected,
     command_requires_model_route,
     normalize_remote_command,
@@ -96,7 +101,7 @@ def test_staging_rejects_non_jpeg_oversize_or_unsafe_remote_root(tmp_path: Path)
 
 
 def test_remote_root_check_requires_preexisting_canonical_private_root() -> None:
-    script = _remote_staging_root_check("/tmp/staging", "/srv/autobench")
+    script = _remote_staging_root_check(OCR_STAGING_ROOT, "/srv/autobench")
     assert "realpath -e" in script and "stat -c %a" in script and "mkdir" not in script
     assert "test ! -e" not in script
 
@@ -106,15 +111,15 @@ def test_staging_uses_injected_transport_and_cleans_target_after_failure(tmp_pat
     remote_calls, copy_calls = [], []
     def remote(target, script):
         remote_calls.append((target, script))
-        return "/tmp/staging/.autobench-ocr-abc123.jpg" if "mktemp" in script else ""
+        return f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg" if "mktemp" in script else ""
     def fail_copy(command):
         copy_calls.append(command)
         raise OSError("transport")
     with pytest.raises(WorkflowError, match="staging failed"):
-        stage_designated_jpeg("target", image, "/tmp/staging", "/srv/autobench", remote_runner=remote, copy_runner=fail_copy)
+        stage_designated_jpeg("target", image, OCR_STAGING_ROOT, "/srv/autobench", remote_runner=remote, copy_runner=fail_copy)
     assert len(copy_calls) == 1 and len(remote_calls) == 4
     assert "input.jpg" not in str(remote_calls)
-    assert remote_calls[0][1] == _remote_staging_root_check("/tmp/staging", "/srv/autobench")
+    assert remote_calls[0][1] == _remote_staging_root_check(OCR_STAGING_ROOT, "/srv/autobench")
     assert "mktemp" in remote_calls[1][1]
     assert "realpath -e" in remote_calls[2][1]
     assert "rm -f" in remote_calls[-1][1]
@@ -125,9 +130,9 @@ def test_staging_returns_private_created_location_without_printing_or_persisting
     calls = []
     def remote(target, script):
         calls.append(script)
-        return "/tmp/staging/.autobench-ocr-abc123.jpg" if "mktemp" in script else ""
-    location = stage_designated_jpeg("target", image, "/tmp/staging", "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: None)
-    assert location == "/tmp/staging/.autobench-ocr-abc123.jpg"
+        return f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg" if "mktemp" in script else ""
+    location = stage_designated_jpeg("target", image, OCR_STAGING_ROOT, "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: None)
+    assert location == f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg"
     assert "chmod 600" in calls[-1]
 
 
@@ -136,7 +141,7 @@ def test_staging_rejects_malformed_private_destination_before_copy(tmp_path: Pat
     def remote(target, script):
         return "/tmp/staging/.autobench-ocr-x/../../checkout/file" if "mktemp" in script else ""
     with pytest.raises(WorkflowError, match="staging failed"):
-        stage_designated_jpeg("target", image, "/tmp/staging", "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: pytest.fail("copy called"))
+        stage_designated_jpeg("target", image, OCR_STAGING_ROOT, "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: pytest.fail("copy called"))
 
 
 def test_staging_rejects_collision_before_copy_and_does_not_cleanup_unowned_destination(tmp_path: Path) -> None:
@@ -148,27 +153,61 @@ def test_staging_rejects_collision_before_copy_and_does_not_cleanup_unowned_dest
             raise OSError("collision")
         return ""
     with pytest.raises(WorkflowError, match="staging failed"):
-        stage_designated_jpeg("target", image, "/tmp/staging", "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: pytest.fail("copy called"))
+        stage_designated_jpeg("target", image, OCR_STAGING_ROOT, "/srv/autobench", remote_runner=remote, copy_runner=lambda *_: pytest.fail("copy called"))
     assert len(calls) == 2 and all("rm -f" not in call for call in calls)
+
+
+def test_provisioning_creates_only_fixed_private_roots_without_leaking_paths() -> None:
+    calls = []
+    provision_ocr_runtime_roots("target", "/srv/autobench", remote_runner=lambda host, script: calls.append((host, script)))
+    assert len(calls) == 1
+    script = calls[0][1]
+    for root in OCR_RUNTIME_ROOTS:
+        assert f"mkdir -m 700 -- {root}" in script
+        assert f"test ! -L {root}" in script
+    assert "/srv/autobench" in script and "printf" not in script
+
+
+def test_provisioning_refuses_checkout_overlap_before_remote_call(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+    monkeypatch.setattr("run_remote.OCR_RUNTIME_ROOTS", ("/srv/autobench/unsafe",))
+    with pytest.raises(WorkflowError, match="outside the checkout"):
+        provision_ocr_runtime_roots("target", "/srv/autobench", remote_runner=lambda *args: calls.append(args))
+    assert calls == []
+
+
+def _ocr_roots() -> dict:
+    return {"staging_root": OCR_STAGING_ROOT, "temporary_root": OCR_WORK_ROOT, "output_root": OCR_OUTPUT_ROOT}
+
+
+def test_staged_ocr_handoff_requires_fixed_runtime_roots(tmp_path: Path) -> None:
+    image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
+    with pytest.raises(WorkflowError, match="not approved"):
+        run_staged_ocr_smoke(
+            "target", image, "/tmp/not-approved", "/srv/autobench",
+            binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
+            remote_runner=lambda *_: pytest.fail("remote called"),
+        )
 
 
 def test_staged_ocr_handoff_invokes_one_hidden_command_and_cleans(tmp_path: Path) -> None:
     image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
     calls, cleanups = [], []
-    staged = "/tmp/staging/.autobench-ocr-abc123.jpg"
+    staged = f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg"
     run_staged_ocr_smoke(
-        "target", image, "/tmp/staging", "/srv/autobench",
+        "target", image, OCR_STAGING_ROOT, "/srv/autobench",
         binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-        temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+        temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
         stage_runner=lambda *_: staged,
         remote_runner=lambda host, script: calls.append((host, script)),
         cleanup_runner=lambda host, path, root: cleanups.append((host, path, root)),
     )
-    assert len(calls) == 4 and cleanups == [("target", staged, "/tmp/staging")]
+    assert len(calls) == 5 and cleanups == [("target", staged, OCR_STAGING_ROOT)]
     command = calls[-1][1]
-    assert "run_ocr_target_smoke.py" in command and "--image /tmp/staging/.autobench-ocr-abc123.jpg" in command
-    assert "--diagnostic-output /tmp/ocr-output/diagnostic.json" in command
-    assert "--output /tmp/ocr-output/receipt.json" in command
+    assert "run_ocr_target_smoke.py" in command and f"--image {staged}" in command
+    assert f"--diagnostic-output {OCR_OUTPUT_ROOT}/diagnostic.json" in command
+    assert f"--output {OCR_OUTPUT_ROOT}/receipt.json" in command
 
 
 def test_staged_ocr_handoff_rejects_unowned_stage_return_before_launch(tmp_path: Path) -> None:
@@ -176,9 +215,9 @@ def test_staged_ocr_handoff_rejects_unowned_stage_return_before_launch(tmp_path:
     calls = []
     with pytest.raises(WorkflowError, match="handoff is unsafe"):
         run_staged_ocr_smoke(
-            "target", image, "/tmp/staging", "/srv/autobench",
+            "target", image, OCR_STAGING_ROOT, "/srv/autobench",
             binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-            temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
             stage_runner=lambda *_: "/tmp/other/input.jpg", remote_runner=lambda *args: calls.append(args),
         )
     assert not any("run_ocr_target_smoke.py" in call[1] for call in calls)
@@ -189,21 +228,21 @@ def test_staged_ocr_handoff_does_not_launch_after_stage_or_preflight_failure(tmp
     calls = []
     with pytest.raises(WorkflowError, match="stage failed"):
         run_staged_ocr_smoke(
-            "target", image, "/tmp/staging", "/srv/autobench",
+            "target", image, OCR_STAGING_ROOT, "/srv/autobench",
             binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-            temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
             stage_runner=lambda *_: (_ for _ in ()).throw(WorkflowError("stage failed")), remote_runner=lambda *args: calls.append(args),
         )
-    assert len(calls) == 3 and not any("run_ocr_target_smoke.py" in call[1] for call in calls)
+    assert len(calls) == 4 and not any("run_ocr_target_smoke.py" in call[1] for call in calls)
     calls.clear()
     def fail_preflight(host, script):
         calls.append(script)
         raise WorkflowError("output collision")
     with pytest.raises(WorkflowError, match="output collision"):
         run_staged_ocr_smoke(
-            "target", image, "/tmp/staging", "/srv/autobench",
+            "target", image, OCR_STAGING_ROOT, "/srv/autobench",
             binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-            temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
             stage_runner=lambda *_: pytest.fail("stage called"), remote_runner=fail_preflight,
         )
     assert len(calls) == 1 and "run_ocr_target_smoke.py" not in calls[0]
@@ -211,12 +250,12 @@ def test_staged_ocr_handoff_does_not_launch_after_stage_or_preflight_failure(tmp
 
 def test_staged_ocr_handoff_propagates_cleanup_failure(tmp_path: Path) -> None:
     image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
-    staged = "/tmp/staging/.autobench-ocr-abc123.jpg"
+    staged = f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg"
     with pytest.raises(WorkflowError, match="cleanup failed"):
         run_staged_ocr_smoke(
-            "target", image, "/tmp/staging", "/srv/autobench",
+            "target", image, OCR_STAGING_ROOT, "/srv/autobench",
             binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-            temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
             stage_runner=lambda *_: staged, remote_runner=lambda *_: None,
             cleanup_runner=lambda *_: (_ for _ in ()).throw(WorkflowError("cleanup failed")),
         )
@@ -224,66 +263,53 @@ def test_staged_ocr_handoff_propagates_cleanup_failure(tmp_path: Path) -> None:
 
 def test_staged_ocr_handoff_cleans_after_invocation_failure(tmp_path: Path) -> None:
     image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
-    staged, calls, cleanups = "/tmp/staging/.autobench-ocr-abc123.jpg", [], []
+    staged, calls, cleanups = f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg", [], []
     def remote(host, script):
         calls.append(script)
         if "run_ocr_target_smoke.py" in script:
             raise WorkflowError("failed")
     with pytest.raises(WorkflowError, match="failed"):
         run_staged_ocr_smoke(
-            "target", image, "/tmp/staging", "/srv/autobench",
+            "target", image, OCR_STAGING_ROOT, "/srv/autobench",
             binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-            temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+            temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
             stage_runner=lambda *_: staged, remote_runner=remote,
             cleanup_runner=lambda host, path, root: cleanups.append((host, path, root)),
         )
     assert sum("run_ocr_target_smoke.py" in call for call in calls) == 1
-    assert cleanups == [("target", staged, "/tmp/staging")]
+    assert cleanups == [("target", staged, OCR_STAGING_ROOT)]
 
 
 def test_staged_ocr_handoff_requires_exact_cli_shape_and_order(tmp_path: Path) -> None:
     image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
-    events, staged = [], "/tmp/staging/.autobench-ocr-abc123.jpg"
+    events, staged = [], f"{OCR_STAGING_ROOT}/.autobench-ocr-abc123.jpg"
     def remote(host, script):
         events.append(("launch" if "run_ocr_target_smoke.py" in script else "preflight", script))
     run_staged_ocr_smoke(
-        "target", image, "/tmp/staging", "/srv/autobench",
+        "target", image, OCR_STAGING_ROOT, "/srv/autobench",
         binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf",
-        temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-output",
+        temporary_root=OCR_WORK_ROOT, output_root=OCR_OUTPUT_ROOT,
         stage_runner=lambda *_: events.append(("stage", "")) or staged,
         remote_runner=remote, cleanup_runner=lambda *_: events.append(("cleanup", "")),
     )
     command = [text for event, text in events if event == "launch"]
-    assert len(command) == 1 and "-st" not in command[0]
-    assert [event for event, _ in events] == ["preflight", "preflight", "preflight", "stage", "launch", "cleanup"]
+    assert len(command) == 1 and " -st " not in command[0]
+    assert [event for event, _ in events] == ["preflight", "preflight", "preflight", "preflight", "stage", "launch", "cleanup"]
 
 
-def test_staged_ocr_handoff_rejects_nested_roots(tmp_path: Path) -> None:
+def test_staged_ocr_handoff_rejects_all_nonapproved_root_combinations(tmp_path: Path) -> None:
     image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
-    common = dict(host="target", source=image, staging_root="/tmp/staging", remote_dir="/srv/autobench", binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf")
-    with pytest.raises(WorkflowError, match="separate from staging"):
-        run_staged_ocr_smoke(**common, temporary_root="/tmp/staging/work", output_root="/tmp/ocr-output")
-    with pytest.raises(WorkflowError, match="separate from staging"):
-        run_staged_ocr_smoke(**common, temporary_root="/tmp/ocr-work", output_root="/tmp")
-    with pytest.raises(WorkflowError, match="must be separate"):
-        run_staged_ocr_smoke(**common, temporary_root="/tmp/ocr-work", output_root="/tmp/ocr-work/results")
-
-
-def test_staged_ocr_handoff_rejects_unsafe_or_overlapping_roots(tmp_path: Path) -> None:
-    image = tmp_path / "input.jpg"; image.write_bytes(_jpeg())
-    kwargs = dict(host="target", source=image, staging_root="/tmp/staging", remote_dir="/srv/autobench", binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf", temporary_root="/tmp/staging", output_root="/tmp/ocr-output")
-    with pytest.raises(WorkflowError, match="separate from staging"):
-        run_staged_ocr_smoke(**kwargs)
-    kwargs["temporary_root"] = "/tmp/ocr-work"; kwargs["output_root"] = "/tmp/ocr-work"
-    with pytest.raises(WorkflowError, match="must be separate"):
-        run_staged_ocr_smoke(**kwargs)
+    common = dict(host="target", source=image, staging_root=OCR_STAGING_ROOT, remote_dir="/srv/autobench", binary="/opt/bin/llama-mtmd-cli", model="/opt/models/model.gguf", projector="/opt/models/projector.gguf")
+    for temporary_root, output_root in ((f"{OCR_STAGING_ROOT}/work", OCR_OUTPUT_ROOT), (OCR_WORK_ROOT, "/tmp"), (OCR_WORK_ROOT, f"{OCR_WORK_ROOT}/results"), (OCR_STAGING_ROOT, OCR_OUTPUT_ROOT), (OCR_WORK_ROOT, OCR_WORK_ROOT)):
+        with pytest.raises(WorkflowError, match="not approved"):
+            run_staged_ocr_smoke(**common, temporary_root=temporary_root, output_root=output_root)
 
 
 def test_staged_ocr_cli_requires_fixed_inputs_and_rejects_arbitrary_command(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("sys.argv", ["run_remote.py", "--run-staged-ocr-smoke", "--stage-image", "input.jpg", "--stage-root", "/tmp/staging"])
+    monkeypatch.setattr("sys.argv", ["run_remote.py", "--run-staged-ocr-smoke", "--stage-image", "input.jpg", "--stage-root", OCR_STAGING_ROOT])
     with pytest.raises(SystemExit):
         parse_arguments()
-    monkeypatch.setattr("sys.argv", ["run_remote.py", "--run-staged-ocr-smoke", "--stage-image", "input.jpg", "--stage-root", "/tmp/staging", "--ocr-binary", "/opt/bin/llama-mtmd-cli", "--ocr-model", "/opt/models/model.gguf", "--ocr-projector", "/opt/models/projector.gguf", "--ocr-temporary-root", "/tmp/work", "--ocr-output-root", "/tmp/output", "--", "echo", "unsafe"])
+    monkeypatch.setattr("sys.argv", ["run_remote.py", "--run-staged-ocr-smoke", "--stage-image", "input.jpg", "--stage-root", OCR_STAGING_ROOT, "--ocr-binary", "/opt/bin/llama-mtmd-cli", "--ocr-model", "/opt/models/model.gguf", "--ocr-projector", "/opt/models/projector.gguf", "--ocr-temporary-root", "/tmp/work", "--ocr-output-root", "/tmp/output", "--", "echo", "unsafe"])
     with pytest.raises(SystemExit):
         parse_arguments()
 
