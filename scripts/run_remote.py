@@ -33,6 +33,10 @@ DEFAULT_REMOTE_DIR = os.environ.get(
     "AUTOBENCH_REMOTE_DIR", "/home/opencode/code/autobench"
 )
 MAX_STAGED_IMAGE_BYTES = 10 * 1024 * 1024
+OCR_STAGING_ROOT = "/home/opencode/tmp/ocr-staging"
+OCR_WORK_ROOT = "/home/opencode/tmp/ocr-work"
+OCR_OUTPUT_ROOT = "/home/opencode/tmp/ocr-output"
+OCR_RUNTIME_ROOTS = (OCR_STAGING_ROOT, OCR_WORK_ROOT, OCR_OUTPUT_ROOT)
 _REMOTE_STAGING_ROOT = re.compile(r"/[A-Za-z0-9._/-]+")
 _REMOTE_STAGED_BASENAME = re.compile(r"\.autobench-ocr-[A-Za-z0-9]{6}\.jpg")
 
@@ -318,6 +322,29 @@ def _remote_staging_root_check(root: str, remote_dir: str) -> str:
     )
 
 
+def provision_ocr_runtime_roots(
+    host: str,
+    remote_dir: str,
+    *,
+    remote_runner: Callable[[str, str], None] = _private_remote_shell,
+) -> None:
+    """Provision only the fixed OCR roots through private, target-safe transport."""
+    quoted_checkout = shlex.quote(remote_dir)
+    commands = []
+    for root in OCR_RUNTIME_ROOTS:
+        _validated_remote_staging_root(root, remote_dir)
+        quoted_root = shlex.quote(root)
+        commands.append(
+            f"if test -e {quoted_root}; then test -d {quoted_root}; test ! -L {quoted_root}; "
+            f"else mkdir -m 700 -- {quoted_root}; fi; "
+            f"test -d {quoted_root}; test ! -L {quoted_root}; "
+            f"test \"$(stat -c %a -- {quoted_root})\" = 700; "
+            f"root=$(realpath -e -- {quoted_root}); checkout=$(realpath -e -- {quoted_checkout}); "
+            f"test \"$root\" = {quoted_root}; case \"$root\" in \"$checkout\"|\"$checkout\"/*) exit 1;; esac"
+        )
+    remote_runner(host, "set -eu; " + "; ".join(commands))
+
+
 def _validated_remote_runtime_root(root: str, remote_dir: str, staging_root: str) -> str:
     """Accept only a canonical private directory outside checkout and staging."""
     root = _validated_remote_staging_root(root, remote_dir)
@@ -362,6 +389,9 @@ def run_staged_ocr_smoke(
     """Stage one JPEG, invoke one reviewed OCR CLI, and always remove the stage."""
     if stage_runner is None:
         stage_runner = stage_designated_jpeg
+    if (staging_root, temporary_root, output_root) != OCR_RUNTIME_ROOTS:
+        raise WorkflowError("OCR runtime roots are not approved.")
+    provision_ocr_runtime_roots(host, remote_dir, remote_runner=remote_runner)
     staging_root = _validated_remote_staging_root(staging_root, remote_dir)
     temporary_root = _validated_remote_runtime_root(temporary_root, remote_dir, staging_root)
     output_root = _validated_remote_runtime_root(output_root, remote_dir, staging_root)
