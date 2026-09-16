@@ -257,6 +257,23 @@ def execute_remote(host: str, remote_dir: str, arguments: Sequence[str]) -> None
     remote_shell(host, normalize_remote_command(arguments, remote_dir))
 
 
+def _private_remote_shell(host: str, script: str) -> None:
+    """Execute sensitive OCR orchestration without rendering its paths or command."""
+    try:
+        result = subprocess.run(
+            ("ssh", *SSH_OPTIONS, host, "bash", "-lc", shlex.quote(script)),
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+    except FileNotFoundError as exc:
+        raise WorkflowError("Required executable was not found: ssh") from exc
+    except subprocess.CalledProcessError as exc:
+        raise WorkflowError("Reviewed OCR smoke invocation failed.") from exc
+    if result.stderr:
+        raise WorkflowError("Reviewed OCR smoke invocation produced unexpected output.")
+
+
 def _validated_staging_source(source: Path) -> Path:
     """Accept one regular bounded JPEG after header-only shape validation."""
     candidate = Path(source)
@@ -299,6 +316,83 @@ def _remote_staging_root_check(root: str, remote_dir: str) -> str:
         "test \"$root\" = " + quoted_root + "; "
         "case \"$root\" in \"$checkout\"|\"$checkout\"/*) exit 1;; esac"
     )
+
+
+def _validated_remote_runtime_root(root: str, remote_dir: str, staging_root: str) -> str:
+    """Accept only a canonical private directory outside checkout and staging."""
+    root = _validated_remote_staging_root(root, remote_dir)
+    runtime = PurePosixPath(root)
+    staging = PurePosixPath(staging_root)
+    if runtime == staging or staging in runtime.parents or runtime in staging.parents:
+        raise WorkflowError("OCR runtime root must be separate from staging.")
+    return root
+
+
+def _remote_runtime_root_check(root: str, remote_dir: str, staging_root: str) -> str:
+    """Return a quiet target-side check for a protected OCR runtime directory."""
+    return _remote_staging_root_check(root, remote_dir) + "; " + _remote_staging_root_check(staging_root, remote_dir)
+
+
+def _cleanup_staged_jpeg(host: str, staged_image: str, staging_root: str) -> None:
+    """Remove only the owned staged image without emitting its opaque path."""
+    candidate = PurePosixPath(staged_image)
+    if candidate.parent != PurePosixPath(staging_root) or not _REMOTE_STAGED_BASENAME.fullmatch(candidate.name):
+        raise WorkflowError("Staged image cleanup is unsafe.")
+    _private_remote_shell(
+        host,
+        f"set -eu; test -f {shlex.quote(staged_image)}; test ! -L {shlex.quote(staged_image)}; rm -f -- {shlex.quote(staged_image)}",
+    )
+
+
+def run_staged_ocr_smoke(
+    host: str,
+    source: Path,
+    staging_root: str,
+    remote_dir: str,
+    *,
+    binary: str,
+    model: str,
+    projector: str,
+    temporary_root: str,
+    output_root: str,
+    stage_runner: Callable[[str, Path, str, str], str] | None = None,
+    remote_runner: Callable[[str, str], None] = _private_remote_shell,
+    cleanup_runner: Callable[[str, str, str], None] = _cleanup_staged_jpeg,
+) -> None:
+    """Stage one JPEG, invoke one reviewed OCR CLI, and always remove the stage."""
+    if stage_runner is None:
+        stage_runner = stage_designated_jpeg
+    staging_root = _validated_remote_staging_root(staging_root, remote_dir)
+    temporary_root = _validated_remote_runtime_root(temporary_root, remote_dir, staging_root)
+    output_root = _validated_remote_runtime_root(output_root, remote_dir, staging_root)
+    temporary_path = PurePosixPath(temporary_root)
+    output_path = PurePosixPath(output_root)
+    if temporary_path == output_path or temporary_path in output_path.parents or output_path in temporary_path.parents:
+        raise WorkflowError("OCR temporary and output roots must be separate.")
+    for value in (binary, model, projector):
+        if not isinstance(value, str) or not _REMOTE_STAGING_ROOT.fullmatch(value):
+            raise WorkflowError("OCR target input is unsafe.")
+    remote_runner(host, _remote_runtime_root_check(temporary_root, remote_dir, staging_root))
+    remote_runner(host, _remote_runtime_root_check(output_root, remote_dir, staging_root))
+    receipt = f"{output_root}/receipt.json"
+    diagnostic = f"{output_root}/diagnostic.json"
+    remote_runner(host, f"set -eu; test ! -e {shlex.quote(receipt)}; test ! -e {shlex.quote(diagnostic)}")
+    staged_image = stage_runner(host, source, staging_root, remote_dir)
+    staged_path = PurePosixPath(staged_image)
+    owned_stage = staged_path.parent == PurePosixPath(staging_root) and bool(_REMOTE_STAGED_BASENAME.fullmatch(staged_path.name))
+    try:
+        if not owned_stage:
+            raise WorkflowError("Staged image handoff is unsafe.")
+        command = shlex.join((
+            ".venv/bin/python", "scripts/run_ocr_target_smoke.py",
+            "--binary", binary, "--model", model, "--projector", projector,
+            "--image", staged_image, "--temporary-root", temporary_root,
+            "--output", receipt, "--diagnostic-output", diagnostic,
+        ))
+        remote_runner(host, f"set -euo pipefail; cd {shlex.quote(remote_dir)}; export AUTOBENCH_EXECUTION_MODE=local; exec {command}")
+    finally:
+        if owned_stage:
+            cleanup_runner(host, staged_image, staging_root)
 
 
 def stage_designated_jpeg(
@@ -411,6 +505,12 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--stage-image", type=Path, default=None, help=argparse.SUPPRESS)
     parser.add_argument("--stage-root", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--run-staged-ocr-smoke", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--ocr-binary", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--ocr-model", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--ocr-projector", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--ocr-temporary-root", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--ocr-output-root", default=None, help=argparse.SUPPRESS)
     parser.add_argument(
         "--require-model-route",
         action="store_true",
@@ -453,10 +553,19 @@ def parse_arguments() -> argparse.Namespace:
         args.command = args.command[1:]
     if (args.stage_image is None) != (args.stage_root is None):
         parser.error("--stage-image and --stage-root must be provided together")
-    if args.stage_image is not None and not args.deploy_only:
-        parser.error("image staging requires --deploy-only")
-    if args.stage_image is not None and (args.sync_results or args.command):
-        parser.error("image staging cannot combine with result sync or a remote command")
+    if args.run_staged_ocr_smoke:
+        required = (args.stage_image, args.stage_root, args.ocr_binary, args.ocr_model, args.ocr_projector, args.ocr_temporary_root, args.ocr_output_root)
+        if any(value is None for value in required):
+            parser.error("reviewed OCR smoke requires staging and OCR path arguments")
+        if args.deploy_only or args.sync_results or args.command:
+            parser.error("reviewed OCR smoke cannot combine with deploy-only, result sync, or a remote command")
+    elif args.stage_image is not None:
+        if not args.deploy_only:
+            parser.error("image staging requires --deploy-only")
+        if args.sync_results or args.command:
+            parser.error("image staging cannot combine with result sync or a remote command")
+    elif any(value is not None for value in (args.ocr_binary, args.ocr_model, args.ocr_projector, args.ocr_temporary_root, args.ocr_output_root)):
+        parser.error("OCR path arguments require --run-staged-ocr-smoke")
     return args
 
 
@@ -472,10 +581,15 @@ def main() -> int:
             run_local_tests(repo)
         expected_sha = ensure_local_main_is_current(repo)
         deploy_commit(args.host, args.remote_dir, expected_sha)
-        if args.stage_image is not None:
+        if args.run_staged_ocr_smoke:
+            run_staged_ocr_smoke(
+                args.host, args.stage_image, args.stage_root, args.remote_dir,
+                binary=args.ocr_binary, model=args.ocr_model, projector=args.ocr_projector,
+                temporary_root=args.ocr_temporary_root, output_root=args.ocr_output_root,
+            )
+        elif args.stage_image is not None:
             stage_designated_jpeg(args.host, args.stage_image, args.stage_root, args.remote_dir)
-
-        if not args.deploy_only:
+        elif not args.deploy_only:
             execute_remote(args.host, args.remote_dir, args.command)
         if args.sync_results:
             sync_results(args.host, args.remote_dir, repo)
